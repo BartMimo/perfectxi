@@ -110,6 +110,8 @@ export default function ProfielPage() {
           <a href="/" className="btn-secondary mt-1">Speel</a>
         </div>
 
+        <TeamNameEditor />
+
         {loading ? (
           <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
         ) : !stats ? (
@@ -178,6 +180,46 @@ function StatBox({ label, value, accent }: { label: string; value: number | stri
         {value}
       </div>
       <div className="text-[10px] uppercase tracking-widest text-slate-400">{label}</div>
+    </div>
+  );
+}
+
+function TeamNameEditor() {
+  const teamName = useAuth((s) => s.teamName);
+  const setTeamName = useAuth((s) => s.setTeamName);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(teamName ?? "");
+
+  if (editing) {
+    return (
+      <div className="card p-5 mb-4">
+        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Teamnaam</div>
+        <form onSubmit={(e) => { e.preventDefault(); setTeamName(draft); setEditing(false); }} className="flex gap-2">
+          <input
+            type="text"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Bijv. FC Bart"
+            maxLength={24}
+            className="glass-input flex-1 !py-2.5 !text-sm"
+            autoFocus
+          />
+          <button type="submit" className="btn-primary !px-4 !py-2.5 !text-sm">Opslaan</button>
+          <button type="button" onClick={() => setEditing(false)} className="btn-secondary !px-4 !py-2.5 !text-sm">Annuleer</button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card p-5 mb-4">
+      <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Teamnaam</div>
+      <div className="flex items-center justify-between">
+        <span className="text-lg font-black text-slate-800">{teamName || "Jouw XI"}</span>
+        <button onClick={() => { setDraft(teamName ?? ""); setEditing(true); }} className="btn-secondary !px-3 !py-1.5 !text-xs">
+          Wijzig
+        </button>
+      </div>
     </div>
   );
 }

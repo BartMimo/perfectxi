@@ -153,7 +153,7 @@ interface GameState {
   cancelPick: () => void;
   onSlotClick: (slotId: string) => void;
   clearSelection: () => void;
-  simulate: () => void;
+  simulate: (teamName?: string) => void;
   finishSimulation: () => void;
   newGame: () => void;
 }
@@ -333,11 +333,11 @@ export const useGame = create<GameState>((set, get) => ({
 
   clearSelection: () => set({ selectedSlotId: null }),
 
-  simulate: () => {
+  simulate: (teamName?: string) => {
     const { slots, opponents } = get();
     if (slots.some((s) => !s.player)) return;
     const lineup = slots.map((s) => ({ player: s.player!, pos: s.pos }));
-    const result = simulateSeason(lineup, { opponents });
+    const result = simulateSeason(lineup, { opponents, teamName });
     set({ result, phase: "simulating", selectedSlotId: null });
   },
 

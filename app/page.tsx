@@ -10,18 +10,20 @@ import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
 import ResultView from "@/components/ResultView";
 import AuthGate from "@/components/AuthGate";
+import { useAuth } from "@/lib/auth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 function CompleteCTA() {
   const simulate = useGame((s) => s.simulate);
+  const teamName = useAuth((s) => s.teamName);
   return (
     <div className="card flex flex-col items-center gap-4 p-6 text-center">
       <div className="text-base font-extrabold text-emerald-700">Je XI is compleet!</div>
       <p className="text-sm leading-relaxed text-slate-500">
         Tik op een speler in het veld om hem te verplaatsen, of simuleer je seizoen.
       </p>
-      <button onClick={simulate} className="btn-primary w-full text-lg">
+      <button onClick={() => simulate(teamName ?? undefined)} className="btn-primary w-full text-lg">
         Simuleer het seizoen
       </button>
     </div>

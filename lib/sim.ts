@@ -114,8 +114,8 @@ export type Qualification =
   | "relegation";
 
 const BASE_GOALS = 1.32;
-const SLOPE = 0.05; // verwachte goals per ratingpunt verschil
-const HOME_BONUS = 0.22; // extra verwachte goals voor de thuisploeg
+const SLOPE = 0.09;
+const HOME_BONUS = 0.25;
 
 // Lineair (niet exponentieel) model: voorkomt onrealistische uitslagen tegen
 // zwakke tegenstanders, doelsaldo's blijven in een geloofwaardige range.
@@ -243,6 +243,7 @@ function weightedPick(
 export interface SimOptions {
   opponents: ClubSeasonLite[];
   seed?: number;
+  teamName?: string;
 }
 
 export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResult {
@@ -252,7 +253,7 @@ export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResu
   const strength = teamStrength(lineup.map((e) => e.player));
 
   const avgOpp = opts.opponents.reduce((s, c) => s + c.teamRating, 0) / opts.opponents.length;
-  const COMPRESS = 0.35;
+  const COMPRESS = 0.2;
 
   const opponents: SimTeam[] = opts.opponents.map((cs) => {
     const compressed = avgOpp + (cs.teamRating - avgOpp) * (1 - COMPRESS);
@@ -260,7 +261,7 @@ export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResu
     return { name: cs.club, attack: r, defense: r, isUser: false };
   });
   const user: SimTeam = {
-    name: "Jouw XI",
+    name: opts.teamName || "Jouw XI",
     attack: strength.overall,
     defense: strength.overall,
     isUser: true,
