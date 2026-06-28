@@ -1,21 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useOnlineCareer } from "@/lib/onlineCareer";
+import { divisionLabel } from "@/lib/career";
 import { LoginPrompt } from "@/components/AuthGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+const STATUS_LABELS: Record<string, string> = {
+  waiting: "Wachtkamer",
+  drafting: "Bezig",
+  simulating: "Simulatie",
+  finished: "Afgelopen",
+};
 
 export default function OnlineCarrierePage() {
   const router = useRouter();
   const userId = useAuth((s) => s.userId);
   const username = useAuth((s) => s.username);
   const teamName = useAuth((s) => s.teamName);
-  const { createLobby, joinLobby, loading, error } = useOnlineCareer();
+  const { createLobby, joinLobby, loadMyLobbies, myLobbies, loading, error } = useOnlineCareer();
   const [joinCode, setJoinCode] = useState("");
   const [showLogin, setShowLogin] = useState(false);
+
+  useEffect(() => {
+    if (userId) loadMyLobbies(userId);
+  }, [userId]);
 
   const handleCreate = async () => {
     if (!userId || !username) return;
@@ -51,6 +63,46 @@ export default function OnlineCarrierePage() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
+            {/* Actieve carrières */}
+            {myLobbies.length > 0 && (
+              <div className="card p-5 border-2 border-indigo-200/60 bg-gradient-to-br from-indigo-50/80 to-purple-50/50">
+                <div className="text-xs font-black uppercase tracking-widest text-indigo-700 mb-3">
+                  Jouw carrières
+                </div>
+                <div className="flex flex-col gap-2">
+                  {myLobbies.map((l) => (
+                    <button
+                      key={l.code}
+                      onClick={() => router.push(`/online-carriere/${l.code}`)}
+                      className="flex items-center justify-between rounded-xl bg-white/80 border border-indigo-100 px-4 py-3 text-left hover:shadow-sm hover:border-indigo-200 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-lg font-black tracking-wider text-indigo-600">{l.code}</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                            {divisionLabel(l.current_division)}
+                          </span>
+                          <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                            Seizoen {l.current_season}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] font-bold text-slate-400">
+                          {l.player_count} spelers
+                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          l.status === "waiting" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+                        }`}>
+                          {STATUS_LABELS[l.status] ?? l.status}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="card p-6">
               <h2 className="text-sm font-black uppercase tracking-widest text-indigo-700 mb-3">
                 Nieuw spel maken

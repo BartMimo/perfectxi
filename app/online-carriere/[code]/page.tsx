@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useOnlineCareer, type OnlinePlayer, type OnlineCareer } from "@/lib/onlineCareer";
-import { useGame } from "@/lib/store";
+import { useGame, filledCount } from "@/lib/store";
 import { divisionLabel, getDivisionRatingRange } from "@/lib/career";
+import { FORMATIONS } from "@/lib/formations";
 import type { ClubSeasonLite } from "@/lib/types";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -14,7 +15,6 @@ import ReelView from "@/components/ReelView";
 import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
 import OnlineResultView from "@/components/OnlineResultView";
-import { filledCount } from "@/lib/store";
 
 function PlayerList({ players, currentUserId, ownerId, onKick }: { players: OnlinePlayer[]; currentUserId: string | null; ownerId?: string; onKick?: (userId: string) => void }) {
   const sorted = [...players].sort((a, b) => a.current_division - b.current_division || a.username.localeCompare(b.username));
@@ -121,6 +121,8 @@ function DivisionOverview({ players }: { players: OnlinePlayer[] }) {
 function WaitingRoom() {
   const { lobby, startDraft, leaveLobby, kickPlayer } = useOnlineCareer();
   const userId = useAuth((s) => s.userId);
+  const formationKey = useGame((s) => s.formationKey);
+  const setFormation = useGame((s) => s.setFormation);
   const router = useRouter();
   const [copied, setCopied] = useState(false);
 
@@ -164,6 +166,27 @@ function WaitingRoom() {
           </span>
         </div>
         <PlayerList players={lobby.players} currentUserId={userId} ownerId={lobby.owner_id} onKick={kickPlayer} />
+      </div>
+
+      <div className="card p-5 mb-4">
+        <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
+          Kies je formatie
+        </div>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {FORMATIONS.map((fm) => (
+            <button
+              key={fm.key}
+              onClick={() => setFormation(fm.key)}
+              className={`rounded-xl border-2 px-2 py-2.5 text-sm font-bold transition-all ${
+                formationKey === fm.key
+                  ? "border-indigo-400 bg-indigo-50/80 text-indigo-700 shadow-sm shadow-indigo-100"
+                  : "border-transparent bg-white/60 text-slate-600 hover:bg-white/80"
+              }`}
+            >
+              {fm.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-2">

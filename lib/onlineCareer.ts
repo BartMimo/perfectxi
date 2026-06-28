@@ -28,12 +28,22 @@ export interface OnlineCareer {
   players: OnlinePlayer[];
 }
 
+export interface MyLobbyInfo {
+  code: string;
+  status: string;
+  current_season: number;
+  player_count: number;
+  current_division: number;
+}
+
 interface OnlineCareerState {
   lobby: OnlineCareer | null;
+  myLobbies: MyLobbyInfo[];
   loading: boolean;
   error: string | null;
   subscription: ReturnType<typeof supabase.channel> | null;
 
+  loadMyLobbies: (userId: string) => Promise<void>;
   createLobby: (userId: string, username: string, teamName: string | null) => Promise<string | null>;
   joinLobby: (code: string, userId: string, username: string, teamName: string | null) => Promise<boolean>;
   loadLobby: (code: string) => Promise<void>;
@@ -79,9 +89,53 @@ async function fetchPlayers(careerId: string): Promise<OnlinePlayer[]> {
 
 export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
   lobby: null,
+  myLobbies: [],
   loading: false,
   error: null,
   subscription: null,
+
+  loadMyLobbies: async (userId) => {
+    const { data: memberships } = await supabase
+      .from("online_career_players")
+      .select("career_id, current_division")
+      .eq("user_id", userId)
+      .eq("is_bot", false);
+
+    if (!memberships || memberships.length === 0) {
+      set({ myLobbies: [] });
+      return;
+    }
+
+    const careerIds = memberships.map((m) => m.career_id as string);
+    const { data: careers } = await supabase
+      .from("online_careers")
+      .select("id, code, status, current_season")
+      .in("id", careerIds);
+
+    if (!careers) {
+      set({ myLobbies: [] });
+      return;
+    }
+
+    const lobbies: MyLobbyInfo[] = [];
+    for (const c of careers) {
+      const { count } = await supabase
+        .from("online_career_players")
+        .select("*", { count: "exact", head: true })
+        .eq("career_id", c.id);
+
+      const mem = memberships.find((m) => m.career_id === c.id);
+      lobbies.push({
+        code: c.code as string,
+        status: c.status as string,
+        current_season: c.current_season as number,
+        player_count: count ?? 0,
+        current_division: (mem?.current_division as number) ?? 10,
+      });
+    }
+
+    set({ myLobbies: lobbies });
+  },
 
   createLobby: async (userId, username, teamName) => {
     set({ loading: true, error: null });
