@@ -129,7 +129,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
         style={{
           position: "relative",
           margin: "8px auto 0",
-          width: 612,
+          width: 940,
           height: 770,
           borderRadius: 24,
           overflow: "hidden",
@@ -151,7 +151,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
                 left: `${s.x}%`,
                 top: `${100 - s.y}%`,
                 transform: "translate(-50%,-50%)",
-                width: 78,
+                width: 90,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -160,13 +160,13 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
               <div
                 className={ratingColor(p.overall)}
                 style={{
-                  width: 52,
-                  height: 52,
+                  width: 48,
+                  height: 48,
                   borderRadius: 999,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 22,
+                  fontSize: 20,
                   fontWeight: 900,
                   border: "3px solid rgba(255,255,255,0.92)",
                   boxShadow: "0 3px 8px rgba(0,0,0,0.35)",
@@ -176,31 +176,33 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
               </div>
               <div
                 style={{
-                  marginTop: 5,
+                  marginTop: 4,
                   background: "rgba(255,255,255,0.96)",
                   color: "#0f172a",
                   borderRadius: 999,
-                  padding: "2px 10px",
-                  fontSize: 15,
+                  padding: "2px 8px",
+                  fontSize: 13,
                   fontWeight: 800,
-                  maxWidth: 78,
+                  maxWidth: 88,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  textAlign: "center",
                 }}
               >
                 {p.name.split(" ").slice(-1)[0]}
               </div>
               <div
                 style={{
-                  fontSize: 11,
+                  fontSize: 10,
                   fontWeight: 600,
                   color: "rgba(255,255,255,0.9)",
                   textShadow: "0 1px 2px rgba(0,0,0,0.55)",
-                  maxWidth: 78,
+                  maxWidth: 88,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
+                  textAlign: "center",
                 }}
               >
                 {p.fromClub} {shortSeason(p.fromSeason)}

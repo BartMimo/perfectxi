@@ -9,6 +9,7 @@ import { saveResult } from "@/lib/saveResult";
 import { leagueName } from "@/lib/leagues";
 import { computeAchievements, type Achievement } from "@/lib/achievements";
 import ShareCard from "./ShareCard";
+import { LoginPrompt } from "./AuthGate";
 
 export default function ResultView() {
   const result = useGame((s) => s.result);
@@ -23,12 +24,17 @@ export default function ResultView() {
   const [sharing, setSharing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [showLogin, setShowLogin] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!result || !userId || !leagueCode || saved) return;
+    if (!result || !leagueCode) return;
     const achv = computeAchievements(result);
     setAchievements(achv);
+  }, [result, leagueCode]);
+
+  useEffect(() => {
+    if (!result || !userId || !leagueCode || saved) return;
     saveResult({
       userId,
       result,
@@ -157,10 +163,19 @@ export default function ResultView() {
         </div>
       )}
 
+      {!userId && !saved && (
+        <button onClick={() => setShowLogin(true)} className="btn-primary w-full text-base">
+          Log in om resultaat op te slaan
+        </button>
+      )}
+      {saved && (
+        <div className="text-center text-xs font-bold text-emerald-600">Resultaat opgeslagen!</div>
+      )}
+
       <button
         onClick={shareResult}
         disabled={sharing}
-        className="btn-primary w-full text-base"
+        className={`${userId || saved ? "btn-primary" : "btn-secondary"} w-full text-base`}
       >
         {sharing ? "Kaart maken…" : "Deel je resultaat"}
       </button>
@@ -273,6 +288,8 @@ export default function ResultView() {
           })}
         </div>
       </details>
+
+      {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}
     </div>
   );
 }
