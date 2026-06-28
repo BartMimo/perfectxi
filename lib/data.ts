@@ -18,19 +18,18 @@ async function load(): Promise<RawData> {
   // Eénmalig de clubnamen opschonen naar nette weergavenamen.
   for (const cs of cache.clubSeasons) cs.club = cleanClubName(cs.club);
 
-  // Prime-rating per speler: de hoogste overall (+ bijbehorende att/def)
-  // die deze spelersnaam ergens in de dataset bereikt.
   const prime = new Map<string, { overall: number; attack: number; defense: number }>();
   for (const cs of cache.clubSeasons) {
     for (const p of cs.players) {
-      const cur = prime.get(p.name);
+      const key = p.pid || p.name;
+      const cur = prime.get(key);
       if (!cur || p.overall > cur.overall) {
-        prime.set(p.name, { overall: p.overall, attack: p.attack, defense: p.defense });
+        prime.set(key, { overall: p.overall, attack: p.attack, defense: p.defense });
       }
     }
   }
   for (const cs of cache.clubSeasons) {
-    for (const p of cs.players) p.prime = prime.get(p.name);
+    for (const p of cs.players) p.prime = prime.get(p.pid || p.name);
   }
 
   byId = new Map(cache.clubSeasons.map((cs) => [cs.id, cs]));

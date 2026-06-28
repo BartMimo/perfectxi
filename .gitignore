@@ -1,5 +1,6 @@
 # raw datasets (large, regenerated via data-pipeline/download_raw.sh)
 data-pipeline/raw/
+data/kaggle/
 
 # node
 node_modules/

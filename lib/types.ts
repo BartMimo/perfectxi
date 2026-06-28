@@ -7,6 +7,7 @@ export type RawPos = "Goalkeeper" | "Defender" | "Midfield" | "Attack" | "Missin
 export type SlotPos = "GK" | "DEF" | "MID" | "ATT";
 
 export interface Player {
+  pid?: string;
   name: string;
   pos: RawPos;
   sub: string;

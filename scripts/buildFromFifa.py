@@ -146,7 +146,10 @@ def parse_row(row, source):
     if defense == 0:
         defense = overall
 
+    pid = row.get("player_id", "")
+
     return {
+        "pid": pid,
         "name": name,
         "club": club,
         "league": league,
@@ -204,6 +207,7 @@ def build():
                         "players": [],
                     }
                 clubs[key]["players"].append({
+                    "pid": parsed["pid"],
                     "name": parsed["name"],
                     "pos": parsed["pos"],
                     "sub": parsed["sub"],
