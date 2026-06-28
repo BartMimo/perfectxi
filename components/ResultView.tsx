@@ -42,7 +42,6 @@ export default function ResultView() {
   }, [result, userId, leagueCode, saved, slots, formationKey, ratingMode, difficulty]);
 
   async function shareResult() {
-    console.log("shareResult called, sharing:", sharing, "cardRef:", !!cardRef.current);
     if (sharing) return;
     setSharing(true);
     try {
@@ -58,27 +57,35 @@ export default function ResultView() {
       });
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], "perfect-xi.png", { type: "image/png" });
-      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.canShare?.({ files: [file] })) {
-        await nav.share({
-          files: [file],
-          title: "Perfect XI",
-          text: "Mijn Perfect XI seizoen! Speel jij het beter?",
-        });
-      } else {
+
+      let shared = false;
+      try {
+        const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+        if (nav.canShare?.({ files: [file] })) {
+          await nav.share({ files: [file], title: "Perfect XI", text: "Mijn Perfect XI seizoen! Speel jij het beter?" });
+          shared = true;
+        }
+      } catch {
+        // share dismissed or unsupported, fall through to download
+      }
+
+      if (!shared) {
+        const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
-        a.href = dataUrl;
+        a.href = url;
         a.download = "perfect-xi.png";
+        a.style.display = "none";
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
       }
     } catch (err: unknown) {
       const e = err instanceof Error ? err : new Error(String(err));
-      if (e.name !== "AbortError") {
-        console.error("Share failed:", e);
-        alert("Delen mislukt: " + e.message);
-      }
+      console.error("Share failed:", e);
+      alert("Delen mislukt: " + e.message);
     } finally {
       setSharing(false);
     }
