@@ -1,0 +1,9 @@
+# raw datasets (large, regenerated via data-pipeline/download_raw.sh)
+data-pipeline/raw/
+
+# node
+node_modules/
+.next/
+out/
+.DS_Store
+*.log
