@@ -7,6 +7,7 @@ import { FORMATIONS } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
 import { getCurrentChallenge, getChallengeWeekId } from "@/lib/challenge";
 import { supabase } from "@/lib/supabase";
+import { CareerStartCard } from "./CareerView";
 
 function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
@@ -130,6 +131,11 @@ export default function StartView() {
           )}
         </div>
       )}
+
+      {/* Carrière */}
+      <div className="mt-6">
+        <CareerStartCard />
+      </div>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
         {/* Formatie */}

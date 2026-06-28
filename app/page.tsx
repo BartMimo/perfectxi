@@ -10,6 +10,7 @@ import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
 import ResultView from "@/components/ResultView";
 import CLResultView from "@/components/CLResultView";
+import { TransferWindow, CareerResultBanner } from "@/components/CareerView";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/lib/auth";
 import Header from "@/components/Header";

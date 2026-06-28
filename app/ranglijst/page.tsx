@@ -6,7 +6,7 @@ import { FORMATIONS } from "@/lib/formations";
 import { getCurrentChallenge, getChallengeWeekId } from "@/lib/challenge";
 import Footer from "@/components/Footer";
 
-type Tab = "records" | "accounts" | "challenge";
+type Tab = "records" | "accounts" | "challenge" | "career";
 type RecordSort = "points" | "goals_for" | "goals_against" | "team_rating" | "team_value";
 type AccountSort = "achievements" | "champions";
 
@@ -31,6 +31,13 @@ interface AccountRow {
   unique_achievements: string[];
 }
 
+interface CareerRow {
+  username: string;
+  seasons: number;
+  championships: number;
+  bestDivision: number;
+}
+
 interface ChallengeRow {
   id: string;
   username: string;
@@ -47,6 +54,7 @@ export default function RanglijstPage() {
   const [gameRows, setGameRows] = useState<GameRow[]>([]);
   const [accountRows, setAccountRows] = useState<AccountRow[]>([]);
   const [challengeRows, setChallengeRows] = useState<ChallengeRow[]>([]);
+  const [careerRows, setCareerRows] = useState<CareerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [recordSort, setRecordSort] = useState<RecordSort>("points");
   const [accountSort, setAccountSort] = useState<AccountSort>("achievements");
@@ -114,6 +122,31 @@ export default function RanglijstPage() {
         position: r.position as number,
         team_rating: r.team_rating as number,
       })));
+    }
+
+    // Fetch career data
+    const { data: carData } = await supabase
+      .from("results")
+      .select("user_id, career_division, career_season, position, users!inner(username)")
+      .eq("is_career", true)
+      .limit(500);
+
+    if (carData) {
+      const byUser = new Map<string, CareerRow>();
+      for (const r of carData as Record<string, unknown>[]) {
+        const uid = r.user_id as string;
+        const username = (r.users as Record<string, string>).username;
+        let u = byUser.get(uid);
+        if (!u) {
+          u = { username, seasons: 0, championships: 0, bestDivision: 10 };
+          byUser.set(uid, u);
+        }
+        u.seasons++;
+        if ((r.position as number) === 1) u.championships++;
+        const div = r.career_division as number;
+        if (div < u.bestDivision) u.bestDivision = div;
+      }
+      setCareerRows([...byUser.values()].sort((a, b) => a.bestDivision - b.bestDivision || b.championships - a.championships));
     }
 
     setLoading(false);
@@ -195,10 +228,20 @@ export default function RanglijstPage() {
           >
             🏅 Challenge
           </button>
+          <button
+            onClick={() => setTab("career")}
+            className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+              tab === "career"
+                ? "bg-indigo-50 shadow-sm border border-indigo-200/60 text-indigo-800"
+                : "text-indigo-500 hover:text-indigo-700"
+            }`}
+          >
+            🏟️ Carrière
+          </button>
         </div>
 
         {/* Sort pills */}
-        {tab !== "challenge" && <div className="flex flex-wrap gap-2 mb-5">
+        {tab !== "challenge" && tab !== "career" && <div className="flex flex-wrap gap-2 mb-5">
           {(tab === "records" ? RECORD_SORTS : ACCOUNT_SORTS).map((opt) => (
             <button
               key={opt.key}
@@ -218,6 +261,46 @@ export default function RanglijstPage() {
         <div className="card overflow-hidden">
           {loading ? (
             <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+          ) : tab === "career" ? (
+            careerRows.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="text-3xl mb-3">🏟️</div>
+                <div className="text-sm text-slate-400">Nog niemand heeft een carrière gestart.</div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-indigo-50/50 text-[10px] uppercase tracking-widest text-indigo-600">
+                    <tr>
+                      <th className="px-4 py-3 text-left">#</th>
+                      <th className="px-3 py-3 text-left">Speler</th>
+                      <th className="px-3 py-3 text-right">Seizoenen</th>
+                      <th className="px-3 py-3 text-right">Titels</th>
+                      <th className="px-3 py-3 text-right">Beste divisie</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {careerRows.map((r, i) => (
+                      <tr key={r.username} className="border-t border-indigo-100/60 text-slate-600 transition hover:bg-indigo-50/30">
+                        <td className="px-4 py-3"><RankBadge rank={i + 1} /></td>
+                        <td className="px-3 py-3 font-bold text-slate-800">{r.username}</td>
+                        <td className="px-3 py-3 text-right tabular-nums">{r.seasons}</td>
+                        <td className="px-3 py-3 text-right tabular-nums font-semibold text-amber-600">{r.championships}</td>
+                        <td className="px-3 py-3 text-right">
+                          <span className={`inline-flex min-w-[3rem] items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                            r.bestDivision <= 3 ? "bg-amber-100/80 text-amber-700" :
+                            r.bestDivision <= 6 ? "bg-emerald-100/80 text-emerald-700" :
+                            "bg-slate-100/80 text-slate-500"
+                          }`}>
+                            Div {r.bestDivision}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )
           ) : tab === "challenge" ? (
             <>
               <div className="px-5 py-3 border-b border-slate-100/60 flex flex-wrap items-center gap-2">

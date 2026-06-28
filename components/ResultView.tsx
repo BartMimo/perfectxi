@@ -10,6 +10,8 @@ import { leagueName } from "@/lib/leagues";
 import { computeAchievements, type Achievement } from "@/lib/achievements";
 import ShareCard from "./ShareCard";
 import { LoginPrompt } from "./AuthGate";
+import { CareerResultBanner, TransferWindow } from "./CareerView";
+import { useCareer } from "@/lib/career";
 
 export default function ResultView() {
   const result = useGame((s) => s.result);
@@ -21,7 +23,9 @@ export default function ResultView() {
   const difficulty = useGame((s) => s.difficulty);
   const isChallenge = useGame((s) => s.isChallenge);
   const challengeWeek = useGame((s) => s.challengeWeek);
+  const gameMode = useGame((s) => s.gameMode);
   const userId = useAuth((s) => s.userId);
+  const career = useCareer();
   const [showTable, setShowTable] = useState(true);
   const [sharing, setSharing] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -48,6 +52,9 @@ export default function ResultView() {
       difficulty,
       isChallenge,
       challengeWeek,
+      isCareer: gameMode === "career",
+      careerDivision: gameMode === "career" ? career.currentDivision : undefined,
+      careerSeason: gameMode === "career" ? career.season : undefined,
     }).then(() => setSaved(true));
   }, [result, userId, leagueCode, saved, slots, formationKey, ratingMode, difficulty]);
 
@@ -166,6 +173,9 @@ export default function ResultView() {
           </div>
         </div>
       )}
+
+      <CareerResultBanner />
+      <TransferWindow />
 
       {!userId && !saved && (
         <button onClick={() => setShowLogin(true)} className="btn-primary w-full text-base">

@@ -7,9 +7,10 @@ import { canPlayerPlay } from "./positions";
 import { getFormation } from "./formations";
 import { simulateSeason, type SimResult } from "./sim";
 import { simulateCL, type CLResult } from "./simCL";
+import { getDivisionRatingRange } from "./career";
 
 export type Phase = "start" | "play" | "simulating" | "result";
-export type GameMode = "league" | "cl";
+export type GameMode = "league" | "cl" | "career";
 export type RatingMode = "actual" | "prime";
 export type Difficulty = "normal" | "hard";
 
@@ -104,6 +105,36 @@ function buildCLOpponents(index: ClubSeasonLite[]): ClubSeasonLite[] {
   return result.sort((a, b) => b.teamRating - a.teamRating).slice(0, 63);
 }
 
+function buildDivisionOpponents(index: ClubSeasonLite[], division: number): ClubSeasonLite[] {
+  const [minR, maxR] = getDivisionRatingRange(division);
+  const mid = (minR + maxR) / 2;
+  const all = index.filter((c) => c.season === CURRENT_SEASON);
+  const seen = new Set<string>();
+  const candidates: ClubSeasonLite[] = [];
+  // Sort by distance to division midpoint
+  const sorted = [...all].sort((a, b) => Math.abs(a.teamRating - mid) - Math.abs(b.teamRating - mid));
+  for (const c of sorted) {
+    if (seen.has(c.club)) continue;
+    seen.add(c.club);
+    // Clamp rating to division range
+    candidates.push({ ...c, teamRating: Math.max(minR, Math.min(maxR, c.teamRating)) });
+    if (candidates.length >= OPPONENT_COUNT) break;
+  }
+  // Fill remaining with synthetic teams if needed
+  while (candidates.length < OPPONENT_COUNT) {
+    const r = minR + Math.random() * (maxR - minR);
+    candidates.push({
+      id: `div${division}-fill-${candidates.length}`,
+      league: `Divisie ${division}`,
+      leagueCode: "DIV",
+      club: `FC Div${division}-${candidates.length + 1}`,
+      season: CURRENT_SEASON,
+      teamRating: Math.round(r),
+    });
+  }
+  return candidates.slice(0, OPPONENT_COUNT);
+}
+
 export const filledCount = (slots: Slot[]) => slots.filter((s) => s.player).length;
 
 /** Posities waarheen de geselecteerde speler verplaatst/geruild kan worden. */
@@ -166,6 +197,7 @@ interface GameState {
   setDifficulty: (d: Difficulty) => void;
   startGame: () => void;
   startCL: () => void;
+  startCareerSeason: (division: number, existingSquad?: DraftedPlayer[]) => void;
   startChallenge: (leagueCode: string, formationKey: string, ratingMode: RatingMode, difficulty: Difficulty, week: string) => void;
   beginSpin: () => void;
   prefetchSquad: (id: string) => void;
@@ -253,6 +285,45 @@ export const useGame = create<GameState>((set, get) => ({
       selectedSlotId: null,
       pendingPlayer: null,
       rerollsLeft: rerollsFor(difficulty),
+      isChallenge: false,
+      challengeWeek: null,
+      error: null,
+    });
+  },
+
+  startCareerSeason: (division: number, existingSquad?: DraftedPlayer[]) => {
+    const { formationKey, index } = get();
+    const newSlots = buildSlots(formationKey);
+
+    // Pre-fill slots with existing career squad
+    if (existingSquad && existingSquad.length > 0) {
+      for (const player of existingSquad) {
+        const eligible = newSlots.filter(
+          (s) => !s.player && canPlayerPlay(player, s.pos),
+        );
+        if (eligible.length > 0) {
+          eligible[0].player = player;
+        }
+      }
+    }
+
+    const needsDraft = newSlots.some((s) => !s.player);
+
+    set({
+      phase: "play",
+      gameMode: "career",
+      leagueCode: null,
+      ratingMode: "actual",
+      difficulty: "normal",
+      slots: newSlots,
+      opponents: buildDivisionOpponents(index, division),
+      landed: null,
+      squad: null,
+      result: null,
+      clResult: null,
+      selectedSlotId: null,
+      pendingPlayer: null,
+      rerollsLeft: 1,
       isChallenge: false,
       challengeWeek: null,
       error: null,
