@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/store";
 import type { MatchResult } from "@/lib/sim";
-import type { CLResult, CLGroup, CLKnockoutRound } from "@/lib/simCL";
 
 function outcome(m: MatchResult): "W" | "D" | "L" {
   return m.gf > m.ga ? "W" : m.gf === m.ga ? "D" : "L";
@@ -12,13 +11,7 @@ const dot = { W: "bg-emerald-400", D: "bg-amber-400", L: "bg-rose-400" } as cons
 
 export default function SimulationView() {
   const result = useGame((s) => s.result);
-  const clResult = useGame((s) => s.clResult);
-  const gameMode = useGame((s) => s.gameMode);
   const finish = useGame((s) => s.finishSimulation);
-
-  if (gameMode === "cl" && clResult) {
-    return <CLSimAnimation clResult={clResult} onFinish={finish} />;
-  }
 
   const total = result?.matchdays.length ?? 0;
   const [round, setRound] = useState(0);
@@ -170,119 +163,6 @@ export default function SimulationView() {
             ))}
           </tbody>
         </table>
-      </div>
-    </div>
-  );
-}
-
-const CL_PHASES = ["Groepsfase", "Laatste 32", "Laatste 16", "Kwartfinale", "Halve finale", "Finale", "Resultaat"];
-
-function CLSimAnimation({ clResult, onFinish }: { clResult: CLResult; onFinish: () => void }) {
-  const [phase, setPhase] = useState(0);
-  const [playing, setPlaying] = useState(true);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const total = CL_PHASES.length - 1;
-
-  useEffect(() => {
-    if (!playing || phase >= total) {
-      if (phase >= total) setPlaying(false);
-      return;
-    }
-    timer.current = setTimeout(() => setPhase((p) => p + 1), 1200);
-    return () => { if (timer.current) clearTimeout(timer.current); };
-  }, [playing, phase, total]);
-
-  const done = phase >= total;
-  const userGroup = clResult.groups.find((g) => g.standings.some((s) => s.isUser));
-  const userAdvanced = userGroup ? userGroup.standings.findIndex((s) => s.isUser) < 2 : false;
-
-  const currentRound = phase > 0 && phase <= clResult.knockout.length ? clResult.knockout[phase - 1] : null;
-  const userTie = currentRound?.ties.find((t) =>
-    clResult.groups.some((g) => g.standings.some((s) => s.isUser && (s.name === t.home || s.name === t.away)))
-  ) ?? currentRound?.ties.find((t) => {
-    const userName = userGroup?.standings.find((s) => s.isUser)?.name;
-    return userName && (t.home === userName || t.away === userName || t.winner === userName);
-  });
-
-  return (
-    <div className="mx-auto max-w-lg px-4 py-8">
-      <div className="card p-5 mb-4">
-        <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-blue-600">
-          <span>⭐ Champions League</span>
-          <span className="text-slate-400">{CL_PHASES[Math.min(phase, total)]}</span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500"
-            style={{ width: `${((phase + 1) / (total + 1)) * 100}%` }}
-          />
-        </div>
-
-        {/* Group phase */}
-        {phase === 0 && userGroup && (
-          <div className="mt-4">
-            <div className="text-xs font-bold text-slate-500 mb-2">Jouw poule</div>
-            {userGroup.standings.map((s, i) => (
-              <div key={s.name} className={`flex items-center justify-between px-3 py-1.5 rounded-lg text-sm ${
-                s.isUser ? "bg-blue-50 font-bold text-blue-800" : i < 2 ? "text-emerald-700" : "text-slate-500"
-              }`}>
-                <span className="truncate max-w-[200px]">{i + 1}. {s.name}</span>
-                <span className="tabular-nums font-bold">{s.points} ptn</span>
-              </div>
-            ))}
-            <div className="mt-2 text-xs font-bold text-center">
-              {userAdvanced ? (
-                <span className="text-emerald-600">Door naar de knockout!</span>
-              ) : (
-                <span className="text-rose-500">Uitgeschakeld in de groepsfase</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Knockout rounds */}
-        {phase > 0 && phase < total && currentRound && (
-          <div className="mt-4">
-            <div className="text-xs font-bold text-slate-500 mb-2">{currentRound.name}</div>
-            {currentRound.ties.slice(0, 4).map((tie, i) => (
-              <div key={i} className="flex items-center justify-between px-3 py-1.5 rounded-lg text-[11px] text-slate-600">
-                <span className={`truncate max-w-[120px] ${tie.winner === tie.home ? "font-black" : ""}`}>{tie.home}</span>
-                <span className="tabular-nums font-bold">{tie.aggregate[0]} - {tie.aggregate[1]}</span>
-                <span className={`truncate max-w-[120px] text-right ${tie.winner === tie.away ? "font-black" : ""}`}>{tie.away}</span>
-              </div>
-            ))}
-            {currentRound.ties.length > 4 && (
-              <div className="text-[10px] text-slate-400 text-center mt-1">+{currentRound.ties.length - 4} meer</div>
-            )}
-          </div>
-        )}
-
-        {/* Final result teaser */}
-        {done && (
-          <div className="mt-4 text-center">
-            <div className="text-3xl mb-2">{clResult.userBestRound === "Winnaar" ? "🏆" : "⭐"}</div>
-            <div className="text-lg font-black text-slate-800">
-              {clResult.userBestRound === "Winnaar" ? "Champions League winnaar!" : `Uitgeschakeld: ${clResult.userBestRound}`}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="flex gap-2">
-        {!done ? (
-          <>
-            <button onClick={() => setPlaying((p) => !p)} className="btn-secondary flex-1">
-              {playing ? "⏸ Pauze" : "▶ Hervat"}
-            </button>
-            <button onClick={() => { setPlaying(false); setPhase(total); }} className="btn-primary flex-1 text-sm">
-              Naar einde
-            </button>
-          </>
-        ) : (
-          <button onClick={onFinish} className="btn-primary w-full text-lg">
-            Bekijk details
-          </button>
-        )}
       </div>
     </div>
   );

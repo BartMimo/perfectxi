@@ -31,11 +31,7 @@ export default function Header({ showMeta = false }: { showMeta?: boolean }) {
               <span className="truncate rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
                 {leagueName(leagueCode)}
               </span>
-            ) : (
-              <span className="truncate rounded-full border border-blue-200/60 bg-blue-50/60 px-3 py-1.5 text-blue-700 backdrop-blur">
-                Champions League
-              </span>
-            )}
+            ) : null}
             <span className="rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
               {formation.label}
             </span>

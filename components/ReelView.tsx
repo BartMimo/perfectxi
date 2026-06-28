@@ -24,7 +24,7 @@ export default function ReelView() {
   const gameMode = useGame((s) => s.gameMode);
 
   const pool = useMemo(
-    () => (gameMode === "cl" || gameMode === "career") ? index : index.filter((c) => c.leagueCode === leagueCode),
+    () => gameMode === "career" ? index : index.filter((c) => c.leagueCode === leagueCode),
     [index, leagueCode, gameMode],
   );
 

@@ -6,11 +6,10 @@ import type { PosKey } from "./positions";
 import { canPlayerPlay } from "./positions";
 import { getFormation } from "./formations";
 import { simulateSeason, type SimResult } from "./sim";
-import { simulateCL, type CLResult } from "./simCL";
 import { getDivisionRatingRange } from "./career";
 
 export type Phase = "start" | "play" | "simulating" | "result";
-export type GameMode = "league" | "cl" | "career";
+export type GameMode = "league" | "career";
 export type RatingMode = "actual" | "prime";
 export type Difficulty = "normal" | "hard";
 
@@ -87,22 +86,6 @@ function buildOpponents(index: ClubSeasonLite[], leagueCode: string): ClubSeason
     result.push(c);
   }
   return result.slice(0, OPPONENT_COUNT);
-}
-
-function buildCLOpponents(index: ClubSeasonLite[]): ClubSeasonLite[] {
-  const current = index.filter((c) => c.season === CURRENT_SEASON);
-  const seen = new Set(current.map((c) => c.club));
-  const result = [...current];
-  const extras = index
-    .filter((c) => c.season !== CURRENT_SEASON)
-    .sort((a, b) => b.teamRating - a.teamRating);
-  for (const c of extras) {
-    if (result.length >= 63) break;
-    if (seen.has(c.club)) continue;
-    seen.add(c.club);
-    result.push(c);
-  }
-  return result.sort((a, b) => b.teamRating - a.teamRating).slice(0, 63);
 }
 
 function buildDivisionOpponents(index: ClubSeasonLite[], division: number): ClubSeasonLite[] {
@@ -185,7 +168,6 @@ interface GameState {
   rerollsLeft: number;
 
   result: SimResult | null;
-  clResult: CLResult | null;
   gameMode: GameMode;
   isChallenge: boolean;
   challengeWeek: string | null;
@@ -196,7 +178,6 @@ interface GameState {
   setRatingMode: (mode: RatingMode) => void;
   setDifficulty: (d: Difficulty) => void;
   startGame: () => void;
-  startCL: () => void;
   startCareerSeason: (division: number, existingSquad?: DraftedPlayer[]) => void;
   startChallenge: (leagueCode: string, formationKey: string, ratingMode: RatingMode, difficulty: Difficulty, week: string) => void;
   beginSpin: () => void;
@@ -257,31 +238,6 @@ export const useGame = create<GameState>((set, get) => ({
       landed: null,
       squad: null,
       result: null,
-      clResult: null,
-      selectedSlotId: null,
-      pendingPlayer: null,
-      rerollsLeft: rerollsFor(difficulty),
-      isChallenge: false,
-      challengeWeek: null,
-      error: null,
-    });
-  },
-
-  startCL: () => {
-    const { formationKey, index, difficulty } = get();
-    set({
-      phase: "play",
-      gameMode: "cl",
-      leagueCode: null,
-      formationKey,
-      ratingMode: "prime",
-      difficulty,
-      slots: buildSlots(formationKey),
-      opponents: buildCLOpponents(index),
-      landed: null,
-      squad: null,
-      result: null,
-      clResult: null,
       selectedSlotId: null,
       pendingPlayer: null,
       rerollsLeft: rerollsFor(difficulty),
@@ -320,7 +276,6 @@ export const useGame = create<GameState>((set, get) => ({
       landed: null,
       squad: null,
       result: null,
-      clResult: null,
       selectedSlotId: null,
       pendingPlayer: null,
       rerollsLeft: 1,
@@ -483,16 +438,11 @@ export const useGame = create<GameState>((set, get) => ({
   clearSelection: () => set({ selectedSlotId: null }),
 
   simulate: (teamName?: string) => {
-    const { slots, opponents, gameMode } = get();
+    const { slots, opponents } = get();
     if (slots.some((s) => !s.player)) return;
     const lineup = slots.map((s) => ({ player: s.player!, pos: s.pos }));
-    if (gameMode === "cl") {
-      const clResult = simulateCL(lineup, { opponents, teamName });
-      set({ clResult, result: null, phase: "simulating", selectedSlotId: null });
-    } else {
-      const result = simulateSeason(lineup, { opponents, teamName });
-      set({ result, clResult: null, phase: "simulating", selectedSlotId: null });
-    }
+    const result = simulateSeason(lineup, { opponents, teamName });
+    set({ result, phase: "simulating", selectedSlotId: null });
   },
 
   finishSimulation: () => set({ phase: "result" }),
@@ -506,7 +456,6 @@ export const useGame = create<GameState>((set, get) => ({
       landed: null,
       squad: null,
       result: null,
-      clResult: null,
       spinning: false,
       spinRequested: false,
       error: null,

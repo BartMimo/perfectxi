@@ -9,7 +9,6 @@ import ReelView from "@/components/ReelView";
 import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
 import ResultView from "@/components/ResultView";
-import CLResultView from "@/components/CLResultView";
 import { TransferWindow, CareerResultBanner } from "@/components/CareerView";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/lib/auth";
@@ -73,7 +72,6 @@ function PlayView() {
 
 export default function Page() {
   const phase = useGame((s) => s.phase);
-  const gameMode = useGame((s) => s.gameMode);
   const setIndex = useGame((s) => s.setIndex);
   const indexLoaded = useGame((s) => s.index.length > 0);
   useEffect(() => {
@@ -94,7 +92,7 @@ export default function Page() {
             <Header showMeta />
             {phase === "play" && <PlayView />}
             {phase === "simulating" && <SimulationView />}
-            {phase === "result" && (gameMode === "cl" ? <CLResultView /> : <ResultView />)}
+            {phase === "result" && <ResultView />}
           </>
         )}
         <Footer />

@@ -56,7 +56,6 @@ export default function StartView() {
   const difficulty = useGame((s) => s.difficulty);
   const setDifficulty = useGame((s) => s.setDifficulty);
   const startGame = useGame((s) => s.startGame);
-  const startCL = useGame((s) => s.startCL);
   const startChallenge = useGame((s) => s.startChallenge);
   const loaded = useGame((s) => s.index.length > 0);
   const userId = useAuth((s) => s.userId);
@@ -225,22 +224,13 @@ export default function StartView() {
         </section>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <button
-          disabled={!ready}
-          onClick={startGame}
-          className="btn-primary flex-1 text-lg"
-        >
-          {!loaded ? "Laden…" : !leagueCode ? "Kies een competitie" : "Start het draft"}
-        </button>
-        <button
-          disabled={!loaded}
-          onClick={startCL}
-          className="flex-1 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3.5 text-lg font-extrabold text-white shadow-md shadow-blue-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:transform-none disabled:shadow-none"
-        >
-          Champions League
-        </button>
-      </div>
+      <button
+        disabled={!ready}
+        onClick={startGame}
+        className="btn-primary mt-8 w-full text-lg"
+      >
+        {!loaded ? "Laden…" : !leagueCode ? "Kies een competitie" : "Start het draft"}
+      </button>
     </div>
   );
 }

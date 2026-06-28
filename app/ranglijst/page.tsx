@@ -39,6 +39,7 @@ interface CareerRow {
   seasons: number;
   championships: number;
   bestDivision: number;
+  seasonsToDiv1Champ: number | null;
 }
 
 interface ChallengeRow {
@@ -145,15 +146,26 @@ export default function RanglijstPage() {
         const username = (r.users as Record<string, string>).username;
         let u = byUser.get(uid);
         if (!u) {
-          u = { username, seasons: 0, championships: 0, bestDivision: 10 };
+          u = { username, seasons: 0, championships: 0, bestDivision: 10, seasonsToDiv1Champ: null };
           byUser.set(uid, u);
         }
         u.seasons++;
-        if ((r.position as number) === 1) u.championships++;
         const div = r.career_division as number;
+        const season = r.career_season as number;
+        if ((r.position as number) === 1) {
+          u.championships++;
+          if (div === 1 && (u.seasonsToDiv1Champ === null || season < u.seasonsToDiv1Champ)) {
+            u.seasonsToDiv1Champ = season;
+          }
+        }
         if (div < u.bestDivision) u.bestDivision = div;
       }
-      setCareerRows([...byUser.values()].sort((a, b) => a.bestDivision - b.bestDivision || b.championships - a.championships));
+      setCareerRows([...byUser.values()].sort((a, b) => {
+        if (a.seasonsToDiv1Champ !== null && b.seasonsToDiv1Champ !== null) return a.seasonsToDiv1Champ - b.seasonsToDiv1Champ;
+        if (a.seasonsToDiv1Champ !== null) return -1;
+        if (b.seasonsToDiv1Champ !== null) return 1;
+        return a.bestDivision - b.bestDivision || b.championships - a.championships;
+      }));
     }
 
     setLoading(false);
@@ -284,6 +296,7 @@ export default function RanglijstPage() {
                       <th className="px-3 py-3 text-right">Seizoenen</th>
                       <th className="px-3 py-3 text-right">Titels</th>
                       <th className="px-3 py-3 text-right">Beste divisie</th>
+                      <th className="px-3 py-3 text-right">Div 1 in</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -301,6 +314,15 @@ export default function RanglijstPage() {
                           }`}>
                             Div {r.bestDivision}
                           </span>
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          {r.seasonsToDiv1Champ !== null ? (
+                            <span className="inline-flex items-center justify-center rounded-full bg-amber-100/80 px-2.5 py-1 text-[10px] font-black text-amber-700">
+                              {r.seasonsToDiv1Champ} szn
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-300">—</span>
+                          )}
                         </td>
                       </tr>
                     ))}
