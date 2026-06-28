@@ -344,49 +344,10 @@ function TransferPhase() {
   const [transfersDone, setTransfersDone] = useState(false);
 
   if (!lobby || !me || !userId) return null;
-
-  const allReady = lobby.players.every((p) => p.ready);
-
-  if (me.ready && !transfersDone) {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-8">
-        <WaitingForOthers lobby={lobby} userId={userId} title="Wacht op andere spelers…" />
-      </div>
-    );
-  }
-
-  if (allReady && !transfersDone) {
-    return (
-      <div className="mx-auto max-w-lg px-4 py-8 text-center">
-        <div className="card p-6">
-          <div className="text-2xl mb-2">🔄</div>
-          <h2 className="text-lg font-black text-slate-800 mb-2">Transferwindow</h2>
-          <p className="text-sm text-slate-500 mb-4">
-            {divisionLabel(me.current_division)} · Seizoen {lobby.current_season + 1}
-          </p>
-          <button
-            disabled={!loaded}
-            onClick={() => {
-              setTransfersDone(true);
-              const remaining = me.squad.filter((p) => !playersToReplace.has(p.name));
-              startCareerSeason(me.current_division, remaining);
-            }}
-            className="btn-primary w-full"
-          >
-            Start transfers
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (transfersDone && phase === "start") {
-    const remaining = me.squad.filter((p) => !playersToReplace.has(p.name));
-    startCareerSeason(me.current_division, remaining);
-    return null;
-  }
+  if (!me.squad || me.squad.length === 0) return null;
 
   if (transfersDone) {
+    if (phase === "play") return <OnlinePlayView />;
     return null;
   }
 
@@ -398,6 +359,7 @@ function TransferPhase() {
   };
 
   const confirmTransfers = () => {
+    if (!loaded) return;
     const remaining = me.squad.filter((p) => !playersToReplace.has(p.name));
     setTransfersDone(true);
     startCareerSeason(me.current_division, remaining);
@@ -517,10 +479,14 @@ export default function OnlineCarriereLobbyPage() {
     setSimulated(false);
   }, [lobby?.current_season]);
 
+  // Track which season we last processed to avoid re-triggering
+  const [lastProcessedSeason, setLastProcessedSeason] = useState(0);
+
   // Sync game phase with lobby status
   useEffect(() => {
-    if (!lobby || !userId) return;
+    if (!lobby || !userId || !indexLoaded) return;
     const me = lobby.players.find((p) => p.user_id === userId);
+    if (!me) return;
 
     if (lobby.status === "waiting") {
       setGamePhase("lobby");
@@ -530,80 +496,80 @@ export default function OnlineCarriereLobbyPage() {
     if (lobby.status !== "drafting") return;
 
     // If we're showing result, stay there
-    if (gamePhase === "result" && result && simulated) return;
+    if (gamePhase === "result" && simulated) return;
     if (gamePhase === "simulating") return;
 
     const allReady = lobby.players.every((p) => p.ready);
 
-    if (allReady && !simulated && me && indexLoaded) {
-      // Everyone is ready — run the shared simulation
-      setGamePhase("simulating");
+    // Everyone ready + not yet simulated this season → run shared sim
+    if (allReady && !simulated && me.squad.length > 0) {
+      try {
+        setGamePhase("simulating");
 
-      const myDiv = me.current_division;
-      const divPlayers = lobby.players.filter((p) => p.current_division === myDiv && p.squad.length > 0);
+        const myDiv = me.current_division;
+        const divPlayers = lobby.players.filter((p) => p.current_division === myDiv && p.squad.length > 0);
 
-      const userTeams: OnlineUserTeam[] = divPlayers.map((p) => ({
-        userId: p.user_id,
-        name: p.team_name || p.username,
-        lineup: buildLineupFromSquad(p.squad),
-      }));
+        const userTeams: OnlineUserTeam[] = divPlayers.map((p) => ({
+          userId: p.user_id,
+          name: p.team_name || p.username,
+          lineup: buildLineupFromSquad(p.squad),
+        }));
 
-      const [minR, maxR] = getDivisionRatingRange(myDiv);
-      const mid = (minR + maxR) / 2;
-      const CURRENT_SEASON = "2025-2026";
-      const all = index.filter((c) => c.season === CURRENT_SEASON);
-      const seen = new Set(divPlayers.map((p) => p.team_name || p.username));
-      const candidates: ClubSeasonLite[] = [];
-      const sorted = [...all].sort((a, b) => Math.abs(a.teamRating - mid) - Math.abs(b.teamRating - mid));
-      for (const c of sorted) {
-        if (seen.has(c.club)) continue;
-        seen.add(c.club);
-        candidates.push({ ...c, teamRating: Math.max(minR, Math.min(maxR, c.teamRating)) });
-        if (candidates.length >= 20 - userTeams.length) break;
-      }
+        const [minR, maxR] = getDivisionRatingRange(myDiv);
+        const mid = (minR + maxR) / 2;
+        const CURRENT_SEASON = "2025-2026";
+        const all = index.filter((c) => c.season === CURRENT_SEASON);
+        const seen = new Set(divPlayers.map((p) => p.team_name || p.username));
+        const candidates: ClubSeasonLite[] = [];
+        const sorted = [...all].sort((a, b) => Math.abs(a.teamRating - mid) - Math.abs(b.teamRating - mid));
+        for (const c of sorted) {
+          if (seen.has(c.club)) continue;
+          seen.add(c.club);
+          candidates.push({ ...c, teamRating: Math.max(minR, Math.min(maxR, c.teamRating)) });
+          if (candidates.length >= 20 - userTeams.length) break;
+        }
 
-      const seed = oc.getSeasonSeed(myDiv);
-      const simResult = simulateOnlineSeason(userTeams, candidates, seed);
-      const myResult = simResult.userResults.get(userId);
+        const seed = oc.getSeasonSeed(myDiv);
+        const simResult = simulateOnlineSeason(userTeams, candidates, seed);
+        const myResult = simResult.userResults.get(userId);
 
-      if (myResult) {
-        // Inject result into game store
-        const gameStore = useGame.getState();
-        (useGame as unknown as { setState: (s: Partial<typeof gameStore>) => void }).setState({
-          result: myResult,
-          phase: "simulating",
-          gameMode: "career",
-        });
-
-        setTimeout(() => {
-          (useGame as unknown as { setState: (s: Partial<typeof gameStore>) => void }).setState({
-            phase: "result",
+        if (myResult) {
+          useGame.setState({
+            result: myResult,
+            phase: "simulating" as const,
+            gameMode: "career" as const,
           });
-          setGamePhase("result");
-          setSimulated(true);
-        }, 3000);
+
+          setTimeout(() => {
+            useGame.setState({ phase: "result" as const });
+            setGamePhase("result");
+            setSimulated(true);
+            setLastProcessedSeason(lobby.current_season);
+          }, 3000);
+        }
+      } catch (e) {
+        console.error("Simulation error:", e);
+        setGamePhase("transfer");
       }
       return;
     }
 
-    if (me?.ready && !allReady) {
-      // I'm ready, waiting for others
+    // I'm ready but others aren't — show waiting screen
+    if (me.ready && !allReady) {
       setGamePhase("drafting");
       return;
     }
 
-    // Need to draft or transfer
-    if (!me?.ready) {
-      if (me && me.squad.length > 0 && lobby.current_season > 1 && gamePhase !== "drafting") {
+    // I need to draft or transfer
+    if (!me.ready) {
+      if (me.squad.length > 0 && lobby.current_season > 1) {
         setGamePhase("transfer");
-      } else if (gamePhase !== "drafting" || phase === "start") {
+      } else {
         setGamePhase("drafting");
-        if (indexLoaded && me) {
-          startCareerSeason(me.current_division, me.squad.length > 0 ? me.squad : undefined);
-        }
+        startCareerSeason(me.current_division, me.squad.length > 0 ? me.squad : undefined);
       }
     }
-  }, [lobby?.status, lobby?.current_season, lobby?.players, phase, result, indexLoaded, simulated, userId]);
+  }, [lobby?.status, lobby?.current_season, lobby?.players?.map(p => `${p.ready}`).join(","), indexLoaded, simulated, userId]);
 
   if (!userId) {
     router.push("/online-carriere");
