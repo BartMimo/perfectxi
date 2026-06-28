@@ -613,7 +613,7 @@ export default function OnlineCarriereLobbyPage() {
   if (loading && !lobby) {
     return (
       <main className="min-h-screen w-full pb-12">
-        <Header />
+        <Header backHref="/online-carriere" />
         <div className="flex items-center justify-center py-20">
           <div className="text-slate-400 font-bold">Laden…</div>
         </div>
@@ -625,7 +625,7 @@ export default function OnlineCarriereLobbyPage() {
   if (error || !lobby) {
     return (
       <main className="min-h-screen w-full pb-12">
-        <Header />
+        <Header backHref="/online-carriere" />
         <div className="mx-auto max-w-lg px-4 py-20 text-center">
           <div className="text-4xl mb-4">😕</div>
           <h1 className="text-xl font-black text-slate-800 mb-2">Lobby niet gevonden</h1>
@@ -646,7 +646,7 @@ export default function OnlineCarriereLobbyPage() {
     }
     return (
       <main className="min-h-screen w-full pb-12">
-        <Header />
+        <Header backHref="/online-carriere" />
         <div className="flex items-center justify-center py-20">
           <div className="text-slate-400 font-bold">Joinen…</div>
         </div>
@@ -657,7 +657,7 @@ export default function OnlineCarriereLobbyPage() {
 
   return (
     <main className="min-h-screen w-full pb-12">
-      {gamePhase !== "lobby" && <Header showMeta />}
+      {gamePhase !== "lobby" && <Header showMeta backHref="/online-carriere" />}
 
       {gamePhase === "lobby" && <WaitingRoom />}
 

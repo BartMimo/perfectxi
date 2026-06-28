@@ -5,7 +5,7 @@ import { leagueName } from "@/lib/leagues";
 import { getFormation } from "@/lib/formations";
 import { useCareer, divisionLabel } from "@/lib/career";
 
-export default function Header({ showMeta = false }: { showMeta?: boolean }) {
+export default function Header({ showMeta = false, backHref }: { showMeta?: boolean; backHref?: string }) {
   const newGame = useGame((s) => s.newGame);
   const leagueCode = useGame((s) => s.leagueCode);
   const gameMode = useGame((s) => s.gameMode);
@@ -16,11 +16,18 @@ export default function Header({ showMeta = false }: { showMeta?: boolean }) {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/40 bg-white/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3">
-        <button onClick={newGame} className="text-base font-black tracking-tight">
-          <span className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
-            Perfect XI
-          </span>
-        </button>
+        <div className="flex items-center gap-2">
+          {backHref && (
+            <a href={backHref} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition text-sm">
+              ←
+            </a>
+          )}
+          <a href="/" className="text-base font-black tracking-tight">
+            <span className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
+              Perfect XI
+            </span>
+          </a>
+        </div>
         {showMeta && (
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
             {gameMode === "career" ? (
