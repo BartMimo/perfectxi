@@ -268,13 +268,13 @@ export const useGame = create<GameState>((set, get) => ({
   },
 
   startCL: () => {
-    const { formationKey, index, difficulty, ratingMode } = get();
+    const { formationKey, index, difficulty } = get();
     set({
       phase: "play",
       gameMode: "cl",
       leagueCode: null,
       formationKey,
-      ratingMode,
+      ratingMode: "prime",
       difficulty,
       slots: buildSlots(formationKey),
       opponents: buildCLOpponents(index),

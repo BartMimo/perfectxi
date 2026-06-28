@@ -65,8 +65,9 @@ export default function ProfielPage() {
       .eq("user_id", userId);
 
     if (data && data.length > 0) {
+      const nonCareer = data.filter((r: Record<string, unknown>) => !r.is_career);
       const s: Stats = {
-        games: data.length,
+        games: nonCareer.length,
         champions: 0,
         bestPoints: 0,
         bestGf: 0,
@@ -77,11 +78,10 @@ export default function ProfielPage() {
         champLeagues: new Set(),
         div1Champ: false,
       };
-      for (const r of data) {
+      for (const r of nonCareer) {
         if (r.position === 1) {
           s.champions++;
           if (r.league_code) s.champLeagues.add(r.league_code as string);
-          if (r.is_career && r.career_division === 1) s.div1Champ = true;
         }
         s.bestPoints = Math.max(s.bestPoints, r.points);
         s.bestGf = Math.max(s.bestGf, r.goals_for);
@@ -90,6 +90,18 @@ export default function ProfielPage() {
         s.bestValue = Math.max(s.bestValue, r.team_value);
         for (const a of (r.achievements ?? [])) {
           s.unlockedAchievements.add(a);
+        }
+      }
+      // Check div1 champ from career results
+      for (const r of data) {
+        if ((r as Record<string, unknown>).is_career && r.career_division === 1 && r.position === 1) {
+          s.div1Champ = true;
+        }
+        // Career achievements still count
+        if ((r as Record<string, unknown>).is_career) {
+          for (const a of (r.achievements ?? [])) {
+            s.unlockedAchievements.add(a);
+          }
         }
       }
       setStats(s);

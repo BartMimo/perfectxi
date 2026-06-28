@@ -17,6 +17,9 @@ interface GameRow {
   team_rating: number;
   team_value: number;
   points: number;
+  won: number;
+  drawn: number;
+  lost: number;
   goals_for: number;
   goals_against: number;
   goal_diff: number;
@@ -64,7 +67,8 @@ export default function RanglijstPage() {
     setLoading(true);
     const { data } = await supabase
       .from("results")
-      .select("id, user_id, formation, team_rating, team_value, points, goals_for, goals_against, goal_diff, league_name, position, achievements, users!inner(username)")
+      .select("id, user_id, formation, team_rating, team_value, points, won, drawn, lost, goals_for, goals_against, goal_diff, league_name, position, achievements, users!inner(username)")
+      .or("is_career.is.null,is_career.eq.false")
       .limit(500);
 
     if (data) {
@@ -75,6 +79,9 @@ export default function RanglijstPage() {
         team_rating: r.team_rating as number,
         team_value: r.team_value as number,
         points: r.points as number,
+        won: r.won as number,
+        drawn: r.drawn as number,
+        lost: r.lost as number,
         goals_for: r.goals_for as number,
         goals_against: r.goals_against as number,
         goal_diff: r.goal_diff as number,
@@ -374,6 +381,7 @@ export default function RanglijstPage() {
                       <th className="px-3 py-3 text-left">Competitie</th>
                       <th className="px-3 py-3 text-left">Formatie</th>
                       <th className="px-3 py-3 text-right">Ptn</th>
+                      <th className="px-3 py-3 text-center">Record</th>
                       <th className="px-3 py-3 text-right">GV</th>
                       <th className="px-3 py-3 text-right">GT</th>
                       <th className="px-3 py-3 text-right">Rating</th>
@@ -395,6 +403,7 @@ export default function RanglijstPage() {
                           </span>
                         </td>
                         <td className={`px-3 py-3 text-right tabular-nums font-semibold ${recordSort === "points" ? "font-black text-emerald-600" : ""}`}>{r.points}</td>
+                        <td className="px-3 py-3 text-center tabular-nums text-[11px] text-slate-500">{r.won}-{r.drawn}-{r.lost}</td>
                         <td className={`px-3 py-3 text-right tabular-nums ${recordSort === "goals_for" ? "font-black text-emerald-600" : ""}`}>{r.goals_for}</td>
                         <td className={`px-3 py-3 text-right tabular-nums ${recordSort === "goals_against" ? "font-black text-emerald-600" : ""}`}>{r.goals_against}</td>
                         <td className={`px-3 py-3 text-right tabular-nums ${recordSort === "team_rating" ? "font-black text-emerald-600" : ""}`}>{r.team_rating.toFixed(1)}</td>
