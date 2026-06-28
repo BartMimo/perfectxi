@@ -1,10 +1,14 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 
 export default function Footer() {
   const username = useAuth((s) => s.username);
   const logout = useAuth((s) => s.logout);
+  const restore = useAuth((s) => s.restore);
+
+  useEffect(() => { restore(); }, [restore]);
 
   return (
     <footer className="mt-8 px-4 text-center">

@@ -42,10 +42,16 @@ export default function ResultView() {
   }, [result, userId, leagueCode, saved, slots, formationKey, ratingMode, difficulty]);
 
   async function shareResult() {
-    if (!cardRef.current || sharing) return;
+    console.log("shareResult called, sharing:", sharing, "cardRef:", !!cardRef.current);
+    if (sharing) return;
     setSharing(true);
     try {
-      const dataUrl = await toPng(cardRef.current, {
+      const node = cardRef.current;
+      if (!node) {
+        alert("Deelkaart kon niet geladen worden.");
+        return;
+      }
+      const dataUrl = await toPng(node, {
         pixelRatio: 2,
         cacheBust: true,
         skipFonts: true,
@@ -63,10 +69,16 @@ export default function ResultView() {
         const a = document.createElement("a");
         a.href = dataUrl;
         a.download = "perfect-xi.png";
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
       }
-    } catch {
-      /* gebruiker annuleerde */
+    } catch (err: unknown) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      if (e.name !== "AbortError") {
+        console.error("Share failed:", e);
+        alert("Delen mislukt: " + e.message);
+      }
     } finally {
       setSharing(false);
     }
