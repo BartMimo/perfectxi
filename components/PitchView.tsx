@@ -1,6 +1,8 @@
 "use client";
 
-import { useGame, validTargets, placementTargets, type Slot } from "@/lib/store";
+import { useMemo } from "react";
+import { filledCount, useGame, validTargets, placementTargets, type Slot } from "@/lib/store";
+import { POS_BAND, type Band } from "@/lib/positions";
 import { POS_LABEL } from "@/lib/positions";
 import { ratingColor, shortSeason } from "./ui";
 
@@ -143,6 +145,66 @@ export default function PitchView() {
           <button onClick={() => onSlotClick(selectedSlotId)} className="underline">
             annuleer
           </button>
+        </div>
+      )}
+
+      <LineRatings slots={slots} hideRating={hideRating} />
+    </div>
+  );
+}
+
+function LineRatings({ slots, hideRating }: { slots: Slot[]; hideRating: boolean }) {
+  const opponents = useGame((s) => s.opponents);
+
+  const stats = useMemo(() => {
+    const bands: Band[] = ["GK", "DEF", "MID", "ATT"];
+    const labels: Record<Band, string> = { GK: "GK", DEF: "DEF", MID: "MID", ATT: "ATT" };
+    const result: { band: Band; label: string; avg: number; count: number }[] = [];
+    for (const band of bands) {
+      const players = slots.filter((s) => s.player && POS_BAND[s.pos] === band).map((s) => s.player!);
+      if (players.length === 0) {
+        result.push({ band, label: labels[band], avg: 0, count: 0 });
+      } else {
+        const avg = Math.round(players.reduce((s, p) => s + p.overall, 0) / players.length);
+        result.push({ band, label: labels[band], avg, count: players.length });
+      }
+    }
+    return result;
+  }, [slots]);
+
+  const prediction = useMemo(() => {
+    const filled = slots.filter((s) => s.player);
+    if (filled.length < 11 || opponents.length === 0) return null;
+    const teamOvr = filled.reduce((s, sl) => s + sl.player!.overall, 0) / filled.length;
+    const sorted = [...opponents].sort((a, b) => b.teamRating - a.teamRating);
+    let pos = 1;
+    for (const opp of sorted) {
+      if (opp.teamRating > teamOvr) pos++;
+    }
+    return pos;
+  }, [slots, opponents]);
+
+  const hasFilled = slots.some((s) => s.player);
+  if (!hasFilled) return null;
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+      {stats.map((s) =>
+        s.count > 0 ? (
+          <div key={s.band} className="flex items-center gap-1.5 rounded-full bg-white/70 border border-slate-200/60 px-3 py-1.5 backdrop-blur">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{s.label}</span>
+            <span className={`text-xs font-black tabular-nums ${hideRating ? "text-slate-400" : "text-slate-700"}`}>
+              {hideRating ? "?" : s.avg}
+            </span>
+          </div>
+        ) : null,
+      )}
+      {prediction && !hideRating && (
+        <div className="flex items-center gap-1.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 px-3 py-1.5 backdrop-blur">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Verwacht</span>
+          <span className="text-xs font-black tabular-nums text-emerald-700">
+            ~{prediction}e
+          </span>
         </div>
       )}
     </div>
