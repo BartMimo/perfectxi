@@ -35,9 +35,14 @@ export default function SquadPicker() {
     [squad, ratingMode],
   );
 
+  const draftedNames = useMemo(
+    () => new Set(slots.filter((s) => s.player).map((s) => s.player!.name)),
+    [slots],
+  );
+
   if (!landed) return null;
 
-  const fits = (p: Player) => openPos.some((pos) => canPlayerPlay(p, pos));
+  const fits = (p: Player) => !draftedNames.has(p.name) && openPos.some((pos) => canPlayerPlay(p, pos));
   const anyFits = players.some(fits);
 
   if (pendingPlayer) {

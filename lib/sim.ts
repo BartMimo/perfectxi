@@ -257,8 +257,8 @@ export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResu
   });
   const user: SimTeam = {
     name: "Jouw XI",
-    attack: strength.attack,
-    defense: strength.defense,
+    attack: strength.overall,
+    defense: strength.overall,
     isUser: true,
   };
   const teams: SimTeam[] = [user, ...opponents];

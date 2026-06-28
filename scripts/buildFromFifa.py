@@ -20,6 +20,19 @@ LEAGUE_MAP = {
     "Primeira Liga": ("PO1", "Primeira Liga"),
 }
 
+# Only accept these league_ids to avoid name collisions (e.g. Russian "Premier League")
+VALID_LEAGUE_IDS = {
+    "13", "13.0",       # English Premier League
+    "14", "14.0",       # English Championship (has PL-promoted clubs)
+    "60", "60.0", "61", "61.0",  # English lower (some PL clubs appear here)
+    "53", "53.0",       # La Liga
+    "31", "31.0",       # Serie A (Italy)
+    "19", "19.0",       # Bundesliga
+    "16", "16.0",       # Ligue 1
+    "10", "10.0",       # Eredivisie
+    "308", "308.0",     # Liga Portugal / Primeira Liga
+}
+
 VERSION_TO_SEASON = {
     "15": "2014-2015", "15.0": "2014-2015",
     "16": "2015-2016", "16.0": "2015-2016",
@@ -94,6 +107,7 @@ def parse_row(row, source):
         overall = safe_int(row.get("overall_rating"))
         club = row.get("club_name", "")
         league = row.get("club_league_name", "")
+        league_id = row.get("club_league_id", "")
         version = "25"
         value = safe_int(row.get("value"))
         positions_raw = row.get("positions", "")
@@ -102,11 +116,15 @@ def parse_row(row, source):
         overall = safe_int(row.get("overall"))
         club = row.get("club_name", "")
         league = row.get("league_name", "")
+        league_id = row.get("league_id", "")
         version = row.get("fifa_version", "")
         value = safe_int(row.get("value_eur"))
         positions_raw = row.get("player_positions", "")
 
     if not name or not club or not league or overall < 1:
+        return None
+
+    if league_id not in VALID_LEAGUE_IDS:
         return None
 
     league_info = LEAGUE_MAP.get(league)
