@@ -112,7 +112,7 @@ export default function StartView() {
             ))}
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
-            Je draft uit clubs van deze competitie (2012-2026) en speelt tegen de
+            Je draft uit clubs van deze competitie (2014-2026) en speelt tegen de
             ploegen van dit seizoen.
           </p>
         </section>
