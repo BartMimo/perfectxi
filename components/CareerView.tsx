@@ -3,13 +3,19 @@
 import { useEffect } from "react";
 import { useCareer, divisionLabel } from "@/lib/career";
 import { useGame } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 
 export function CareerStartCard() {
   const career = useCareer();
   const startCareerSeason = useGame((s) => s.startCareerSeason);
   const loaded = useGame((s) => s.index.length > 0);
+  const userId = useAuth((s) => s.userId);
 
-  useEffect(() => { career.restore(); }, []);
+  useEffect(() => {
+    if (userId) career.loadCareer(userId);
+  }, [userId]);
+
+  if (career.loading) return null;
 
   if (career.active) {
     return (
@@ -45,15 +51,29 @@ export function CareerStartCard() {
         <div className="flex gap-2">
           <button
             disabled={!loaded}
-            onClick={() => startCareerSeason(career.currentDivision)}
+            onClick={() => startCareerSeason(career.currentDivision, career.squad.length > 0 ? career.squad : undefined)}
             className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:transform-none"
           >
             {loaded ? `Speel seizoen ${career.season}` : "Laden…"}
           </button>
-          <button onClick={career.endCareer} className="btn-secondary !px-4 !py-3 !text-xs text-rose-500">
+          <button onClick={() => userId && career.endCareer(userId)} className="btn-secondary !px-4 !py-3 !text-xs text-rose-500">
             Stop
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return (
+      <div className="card p-5 border-2 border-indigo-200/40 bg-gradient-to-br from-indigo-50/40 to-purple-50/30">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">🏟️</span>
+          <span className="text-xs font-black uppercase tracking-widest text-indigo-700">Carrièremodus</span>
+        </div>
+        <p className="text-sm text-slate-500">
+          Log in om een carrière te starten.
+        </p>
       </div>
     );
   }
@@ -70,7 +90,7 @@ export function CareerStartCard() {
       </p>
       <button
         disabled={!loaded}
-        onClick={career.startCareer}
+        onClick={() => career.startCareer(userId)}
         className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:transform-none"
       >
         {loaded ? "Start carrière" : "Laden…"}
@@ -82,6 +102,7 @@ export function CareerStartCard() {
 export function TransferWindow() {
   const career = useCareer();
   const startCareerSeason = useGame((s) => s.startCareerSeason);
+  const userId = useAuth((s) => s.userId);
 
   if (!career.transferring) return null;
 
@@ -131,6 +152,10 @@ export function TransferWindow() {
           <button
             onClick={() => {
               const remaining = career.confirmTransfers();
+              if (userId) {
+                // Save remaining squad to DB before starting new season
+                career.setSquad(userId, remaining);
+              }
               startCareerSeason(career.currentDivision, remaining);
             }}
             className="btn-primary flex-1"
@@ -148,12 +173,12 @@ export function CareerResultBanner() {
   const result = useGame((s) => s.result);
   const slots = useGame((s) => s.slots);
   const gameMode = useGame((s) => s.gameMode);
+  const userId = useAuth((s) => s.userId);
 
-  // Save squad to career when result is shown
   useEffect(() => {
-    if (gameMode === "career" && result && career.active && slots.every((s) => s.player)) {
+    if (gameMode === "career" && result && career.active && userId && slots.every((s) => s.player)) {
       const squad = slots.map((s) => s.player!);
-      career.setSquad(squad);
+      career.setSquad(userId, squad);
     }
   }, [gameMode, result]);
 
@@ -165,7 +190,9 @@ export function CareerResultBanner() {
   const champion = position === 1;
 
   const handleContinue = () => {
-    career.finishSeason(position, result.userRow.points, result.userRow.gf, result.userRow.ga);
+    if (userId) {
+      career.finishSeason(userId, position, result.userRow.points, result.userRow.gf, result.userRow.ga);
+    }
     career.startTransferWindow();
   };
 

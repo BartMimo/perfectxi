@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { supabase } from "./supabase";
 import type { DraftedPlayer } from "./types";
 
 export interface CareerSeason {
@@ -19,31 +20,30 @@ export interface CareerState {
   squad: DraftedPlayer[];
   history: CareerSeason[];
   championships: number;
-  transfersLeft: number;
   transferring: boolean;
   playersToReplace: Set<string>;
+  loading: boolean;
 
-  startCareer: () => void;
-  setSquad: (squad: DraftedPlayer[]) => void;
-  finishSeason: (position: number, points: number, gf: number, ga: number) => void;
+  startCareer: (userId: string) => Promise<void>;
+  loadCareer: (userId: string) => Promise<void>;
+  setSquad: (userId: string, squad: DraftedPlayer[]) => void;
+  finishSeason: (userId: string, position: number, points: number, gf: number, ga: number) => void;
   startTransferWindow: () => void;
   toggleReplace: (playerName: string) => void;
   confirmTransfers: () => DraftedPlayer[];
-  endCareer: () => void;
-  restore: () => void;
+  endCareer: (userId: string) => void;
 }
 
-const STORAGE_KEY = "pxi_career";
-
-function saveToStorage(state: Pick<CareerState, "active" | "currentDivision" | "season" | "squad" | "history" | "championships">) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify({
-    active: state.active,
-    currentDivision: state.currentDivision,
+function saveToDb(userId: string, state: { currentDivision: number; season: number; squad: DraftedPlayer[]; history: CareerSeason[]; championships: number }) {
+  supabase.from("careers").upsert({
+    user_id: userId,
+    current_division: state.currentDivision,
     season: state.season,
+    championships: state.championships,
     squad: state.squad,
     history: state.history,
-    championships: state.championships,
-  }));
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "user_id" }).then(() => {});
 }
 
 export const useCareer = create<CareerState>((set, get) => ({
@@ -53,42 +53,54 @@ export const useCareer = create<CareerState>((set, get) => ({
   squad: [],
   history: [],
   championships: 0,
-  transfersLeft: 0,
   transferring: false,
   playersToReplace: new Set(),
+  loading: false,
 
-  startCareer: () => {
+  startCareer: async (userId) => {
     const state = {
-      active: true,
       currentDivision: 10,
       season: 1,
-      squad: [],
-      history: [],
+      squad: [] as DraftedPlayer[],
+      history: [] as CareerSeason[],
       championships: 0,
-      transfersLeft: 0,
-      transferring: false,
-      playersToReplace: new Set<string>(),
     };
-    set(state);
-    saveToStorage(state);
+    set({ active: true, ...state, transferring: false, playersToReplace: new Set() });
+    saveToDb(userId, state);
   },
 
-  setSquad: (squad) => {
+  loadCareer: async (userId) => {
+    set({ loading: true });
+    const { data } = await supabase
+      .from("careers")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (data) {
+      set({
+        active: true,
+        currentDivision: data.current_division,
+        season: data.season,
+        squad: (data.squad as DraftedPlayer[]) ?? [],
+        history: (data.history as CareerSeason[]) ?? [],
+        championships: data.championships ?? 0,
+        loading: false,
+      });
+    } else {
+      set({ active: false, loading: false });
+    }
+  },
+
+  setSquad: (userId, squad) => {
     set({ squad });
     const s = get();
-    saveToStorage(s);
+    saveToDb(userId, { currentDivision: s.currentDivision, season: s.season, squad, history: s.history, championships: s.championships });
   },
 
-  finishSeason: (position, points, gf, ga) => {
+  finishSeason: (userId, position, points, gf, ga) => {
     const s = get();
-    const entry: CareerSeason = {
-      season: s.season,
-      division: s.currentDivision,
-      position,
-      points,
-      gf,
-      ga,
-    };
+    const entry: CareerSeason = { season: s.season, division: s.currentDivision, position, points, gf, ga };
     const history = [...s.history, entry];
     let newDiv = s.currentDivision;
     let championships = s.championships;
@@ -100,23 +112,16 @@ export const useCareer = create<CareerState>((set, get) => ({
       if (newDiv < 10) newDiv++;
     }
 
-    const newState = {
-      ...s,
-      history,
-      championships,
-      currentDivision: newDiv,
-      season: s.season + 1,
-    };
-    set(newState);
-    saveToStorage(newState);
+    set({ history, championships, currentDivision: newDiv, season: s.season + 1 });
+    saveToDb(userId, { currentDivision: newDiv, season: s.season + 1, squad: s.squad, history, championships });
   },
 
   startTransferWindow: () => {
-    set({ transferring: true, transfersLeft: 2, playersToReplace: new Set() });
+    set({ transferring: true, playersToReplace: new Set() });
   },
 
   toggleReplace: (playerName) => {
-    const { playersToReplace, transfersLeft } = get();
+    const { playersToReplace } = get();
     const next = new Set(playersToReplace);
     if (next.has(playerName)) {
       next.delete(playerName);
@@ -130,12 +135,10 @@ export const useCareer = create<CareerState>((set, get) => ({
     const { squad, playersToReplace } = get();
     const remaining = squad.filter((p) => !playersToReplace.has(p.name));
     set({ transferring: false, playersToReplace: new Set(), squad: remaining });
-    const s = get();
-    saveToStorage(s);
     return remaining;
   },
 
-  endCareer: () => {
+  endCareer: (userId) => {
     set({
       active: false,
       currentDivision: 10,
@@ -143,31 +146,13 @@ export const useCareer = create<CareerState>((set, get) => ({
       squad: [],
       history: [],
       championships: 0,
-      transfersLeft: 0,
       transferring: false,
       playersToReplace: new Set(),
     });
-    localStorage.removeItem(STORAGE_KEY);
-  },
-
-  restore: () => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      set({
-        active: data.active ?? false,
-        currentDivision: data.currentDivision ?? 10,
-        season: data.season ?? 1,
-        squad: data.squad ?? [],
-        history: data.history ?? [],
-        championships: data.championships ?? 0,
-      });
-    } catch {}
+    supabase.from("careers").delete().eq("user_id", userId).then(() => {});
   },
 }));
 
-// Division rating ranges: div 10 = weakest, div 1 = strongest
 const DIV_RATINGS: Record<number, [number, number]> = {
   10: [63, 69],
   9: [66, 72],

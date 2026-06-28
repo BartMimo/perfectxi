@@ -17,6 +17,7 @@ interface Stats {
   bestValue: number;
   unlockedAchievements: Set<string>;
   champLeagues: Set<string>;
+  div1Champ: boolean;
 }
 
 export default function ProfielPage() {
@@ -60,7 +61,7 @@ export default function ProfielPage() {
 
     const { data } = await supabase
       .from("results")
-      .select("points, goals_for, goals_against, team_rating, team_value, position, achievements, league_code")
+      .select("points, goals_for, goals_against, team_rating, team_value, position, achievements, league_code, is_career, career_division")
       .eq("user_id", userId);
 
     if (data && data.length > 0) {
@@ -74,11 +75,13 @@ export default function ProfielPage() {
         bestValue: 0,
         unlockedAchievements: new Set(),
         champLeagues: new Set(),
+        div1Champ: false,
       };
       for (const r of data) {
         if (r.position === 1) {
           s.champions++;
           if (r.league_code) s.champLeagues.add(r.league_code as string);
+          if (r.is_career && r.career_division === 1) s.div1Champ = true;
         }
         s.bestPoints = Math.max(s.bestPoints, r.points);
         s.bestGf = Math.max(s.bestGf, r.goals_for);
@@ -158,9 +161,12 @@ export default function ProfielPage() {
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ALL_ACHIEVEMENTS.map((a) => {
                   const isChampion = a.id === "champion";
+                  const isDiv1 = a.id === "div1champ";
                   const unlocked = isChampion
                     ? stats.champLeagues.size >= LEAGUES.length
-                    : stats.unlockedAchievements.has(a.id);
+                    : isDiv1
+                      ? stats.div1Champ
+                      : stats.unlockedAchievements.has(a.id);
                   const pct = achievementPcts[a.id] ?? 0;
                   const expanded = expandedAch === a.id;
                   return (

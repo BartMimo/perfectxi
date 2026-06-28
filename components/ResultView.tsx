@@ -40,13 +40,15 @@ export default function ResultView() {
   }, [result, leagueCode]);
 
   useEffect(() => {
-    if (!result || !userId || !leagueCode || saved) return;
+    if (!result || !userId || saved) return;
+    const lc = leagueCode ?? "DIV";
+    const ln = leagueCode ? leagueName(leagueCode) : `Divisie ${career.currentDivision}`;
     saveResult({
       userId,
       result,
       slots,
-      leagueCode,
-      leagueName: leagueName(leagueCode),
+      leagueCode: lc,
+      leagueName: ln,
       formation: formationKey,
       ratingMode,
       difficulty,
