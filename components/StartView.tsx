@@ -136,6 +136,19 @@ export default function StartView() {
         <CareerStartCard />
       </div>
 
+      {/* Online Carrière */}
+      <div className="mt-4">
+        <a href="/online-carriere" className="block card p-5 border-2 border-cyan-200/40 bg-gradient-to-br from-cyan-50/40 to-blue-50/30 hover:shadow-md transition">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🌐</span>
+            <span className="text-xs font-black uppercase tracking-widest text-cyan-700">Online Carrière</span>
+          </div>
+          <p className="text-sm text-slate-500">
+            Speel de carrièremodus met vrienden! Race samen naar Divisie 1.
+          </p>
+        </a>
+      </div>
+
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
         {/* Formatie */}
         <section className="card p-5 sm:col-span-2">
