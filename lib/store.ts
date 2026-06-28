@@ -275,7 +275,6 @@ export const useGame = create<GameState>((set, get) => ({
       landed: null,
       pendingPlayer: null,
       selectedSlotId: null,
-      rerollsLeft: rerollsFor(difficulty), // nieuwe pick → rerolls weer beschikbaar
     });
   },
 

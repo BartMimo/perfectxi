@@ -1,0 +1,189 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
+import Footer from "@/components/Footer";
+
+const ALL_ACHIEVEMENTS: { id: string; label: string; icon: string }[] = [
+  { id: "champion", label: "Kampioen", icon: "🏆" },
+  { id: "invincible", label: "Invincible", icon: "🛡️" },
+  { id: "100pts", label: "100+ punten", icon: "💯" },
+  { id: "clean20", label: "20+ clean sheets", icon: "🧤" },
+  { id: "gf100", label: "100+ goals", icon: "⚽" },
+  { id: "ga20", label: "< 20 tegendoelpunten", icon: "🔒" },
+  { id: "gd80", label: "Doelsaldo 80+", icon: "📊" },
+  { id: "unbeaten", label: "Ongeslagen", icon: "💪" },
+  { id: "cl", label: "Champions League", icon: "⭐" },
+  { id: "topscorer30", label: "Topscorer 30+", icon: "🔥" },
+  { id: "nolosses", label: "Nul verliespartijen", icon: "🚫" },
+  { id: "win30", label: "30+ overwinningen", icon: "🎖️" },
+  { id: "relegation", label: "Degradatie overleefd", icon: "😅" },
+  { id: "gf50", label: "50+ goals", icon: "🥅" },
+  { id: "assister20", label: "Assistkoning 20+", icon: "🎯" },
+];
+
+interface Stats {
+  games: number;
+  champions: number;
+  bestPoints: number;
+  bestGf: number;
+  leastGa: number;
+  bestRating: number;
+  bestValue: number;
+  unlockedAchievements: Set<string>;
+}
+
+export default function ProfielPage() {
+  const userId = useAuth((s) => s.userId);
+  const username = useAuth((s) => s.username);
+  const restore = useAuth((s) => s.restore);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { restore(); }, [restore]);
+
+  const fetchStats = useCallback(async () => {
+    if (!userId) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("results")
+      .select("points, goals_for, goals_against, team_rating, team_value, position, achievements")
+      .eq("user_id", userId);
+
+    if (data && data.length > 0) {
+      const s: Stats = {
+        games: data.length,
+        champions: 0,
+        bestPoints: 0,
+        bestGf: 0,
+        leastGa: 9999,
+        bestRating: 0,
+        bestValue: 0,
+        unlockedAchievements: new Set(),
+      };
+      for (const r of data) {
+        if (r.position === 1) s.champions++;
+        s.bestPoints = Math.max(s.bestPoints, r.points);
+        s.bestGf = Math.max(s.bestGf, r.goals_for);
+        s.leastGa = Math.min(s.leastGa, r.goals_against);
+        s.bestRating = Math.max(s.bestRating, r.team_rating);
+        s.bestValue = Math.max(s.bestValue, r.team_value);
+        for (const a of (r.achievements ?? [])) {
+          s.unlockedAchievements.add(a);
+        }
+      }
+      setStats(s);
+    } else {
+      setStats(null);
+    }
+    setLoading(false);
+  }, [userId]);
+
+  useEffect(() => { fetchStats(); }, [fetchStats]);
+
+  if (!userId) {
+    return (
+      <main className="min-h-screen w-full pb-12">
+        <div className="mx-auto max-w-2xl px-4 py-20 text-center">
+          <p className="text-slate-500">Je bent niet ingelogd.</p>
+          <a href="/" className="btn-primary mt-4 inline-block">Ga naar home</a>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen w-full pb-12">
+      <div className="mx-auto max-w-2xl px-4 py-10">
+        <div className="flex items-start justify-between mb-8">
+          <div className="animate-fade-up">
+            <a href="/" className="text-base font-black tracking-tight">
+              <span className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
+                Perfect XI
+              </span>
+            </a>
+            <h1 className="text-3xl font-black text-slate-800 mt-1">{username}</h1>
+            <p className="text-sm text-slate-400 mt-1">Jouw profiel en statistieken</p>
+          </div>
+          <a href="/" className="btn-secondary mt-1">Speel</a>
+        </div>
+
+        {loading ? (
+          <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+        ) : !stats ? (
+          <div className="card p-12 text-center">
+            <div className="text-3xl mb-3">🏟️</div>
+            <div className="text-sm text-slate-400">Nog geen seizoenen gespeeld.</div>
+          </div>
+        ) : (
+          <>
+            <div className="card p-5 mb-4">
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Statistieken</div>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatBox label="Gespeeld" value={stats.games} />
+                <StatBox label="Kampioen" value={`${stats.champions}x`} accent />
+                <StatBox label="Meeste punten" value={stats.bestPoints} />
+                <StatBox label="Meeste goals" value={stats.bestGf} />
+                <StatBox label="Minste tegen" value={stats.leastGa === 9999 ? "—" : stats.leastGa} />
+                <StatBox label="Beste rating" value={stats.bestRating.toFixed(1)} />
+                <StatBox label="Beste waarde" value={fmtValue(stats.bestValue)} />
+              </div>
+            </div>
+
+            <div className="card p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Achievements</div>
+                <span className="text-xs font-bold text-emerald-600">{stats.unlockedAchievements.size} / {ALL_ACHIEVEMENTS.length}</span>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {ALL_ACHIEVEMENTS.map((a) => {
+                  const unlocked = stats.unlockedAchievements.has(a.id);
+                  return (
+                    <div
+                      key={a.id}
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 transition-all ${
+                        unlocked
+                          ? "border-amber-200/60 bg-amber-50/80"
+                          : "border-transparent bg-slate-50/50 opacity-40"
+                      }`}
+                    >
+                      <span className="text-xl">{a.icon}</span>
+                      <div>
+                        <div className={`text-sm font-bold ${unlocked ? "text-amber-800" : "text-slate-400"}`}>
+                          {a.label}
+                        </div>
+                        {unlocked && (
+                          <div className="text-[10px] font-semibold text-amber-600">Behaald</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      <Footer />
+    </main>
+  );
+}
+
+function StatBox({ label, value, accent }: { label: string; value: number | string; accent?: boolean }) {
+  return (
+    <div className={`rounded-2xl px-3 py-3 ${accent ? "bg-emerald-50/80" : "bg-slate-50/80"}`}>
+      <div className={`text-lg font-black tabular-nums ${accent ? "text-emerald-700" : "text-slate-800"}`}>
+        {value}
+      </div>
+      <div className="text-[10px] uppercase tracking-widest text-slate-400">{label}</div>
+    </div>
+  );
+}
+
+function fmtValue(mv: number): string {
+  if (mv >= 1_000_000) return `€${(mv / 1_000_000).toFixed(0)}M`;
+  if (mv >= 1000) return `€${(mv / 1000).toFixed(0)}K`;
+  return `€${Math.round(mv)}`;
+}

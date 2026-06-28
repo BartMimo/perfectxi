@@ -17,6 +17,11 @@ const ALL: { id: string; label: string; icon: string; check: (r: SimResult) => b
   { id: "unbeaten", label: "Ongeslagen", icon: "💪", check: (r) => r.userRow.lost === 0 },
   { id: "cl", label: "Champions League", icon: "⭐", check: (r) => r.position <= 4 },
   { id: "topscorer30", label: "Topscorer 30+ goals", icon: "🔥", check: (r) => (r.awards.topScorer?.goals ?? 0) >= 30 },
+  { id: "nolosses", label: "Nul verliespartijen", icon: "🚫", check: (r) => r.userRow.lost === 0 && r.userRow.drawn > 0 },
+  { id: "win30", label: "30+ overwinningen", icon: "🎖️", check: (r) => r.userRow.won >= 30 },
+  { id: "relegation", label: "Degradatie overleefd", icon: "😅", check: (r) => r.position >= 15 && r.position <= 17 },
+  { id: "gf50", label: "50+ goals", icon: "🥅", check: (r) => r.userRow.gf >= 50 },
+  { id: "assister20", label: "Assistkoning 20+", icon: "🎯", check: (r) => (r.awards.topAssister?.assists ?? 0) >= 20 },
 ];
 
 export function computeAchievements(result: SimResult): Achievement[] {
