@@ -383,6 +383,167 @@ function qualify(position: number): Qualification {
   return "midtable";
 }
 
+// ---------- Online multiplayer simulatie ----------
+
+export interface OnlineUserTeam {
+  userId: string;
+  name: string;
+  lineup: LineupEntry[];
+}
+
+export interface OnlineSimResult {
+  table: TableRow[];
+  seed: number;
+  userResults: Map<string, SimResult>;
+}
+
+export function simulateOnlineSeason(
+  users: OnlineUserTeam[],
+  opponents: ClubSeasonLite[],
+  seed?: number,
+): OnlineSimResult {
+  const actualSeed = seed ?? Math.floor(Math.random() * 2 ** 31);
+  const rng = mulberry32(actualSeed);
+
+  const neededOpponents = 20 - users.length;
+  const opps = opponents.slice(0, Math.max(0, neededOpponents));
+
+  const avgOpp = opps.length > 0 ? opps.reduce((s, c) => s + c.teamRating, 0) / opps.length : 75;
+  const OPP_COMPRESS = 0.2;
+
+  const aiTeams: SimTeam[] = opps.map((cs) => {
+    const compressed = avgOpp + (cs.teamRating - avgOpp) * (1 - OPP_COMPRESS);
+    const r = compressed + (rng() - 0.5) * 4;
+    return { name: cs.club, attack: r, defense: r, isUser: false };
+  });
+
+  const userTeams: SimTeam[] = users.map((u) => {
+    const strength = teamStrength(u.lineup.map((e) => e.player));
+    return { name: u.name, attack: strength.overall, defense: strength.overall, isUser: true };
+  });
+
+  const teams: SimTeam[] = [...userTeams, ...aiTeams];
+  while (teams.length < 20) {
+    const r = avgOpp + (rng() - 0.5) * 6;
+    teams.push({ name: `FC Fill-${teams.length + 1}`, attack: r, defense: r, isUser: false });
+  }
+
+  const n = teams.length;
+  const rows = teams.map((t) => emptyRow(t.name, t.isUser));
+
+  const userStatsMap = new Map<string, Map<string, PlayerStat>>();
+  const userLineupsMap = new Map<string, LineupEntry[]>();
+  for (let i = 0; i < users.length; i++) {
+    const u = users[i];
+    userLineupsMap.set(u.userId, u.lineup);
+    const stats = new Map<string, PlayerStat>();
+    for (const e of u.lineup) {
+      stats.set(e.player.name, {
+        name: e.player.name,
+        pos: e.pos,
+        overall: e.player.overall,
+        fromClub: e.player.fromClub,
+        goals: 0,
+        assists: 0,
+        cleanSheets: 0,
+      });
+    }
+    userStatsMap.set(u.userId, stats);
+  }
+
+  const scorerWeight = (e: LineupEntry) => GOAL_WEIGHT[e.pos] * (e.player.attack / 75);
+  const assistWeight = (e: LineupEntry) => ASSIST_WEIGHT[e.pos];
+
+  function distribute(userId: string, goalsFor: number, goalsAgainst: number) {
+    const stats = userStatsMap.get(userId);
+    const lineup = userLineupsMap.get(userId);
+    if (!stats || !lineup) return;
+    for (let g = 0; g < goalsFor; g++) {
+      const scorer = weightedPick(lineup, scorerWeight, rng);
+      if (scorer) stats.get(scorer.player.name)!.goals++;
+      if (rng() < 0.72) {
+        const assister = weightedPick(lineup, assistWeight, rng, scorer?.player.name);
+        if (assister) stats.get(assister.player.name)!.assists++;
+      }
+    }
+    if (goalsAgainst === 0) {
+      for (const e of lineup) {
+        const band = POS_BAND[e.pos];
+        if (band === "GK" || band === "DEF") stats.get(e.player.name)!.cleanSheets++;
+      }
+    }
+  }
+
+  const userMatchesMap = new Map<string, MatchResult[]>();
+  const userMatchdaysMap = new Map<string, MatchdayResult[]>();
+  for (const u of users) {
+    userMatchesMap.set(u.userId, []);
+    userMatchdaysMap.set(u.userId, []);
+  }
+
+  const schedule = buildSchedule(n);
+  schedule.forEach((round, ri) => {
+    for (const [hi, ai] of round) {
+      const [hg, ag] = playMatch(teams[hi], teams[ai], rng);
+      applyResult(rows[hi], hg, ag);
+      applyResult(rows[ai], ag, hg);
+
+      for (let ui = 0; ui < users.length; ui++) {
+        if (hi === ui) {
+          userMatchesMap.get(users[ui].userId)!.push({
+            opponent: teams[ai].name, home: true, gf: hg, ga: ag,
+          });
+          distribute(users[ui].userId, hg, ag);
+        } else if (ai === ui) {
+          userMatchesMap.get(users[ui].userId)!.push({
+            opponent: teams[hi].name, home: false, gf: ag, ga: hg,
+          });
+          distribute(users[ui].userId, ag, hg);
+        }
+      }
+    }
+
+    const standings = sortTable(rows).map((r) => ({ ...r }));
+    for (const u of users) {
+      const matches = userMatchesMap.get(u.userId)!;
+      userMatchdaysMap.get(u.userId)!.push({
+        round: ri + 1,
+        userMatch: matches[matches.length - 1],
+        standings,
+      });
+    }
+  });
+
+  const table = sortTable(rows);
+  const userResults = new Map<string, SimResult>();
+
+  for (let ui = 0; ui < users.length; ui++) {
+    const u = users[ui];
+    const teamName = teams[ui].name;
+    const userRow = table.find((r) => r.name === teamName)!;
+    const position = table.indexOf(userRow) + 1;
+    const matches = userMatchesMap.get(u.userId)!;
+    const squadStats = [...userStatsMap.get(u.userId)!.values()].sort(
+      (a, b) => b.goals - a.goals || b.assists - a.assists,
+    );
+
+    userResults.set(u.userId, {
+      table,
+      userRow,
+      position,
+      matches,
+      matchdays: userMatchdaysMap.get(u.userId)!,
+      squadStats,
+      awards: buildAwards(squadStats, matches),
+      invincible: userRow.won === userRow.played && userRow.lost === 0 && userRow.drawn === 0,
+      qualification: qualify(position),
+      seed: actualSeed,
+    });
+  }
+
+  return { table, seed: actualSeed, userResults };
+}
+
 export const QUALIFICATION_LABELS: Record<Qualification, string> = {
   champion: "Landskampioen 🏆",
   championsLeague: "Champions League",

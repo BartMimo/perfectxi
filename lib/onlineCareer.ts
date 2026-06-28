@@ -48,6 +48,7 @@ interface OnlineCareerState {
   joinLobby: (code: string, userId: string, username: string, teamName: string | null) => Promise<boolean>;
   loadLobby: (code: string) => Promise<void>;
   leaveLobby: (userId: string) => Promise<void>;
+  deleteLobby: () => Promise<void>;
   subscribe: (code: string) => void;
   unsubscribe: () => void;
 
@@ -57,6 +58,8 @@ interface OnlineCareerState {
   saveSquad: (userId: string, squad: DraftedPlayer[]) => Promise<void>;
   finishSeason: (userId: string, position: number, points: number, gf: number, ga: number) => Promise<void>;
   advanceSeason: () => Promise<void>;
+  getDivisionPlayers: (division: number) => OnlinePlayer[];
+  getSeasonSeed: (division: number) => number;
 }
 
 function generateCode(): string {
@@ -262,6 +265,16 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     set({ lobby: null });
   },
 
+  deleteLobby: async () => {
+    const { lobby } = get();
+    if (!lobby) return;
+
+    await supabase.from("online_careers").delete().eq("id", lobby.id);
+
+    get().unsubscribe();
+    set({ lobby: null });
+  },
+
   subscribe: (code) => {
     get().unsubscribe();
 
@@ -418,5 +431,21 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       .update({ ready: true })
       .eq("career_id", lobby.id)
       .eq("is_bot", true);
+  },
+
+  getDivisionPlayers: (division) => {
+    const { lobby } = get();
+    if (!lobby) return [];
+    return lobby.players.filter((p) => p.current_division === division);
+  },
+
+  getSeasonSeed: (division) => {
+    const { lobby } = get();
+    if (!lobby) return 0;
+    let h = lobby.current_season * 73856093 + division * 19349669;
+    h = ((h >> 16) ^ h) * 0x45d9f3b;
+    h = ((h >> 16) ^ h) * 0x45d9f3b;
+    h = (h >> 16) ^ h;
+    return h >>> 0;
   },
 }));

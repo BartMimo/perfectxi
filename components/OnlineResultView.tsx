@@ -136,43 +136,61 @@ export default function OnlineResultView() {
           Overzicht spelers
         </div>
         <div className="flex flex-col gap-1.5">
-          {lobby.players
-            .sort((a, b) => a.current_division - b.current_division)
+          {[...lobby.players]
+            .sort((a, b) => a.current_division - b.current_division || a.username.localeCompare(b.username))
             .map((p) => {
               const lastSeason = p.history[p.history.length - 1];
+              const rating = p.squad.length > 0
+                ? Math.round(p.squad.reduce((s, pl) => s + pl.overall, 0) / p.squad.length * 10) / 10
+                : 0;
+              const isMe = p.user_id === userId;
               return (
                 <div
                   key={p.user_id}
-                  className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 ${
-                    p.user_id === userId ? "bg-indigo-50 border-2 border-indigo-200" : "bg-slate-50/80 border-2 border-transparent"
+                  className={`flex items-center justify-between rounded-2xl p-3 ${
+                    isMe
+                      ? "bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200"
+                      : p.is_bot
+                        ? "bg-slate-50/60 border-2 border-dashed border-slate-200"
+                        : "bg-white/80 border-2 border-slate-100"
                   }`}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
-                    {p.is_bot && <span className="text-xs">🤖</span>}
-                    <span className={`text-sm font-bold truncate ${p.is_bot ? "text-slate-500" : "text-slate-800"}`}>
-                      {p.team_name || p.username}
-                    </span>
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {p.is_bot ? (
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-sm shrink-0">🤖</div>
+                    ) : (
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-white shrink-0 ${
+                        isMe ? "bg-gradient-to-br from-indigo-500 to-purple-500" : "bg-gradient-to-br from-slate-400 to-slate-500"
+                      }`}>
+                        {(p.team_name || p.username).charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-slate-800 truncate">
+                        {p.team_name || p.username}
+                        {isMe && <span className="ml-1 text-[9px] font-bold text-indigo-400">jij</span>}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-400">{divisionLabel(p.current_division)}</span>
+                        {rating > 0 && <span className="text-[10px] font-bold text-emerald-600">{rating} OVR</span>}
+                        {p.championships > 0 && <span className="text-[10px] font-bold text-amber-600">{p.championships}x🏆</span>}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="rounded-full bg-white border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                      {divisionLabel(p.current_division)}
-                    </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {lastSeason && (
-                      <span className={`text-[10px] font-bold ${
-                        lastSeason.position <= 2 ? "text-emerald-600" : lastSeason.position >= 18 ? "text-rose-500" : "text-slate-500"
+                      <span className={`rounded-lg px-1.5 py-0.5 text-[10px] font-bold ${
+                        lastSeason.position <= 2 ? "bg-emerald-50 text-emerald-700" :
+                        lastSeason.position >= 18 ? "bg-rose-50 text-rose-600" :
+                        "bg-slate-50 text-slate-500"
                       }`}>
                         {lastSeason.position}e
                       </span>
                     )}
-                    {p.ready ? (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-xs text-white">✓</span>
-                    ) : (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs text-slate-400">…</span>
-                    )}
-                    {isOwner && p.user_id !== userId && !p.is_bot && (
+                    {isOwner && !isMe && !p.is_bot && (
                       <button
                         onClick={() => kickPlayer(p.user_id)}
-                        className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-xs text-rose-500 hover:bg-rose-200 transition"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 border border-rose-200 text-xs text-rose-400 hover:bg-rose-100 transition"
                         title="Verwijder speler"
                       >
                         ✕
@@ -186,22 +204,16 @@ export default function OnlineResultView() {
       </div>
 
       {/* Next season button */}
-      {allReady && !div1Winner && (
+      {!div1Winner && (
         isOwner ? (
-          <button onClick={handleNextSeason} className="btn-primary w-full text-lg">
+          <button onClick={handleNextSeason} className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5">
             Start seizoen {lobby.current_season + 1}
           </button>
         ) : (
-          <div className="rounded-2xl bg-slate-100 px-5 py-3.5 text-center text-base font-bold text-slate-500">
+          <div className="rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
             Wacht tot de host het volgende seizoen start…
           </div>
         )
-      )}
-
-      {!allReady && (
-        <div className="rounded-2xl bg-amber-50 border border-amber-200 px-5 py-3.5 text-center text-sm font-bold text-amber-700">
-          Wacht tot alle spelers hun seizoen hebben afgerond…
-        </div>
       )}
 
       {/* Standings table */}
@@ -222,22 +234,31 @@ export default function OnlineResultView() {
               </tr>
             </thead>
             <tbody>
-              {table.map((r, i) => (
+              {table.map((r, i) => {
+                const isMe = r.name === (me?.team_name || me?.username);
+                const isHuman = r.isUser;
+                return (
                 <tr
                   key={r.name}
                   className={`border-t border-slate-100/60 ${
-                    r.isUser ? "bg-emerald-50/60 font-bold text-emerald-800" : "text-slate-600"
+                    isMe ? "bg-emerald-50/60 font-bold text-emerald-800"
+                    : isHuman ? "bg-indigo-50/40 font-semibold text-indigo-800"
+                    : "text-slate-600"
                   }`}
                 >
                   <td className="px-3 py-2">
                     <span className={i < 2 ? "text-emerald-500" : i >= 17 ? "text-rose-400" : ""}>{i + 1}</span>
                   </td>
-                  <td className="max-w-[150px] truncate px-3 py-2">{r.name}</td>
+                  <td className="max-w-[150px] truncate px-3 py-2">
+                    {r.name}
+                    {isHuman && !isMe && <span className="ml-1 text-[9px] text-indigo-400">●</span>}
+                  </td>
                   <td className="px-2 py-2 text-right tabular-nums">{r.played}</td>
                   <td className="px-2 py-2 text-right tabular-nums">{(r.gd >= 0 ? "+" : "") + r.gd}</td>
                   <td className="px-3 py-2 text-right font-semibold tabular-nums">{r.points}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
