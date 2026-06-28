@@ -11,7 +11,23 @@ const dot = { W: "bg-emerald-400", D: "bg-amber-400", L: "bg-rose-400" } as cons
 
 export default function SimulationView() {
   const result = useGame((s) => s.result);
+  const clResult = useGame((s) => s.clResult);
+  const gameMode = useGame((s) => s.gameMode);
   const finish = useGame((s) => s.finishSimulation);
+
+  // CL mode: skip animation, go directly to result
+  if (gameMode === "cl") {
+    return (
+      <div className="mx-auto max-w-md px-4 py-20 text-center">
+        <div className="text-5xl mb-4">⭐</div>
+        <div className="text-xl font-black text-slate-800 mb-2">Champions League</div>
+        <div className="text-sm text-slate-500 mb-6">Het toernooi is gesimuleerd!</div>
+        <button onClick={finish} className="btn-primary w-full text-lg">
+          Bekijk resultaat
+        </button>
+      </div>
+    );
+  }
 
   const total = result?.matchdays.length ?? 0;
   const [round, setRound] = useState(0);

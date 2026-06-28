@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { FORMATIONS } from "@/lib/formations";
+import { getCurrentChallenge, getChallengeWeekId } from "@/lib/challenge";
 import Footer from "@/components/Footer";
 
-type Tab = "records" | "accounts";
+type Tab = "records" | "accounts" | "challenge";
 type RecordSort = "points" | "goals_for" | "goals_against" | "team_rating" | "team_value";
 type AccountSort = "achievements" | "champions";
 
@@ -30,13 +31,26 @@ interface AccountRow {
   unique_achievements: string[];
 }
 
+interface ChallengeRow {
+  id: string;
+  username: string;
+  points: number;
+  goals_for: number;
+  goals_against: number;
+  goal_diff: number;
+  position: number;
+  team_rating: number;
+}
+
 export default function RanglijstPage() {
   const [tab, setTab] = useState<Tab>("records");
   const [gameRows, setGameRows] = useState<GameRow[]>([]);
   const [accountRows, setAccountRows] = useState<AccountRow[]>([]);
+  const [challengeRows, setChallengeRows] = useState<ChallengeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [recordSort, setRecordSort] = useState<RecordSort>("points");
   const [accountSort, setAccountSort] = useState<AccountSort>("achievements");
+  const challenge = getCurrentChallenge();
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -78,6 +92,30 @@ export default function RanglijstPage() {
       }
       setAccountRows([...byUser.values()]);
     }
+
+    // Fetch challenge results for current week
+    const weekId = getChallengeWeekId();
+    const { data: cData } = await supabase
+      .from("results")
+      .select("id, points, goals_for, goals_against, goal_diff, position, team_rating, users!inner(username)")
+      .eq("is_challenge", true)
+      .eq("challenge_week", weekId)
+      .order("points", { ascending: false })
+      .limit(100);
+
+    if (cData) {
+      setChallengeRows((cData as Record<string, unknown>[]).map((r) => ({
+        id: r.id as string,
+        username: (r.users as Record<string, string>).username,
+        points: r.points as number,
+        goals_for: r.goals_for as number,
+        goals_against: r.goals_against as number,
+        goal_diff: r.goal_diff as number,
+        position: r.position as number,
+        team_rating: r.team_rating as number,
+      })));
+    }
+
     setLoading(false);
   }, []);
 
@@ -147,10 +185,20 @@ export default function RanglijstPage() {
           >
             Spelers
           </button>
+          <button
+            onClick={() => setTab("challenge")}
+            className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+              tab === "challenge"
+                ? "bg-amber-50 shadow-sm border border-amber-200/60 text-amber-800"
+                : "text-amber-500 hover:text-amber-700"
+            }`}
+          >
+            🏅 Challenge
+          </button>
         </div>
 
         {/* Sort pills */}
-        <div className="flex flex-wrap gap-2 mb-5">
+        {tab !== "challenge" && <div className="flex flex-wrap gap-2 mb-5">
           {(tab === "records" ? RECORD_SORTS : ACCOUNT_SORTS).map((opt) => (
             <button
               key={opt.key}
@@ -164,12 +212,72 @@ export default function RanglijstPage() {
               {opt.label}
             </button>
           ))}
-        </div>
+        </div>}
 
         {/* Content */}
         <div className="card overflow-hidden">
           {loading ? (
             <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+          ) : tab === "challenge" ? (
+            <>
+              <div className="px-5 py-3 border-b border-slate-100/60 flex flex-wrap items-center gap-2">
+                <span className="text-sm font-bold text-amber-800">🏅 Challenge van de week</span>
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                  {challenge.leagueFlag} {challenge.leagueName}
+                </span>
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                  {challenge.formationLabel}
+                </span>
+                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                  {challenge.ratingMode === "prime" ? "Prime" : "Actueel"}
+                </span>
+              </div>
+              {challengeRows.length === 0 ? (
+                <div className="p-12 text-center">
+                  <div className="text-3xl mb-3">🏅</div>
+                  <div className="text-sm text-slate-400">Nog niemand heeft de challenge gespeeld deze week.</div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
+                      <tr>
+                        <th className="px-4 py-3 text-left">#</th>
+                        <th className="px-3 py-3 text-left">Speler</th>
+                        <th className="px-3 py-3 text-right">Ptn</th>
+                        <th className="px-3 py-3 text-right">GV</th>
+                        <th className="px-3 py-3 text-right">GT</th>
+                        <th className="px-3 py-3 text-right">DS</th>
+                        <th className="px-3 py-3 text-right">Rating</th>
+                        <th className="px-3 py-3 text-left">Pos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {challengeRows.map((r, i) => (
+                        <tr key={r.id} className="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30">
+                          <td className="px-4 py-3"><RankBadge rank={i + 1} /></td>
+                          <td className="px-3 py-3 font-bold text-slate-800">{r.username}</td>
+                          <td className="px-3 py-3 text-right tabular-nums font-black text-amber-700">{r.points}</td>
+                          <td className="px-3 py-3 text-right tabular-nums">{r.goals_for}</td>
+                          <td className="px-3 py-3 text-right tabular-nums">{r.goals_against}</td>
+                          <td className="px-3 py-3 text-right tabular-nums text-slate-400">{(r.goal_diff >= 0 ? "+" : "")}{r.goal_diff}</td>
+                          <td className="px-3 py-3 text-right tabular-nums">{r.team_rating.toFixed(1)}</td>
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[10px] font-bold ${
+                              r.position === 1 ? "bg-amber-100/80 text-amber-700"
+                                : r.position <= 4 ? "bg-emerald-100/80 text-emerald-700"
+                                : "bg-slate-100/80 text-slate-500"
+                            }`}>
+                              {r.position}e
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
           ) : tab === "records" ? (
             sortedGames.length === 0 ? (
               <EmptyState />

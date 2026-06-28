@@ -19,6 +19,8 @@ export default function ResultView() {
   const formationKey = useGame((s) => s.formationKey);
   const ratingMode = useGame((s) => s.ratingMode);
   const difficulty = useGame((s) => s.difficulty);
+  const isChallenge = useGame((s) => s.isChallenge);
+  const challengeWeek = useGame((s) => s.challengeWeek);
   const userId = useAuth((s) => s.userId);
   const [showTable, setShowTable] = useState(true);
   const [sharing, setSharing] = useState(false);
@@ -44,6 +46,8 @@ export default function ResultView() {
       formation: formationKey,
       ratingMode,
       difficulty,
+      isChallenge,
+      challengeWeek,
     }).then(() => setSaved(true));
   }, [result, userId, leagueCode, saved, slots, formationKey, ratingMode, difficulty]);
 

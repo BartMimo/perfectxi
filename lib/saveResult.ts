@@ -13,10 +13,12 @@ interface SaveParams {
   formation: string;
   ratingMode: RatingMode;
   difficulty: Difficulty;
+  isChallenge?: boolean;
+  challengeWeek?: string | null;
 }
 
 export async function saveResult(params: SaveParams) {
-  const { userId, result, slots, leagueCode, leagueName, formation, ratingMode, difficulty } = params;
+  const { userId, result, slots, leagueCode, leagueName, formation, ratingMode, difficulty, isChallenge, challengeWeek } = params;
 
   const players = slots.map((s) => s.player!);
   const teamRating = Math.round(
@@ -50,6 +52,8 @@ export async function saveResult(params: SaveParams) {
       qualification: result.qualification,
       invincible: result.invincible,
       achievements: achievements.map((a) => a.id),
+      is_challenge: isChallenge ?? false,
+      challenge_week: challengeWeek ?? null,
     },
     { onConflict: "user_id,seed", ignoreDuplicates: true },
   );

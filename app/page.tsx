@@ -9,6 +9,7 @@ import ReelView from "@/components/ReelView";
 import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
 import ResultView from "@/components/ResultView";
+import CLResultView from "@/components/CLResultView";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/lib/auth";
 import Header from "@/components/Header";
@@ -41,9 +42,16 @@ function PlayView() {
       <div className="min-w-0 lg:sticky lg:top-[74px]">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-600">Jouw opstelling</h2>
-          <span className="rounded-full bg-emerald-100/80 px-3 py-1.5 text-xs font-bold text-emerald-700">
-            {complete ? "Compleet" : `${filled} / ${total}`}
-          </span>
+          <div className="flex items-center gap-2">
+            {filled > 0 && (
+              <button onClick={useGame.getState().newGame} className="rounded-full bg-rose-50/80 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-100 transition">
+                Opnieuw
+              </button>
+            )}
+            <span className="rounded-full bg-emerald-100/80 px-3 py-1.5 text-xs font-bold text-emerald-700">
+              {complete ? "Compleet" : `${filled} / ${total}`}
+            </span>
+          </div>
         </div>
         <PitchView />
       </div>
@@ -64,6 +72,7 @@ function PlayView() {
 
 export default function Page() {
   const phase = useGame((s) => s.phase);
+  const gameMode = useGame((s) => s.gameMode);
   const setIndex = useGame((s) => s.setIndex);
   const indexLoaded = useGame((s) => s.index.length > 0);
   useEffect(() => {
@@ -84,7 +93,7 @@ export default function Page() {
             <Header showMeta />
             {phase === "play" && <PlayView />}
             {phase === "simulating" && <SimulationView />}
-            {phase === "result" && <ResultView />}
+            {phase === "result" && (gameMode === "cl" ? <CLResultView /> : <ResultView />)}
           </>
         )}
         <Footer />

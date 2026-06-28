@@ -18,11 +18,17 @@ export default function Header({ showMeta = false }: { showMeta?: boolean }) {
             Perfect XI
           </span>
         </button>
-        {showMeta && leagueCode && (
+        {showMeta && (
           <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-            <span className="truncate rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
-              {leagueName(leagueCode)}
-            </span>
+            {leagueCode ? (
+              <span className="truncate rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
+                {leagueName(leagueCode)}
+              </span>
+            ) : (
+              <span className="truncate rounded-full border border-blue-200/60 bg-blue-50/60 px-3 py-1.5 text-blue-700 backdrop-blur">
+                Champions League
+              </span>
+            )}
             <span className="rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
               {formation.label}
             </span>

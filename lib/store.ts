@@ -6,8 +6,10 @@ import type { PosKey } from "./positions";
 import { canPlayerPlay } from "./positions";
 import { getFormation } from "./formations";
 import { simulateSeason, type SimResult } from "./sim";
+import { simulateCL, type CLResult } from "./simCL";
 
 export type Phase = "start" | "play" | "simulating" | "result";
+export type GameMode = "league" | "cl";
 export type RatingMode = "actual" | "prime";
 export type Difficulty = "normal" | "hard";
 
@@ -86,6 +88,22 @@ function buildOpponents(index: ClubSeasonLite[], leagueCode: string): ClubSeason
   return result.slice(0, OPPONENT_COUNT);
 }
 
+function buildCLOpponents(index: ClubSeasonLite[]): ClubSeasonLite[] {
+  const current = index.filter((c) => c.season === CURRENT_SEASON);
+  const seen = new Set(current.map((c) => c.club));
+  const result = [...current];
+  const extras = index
+    .filter((c) => c.season !== CURRENT_SEASON)
+    .sort((a, b) => b.teamRating - a.teamRating);
+  for (const c of extras) {
+    if (result.length >= 63) break;
+    if (seen.has(c.club)) continue;
+    seen.add(c.club);
+    result.push(c);
+  }
+  return result.sort((a, b) => b.teamRating - a.teamRating).slice(0, 63);
+}
+
 export const filledCount = (slots: Slot[]) => slots.filter((s) => s.player).length;
 
 /** Posities waarheen de geselecteerde speler verplaatst/geruild kan worden. */
@@ -136,6 +154,10 @@ interface GameState {
   rerollsLeft: number;
 
   result: SimResult | null;
+  clResult: CLResult | null;
+  gameMode: GameMode;
+  isChallenge: boolean;
+  challengeWeek: string | null;
 
   setIndex: (idx: ClubSeasonLite[]) => void;
   setFormation: (key: string) => void;
@@ -143,6 +165,8 @@ interface GameState {
   setRatingMode: (mode: RatingMode) => void;
   setDifficulty: (d: Difficulty) => void;
   startGame: () => void;
+  startCL: () => void;
+  startChallenge: (leagueCode: string, formationKey: string, ratingMode: RatingMode, difficulty: Difficulty, week: string) => void;
   beginSpin: () => void;
   prefetchSquad: (id: string) => void;
   land: (pick: ClubSeasonLite) => Promise<void>;
@@ -179,6 +203,10 @@ export const useGame = create<GameState>((set, get) => ({
   pendingPlayer: null,
   rerollsLeft: 1,
   result: null,
+  clResult: null,
+  gameMode: "league" as GameMode,
+  isChallenge: false,
+  challengeWeek: null,
 
   setIndex: (idx) => set({ index: idx }),
   setFormation: (key) => set({ formationKey: key, slots: buildSlots(key) }),
@@ -191,6 +219,54 @@ export const useGame = create<GameState>((set, get) => ({
     if (!leagueCode) return;
     set({
       phase: "play",
+      gameMode: "league",
+      slots: buildSlots(formationKey),
+      opponents: buildOpponents(index, leagueCode),
+      landed: null,
+      squad: null,
+      result: null,
+      clResult: null,
+      selectedSlotId: null,
+      pendingPlayer: null,
+      rerollsLeft: rerollsFor(difficulty),
+      isChallenge: false,
+      challengeWeek: null,
+      error: null,
+    });
+  },
+
+  startCL: () => {
+    const { formationKey, index, difficulty, ratingMode } = get();
+    set({
+      phase: "play",
+      gameMode: "cl",
+      leagueCode: null,
+      formationKey,
+      ratingMode,
+      difficulty,
+      slots: buildSlots(formationKey),
+      opponents: buildCLOpponents(index),
+      landed: null,
+      squad: null,
+      result: null,
+      clResult: null,
+      selectedSlotId: null,
+      pendingPlayer: null,
+      rerollsLeft: rerollsFor(difficulty),
+      isChallenge: false,
+      challengeWeek: null,
+      error: null,
+    });
+  },
+
+  startChallenge: (leagueCode, formationKey, ratingMode, difficulty, week) => {
+    const { index } = get();
+    set({
+      leagueCode,
+      formationKey,
+      ratingMode,
+      difficulty,
+      phase: "play",
       slots: buildSlots(formationKey),
       opponents: buildOpponents(index, leagueCode),
       landed: null,
@@ -199,6 +275,8 @@ export const useGame = create<GameState>((set, get) => ({
       selectedSlotId: null,
       pendingPlayer: null,
       rerollsLeft: rerollsFor(difficulty),
+      isChallenge: true,
+      challengeWeek: week,
       error: null,
     });
   },
@@ -334,11 +412,16 @@ export const useGame = create<GameState>((set, get) => ({
   clearSelection: () => set({ selectedSlotId: null }),
 
   simulate: (teamName?: string) => {
-    const { slots, opponents } = get();
+    const { slots, opponents, gameMode } = get();
     if (slots.some((s) => !s.player)) return;
     const lineup = slots.map((s) => ({ player: s.player!, pos: s.pos }));
-    const result = simulateSeason(lineup, { opponents, teamName });
-    set({ result, phase: "simulating", selectedSlotId: null });
+    if (gameMode === "cl") {
+      const clResult = simulateCL(lineup, { opponents, teamName });
+      set({ clResult, result: null, phase: "simulating", selectedSlotId: null });
+    } else {
+      const result = simulateSeason(lineup, { opponents, teamName });
+      set({ result, clResult: null, phase: "simulating", selectedSlotId: null });
+    }
   },
 
   finishSimulation: () => set({ phase: "result" }),
@@ -347,10 +430,12 @@ export const useGame = create<GameState>((set, get) => ({
     const { formationKey } = get();
     set({
       phase: "start",
+      gameMode: "league",
       slots: buildSlots(formationKey),
       landed: null,
       squad: null,
       result: null,
+      clResult: null,
       spinning: false,
       spinRequested: false,
       error: null,

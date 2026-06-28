@@ -1,8 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useGame } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { FORMATIONS } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
+import { getCurrentChallenge, getChallengeWeekId } from "@/lib/challenge";
+import { supabase } from "@/lib/supabase";
 
 function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
@@ -51,7 +55,30 @@ export default function StartView() {
   const difficulty = useGame((s) => s.difficulty);
   const setDifficulty = useGame((s) => s.setDifficulty);
   const startGame = useGame((s) => s.startGame);
+  const startCL = useGame((s) => s.startCL);
+  const startChallenge = useGame((s) => s.startChallenge);
   const loaded = useGame((s) => s.index.length > 0);
+  const userId = useAuth((s) => s.userId);
+
+  const challenge = getCurrentChallenge();
+  const [challengePlayed, setChallengePlayed] = useState<number | null>(null);
+  const [challengeChecked, setChallengeChecked] = useState(false);
+
+  useEffect(() => {
+    if (!userId) { setChallengeChecked(true); return; }
+    const weekId = getChallengeWeekId();
+    supabase
+      .from("results")
+      .select("points")
+      .eq("user_id", userId)
+      .eq("challenge_week", weekId)
+      .eq("is_challenge", true)
+      .limit(1)
+      .then(({ data }) => {
+        if (data && data.length > 0) setChallengePlayed(data[0].points);
+        setChallengeChecked(true);
+      });
+  }, [userId]);
 
   const ready = loaded && !!leagueCode;
 
@@ -68,7 +95,43 @@ export default function StartView() {
         </p>
       </div>
 
-      <div className="mt-10 grid gap-5 sm:grid-cols-2">
+      {/* Challenge van de week */}
+      {challengeChecked && (
+        <div className="mt-8 card p-5 border-2 border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🏅</span>
+            <span className="text-xs font-black uppercase tracking-widest text-amber-700">Challenge van de week</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="rounded-full bg-white/80 border border-amber-200/60 px-3 py-1.5 font-bold text-slate-700">
+              {challenge.leagueFlag} {challenge.leagueName}
+            </span>
+            <span className="rounded-full bg-white/80 border border-amber-200/60 px-3 py-1.5 font-bold text-slate-700">
+              {challenge.formationLabel}
+            </span>
+            <span className="rounded-full bg-white/80 border border-amber-200/60 px-3 py-1.5 font-bold text-slate-700">
+              {challenge.ratingMode === "prime" ? "Prime" : "Actueel"}
+            </span>
+          </div>
+          {challengePlayed !== null ? (
+            <div className="mt-4 flex items-center gap-3">
+              <span className="text-sm font-bold text-amber-800">Al gespeeld deze week!</span>
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">{challengePlayed} punten</span>
+              <a href="/ranglijst" className="text-xs font-bold text-amber-600 hover:text-amber-700 underline transition">Bekijk ranglijst</a>
+            </div>
+          ) : (
+            <button
+              disabled={!loaded}
+              onClick={() => startChallenge(challenge.leagueCode, challenge.formationKey, challenge.ratingMode, challenge.difficulty, challenge.week)}
+              className="mt-4 w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-amber-200/50 transition hover:shadow-lg hover:-translate-y-0.5"
+            >
+              {loaded ? "Speel de challenge" : "Laden…"}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="mt-8 grid gap-5 sm:grid-cols-2">
         {/* Formatie */}
         <section className="card p-5 sm:col-span-2">
           <SectionTitle n={1}>Kies je formatie</SectionTitle>
@@ -156,13 +219,22 @@ export default function StartView() {
         </section>
       </div>
 
-      <button
-        disabled={!ready}
-        onClick={startGame}
-        className="btn-primary mt-8 w-full text-lg"
-      >
-        {!loaded ? "Laden…" : !leagueCode ? "Kies een competitie" : "Start het draft"}
-      </button>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <button
+          disabled={!ready}
+          onClick={startGame}
+          className="btn-primary flex-1 text-lg"
+        >
+          {!loaded ? "Laden…" : !leagueCode ? "Kies een competitie" : "Start het draft"}
+        </button>
+        <button
+          disabled={!loaded}
+          onClick={startCL}
+          className="flex-1 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-3.5 text-lg font-extrabold text-white shadow-md shadow-blue-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:transform-none disabled:shadow-none"
+        >
+          Champions League
+        </button>
+      </div>
     </div>
   );
 }

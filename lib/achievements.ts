@@ -16,7 +16,7 @@ export interface AchievementDef {
 }
 
 export const ALL_ACHIEVEMENTS: AchievementDef[] = [
-  { id: "champion", label: "Kampioen", icon: "🏆", description: "Eindig op de eerste plaats in de competitie.", check: (r) => r.position === 1 },
+  { id: "champion", label: "Kampioen", icon: "🏆", description: "Word kampioen in alle 7 competities.", check: (r) => r.position === 1 },
   { id: "invincible", label: "Invincible", icon: "🛡️", description: "Win alle 38 wedstrijden in één seizoen (38-0-0).", check: (r) => r.invincible },
   { id: "100pts", label: "100+ punten", icon: "💯", description: "Behaal 100 of meer punten in één seizoen.", check: (r) => r.userRow.points >= 100 },
   { id: "clean20", label: "20+ clean sheets", icon: "🧤", description: "Houd 20 of meer clean sheets in één seizoen.", check: (r) => r.awards.cleanSheets >= 20 },

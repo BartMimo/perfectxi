@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { ALL_ACHIEVEMENTS } from "@/lib/achievements";
+import { LEAGUES } from "@/lib/leagues";
 import Footer from "@/components/Footer";
 
 interface Stats {
@@ -15,6 +16,7 @@ interface Stats {
   bestRating: number;
   bestValue: number;
   unlockedAchievements: Set<string>;
+  champLeagues: Set<string>;
 }
 
 export default function ProfielPage() {
@@ -58,7 +60,7 @@ export default function ProfielPage() {
 
     const { data } = await supabase
       .from("results")
-      .select("points, goals_for, goals_against, team_rating, team_value, position, achievements")
+      .select("points, goals_for, goals_against, team_rating, team_value, position, achievements, league_code")
       .eq("user_id", userId);
 
     if (data && data.length > 0) {
@@ -71,9 +73,13 @@ export default function ProfielPage() {
         bestRating: 0,
         bestValue: 0,
         unlockedAchievements: new Set(),
+        champLeagues: new Set(),
       };
       for (const r of data) {
-        if (r.position === 1) s.champions++;
+        if (r.position === 1) {
+          s.champions++;
+          if (r.league_code) s.champLeagues.add(r.league_code as string);
+        }
         s.bestPoints = Math.max(s.bestPoints, r.points);
         s.bestGf = Math.max(s.bestGf, r.goals_for);
         s.leastGa = Math.min(s.leastGa, r.goals_against);
@@ -151,7 +157,10 @@ export default function ProfielPage() {
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ALL_ACHIEVEMENTS.map((a) => {
-                  const unlocked = stats.unlockedAchievements.has(a.id);
+                  const isChampion = a.id === "champion";
+                  const unlocked = isChampion
+                    ? stats.champLeagues.size >= LEAGUES.length
+                    : stats.unlockedAchievements.has(a.id);
                   const pct = achievementPcts[a.id] ?? 0;
                   const expanded = expandedAch === a.id;
                   return (
@@ -161,19 +170,38 @@ export default function ProfielPage() {
                       className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-all ${
                         unlocked
                           ? "border-amber-200/60 bg-amber-50/80"
-                          : "border-transparent bg-slate-50/50 opacity-40"
+                          : isChampion && stats.champLeagues.size > 0
+                            ? "border-amber-200/40 bg-amber-50/40"
+                            : "border-transparent bg-slate-50/50 opacity-40"
                       }`}
                     >
                       <span className="text-xl">{a.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`text-sm font-bold ${unlocked ? "text-amber-800" : "text-slate-400"}`}>
+                          <span className={`text-sm font-bold ${unlocked ? "text-amber-800" : isChampion && stats.champLeagues.size > 0 ? "text-amber-700" : "text-slate-400"}`}>
                             {a.label}
+                            {isChampion && <span className="ml-1 text-[10px] font-bold text-amber-500">{stats.champLeagues.size}/{LEAGUES.length}</span>}
                           </span>
                           <span className="shrink-0 text-[10px] font-bold text-slate-400">{pct}% heeft dit</span>
                         </div>
                         {expanded && (
-                          <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{a.description}</div>
+                          <>
+                            <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{a.description}</div>
+                            {isChampion && (
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {LEAGUES.map((l) => {
+                                  const won = stats.champLeagues.has(l.code);
+                                  return (
+                                    <span key={l.code} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                                      won ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-400"
+                                    }`}>
+                                      {l.flag} {l.name} {won ? "✓" : ""}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     </button>

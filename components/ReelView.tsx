@@ -21,9 +21,11 @@ export default function ReelView() {
   const difficulty = useGame((s) => s.difficulty);
   const ratingsHidden = difficulty === "hard";
 
+  const gameMode = useGame((s) => s.gameMode);
+
   const pool = useMemo(
-    () => index.filter((c) => c.leagueCode === leagueCode),
-    [index, leagueCode],
+    () => gameMode === "cl" ? index : index.filter((c) => c.leagueCode === leagueCode),
+    [index, leagueCode, gameMode],
   );
 
   const trackRef = useRef<HTMLDivElement>(null);
