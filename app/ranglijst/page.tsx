@@ -251,7 +251,7 @@ export default function RanglijstPage() {
                           {r.champions}
                         </td>
                         <td className={`px-3 py-3 text-right tabular-nums font-semibold ${accountSort === "achievements" ? "font-black text-emerald-600" : ""}`}>
-                          {r.unique_achievements.length} / 15
+                          {r.unique_achievements.length} / 16
                         </td>
                       </tr>
                     ))}

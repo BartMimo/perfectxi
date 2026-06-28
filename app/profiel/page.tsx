@@ -3,25 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
+import { ALL_ACHIEVEMENTS } from "@/lib/achievements";
 import Footer from "@/components/Footer";
-
-const ALL_ACHIEVEMENTS: { id: string; label: string; icon: string }[] = [
-  { id: "champion", label: "Kampioen", icon: "🏆" },
-  { id: "invincible", label: "Invincible", icon: "🛡️" },
-  { id: "100pts", label: "100+ punten", icon: "💯" },
-  { id: "clean20", label: "20+ clean sheets", icon: "🧤" },
-  { id: "gf100", label: "100+ goals", icon: "⚽" },
-  { id: "ga20", label: "< 20 tegendoelpunten", icon: "🔒" },
-  { id: "gd80", label: "Doelsaldo 80+", icon: "📊" },
-  { id: "unbeaten", label: "Ongeslagen", icon: "💪" },
-  { id: "cl", label: "Champions League", icon: "⭐" },
-  { id: "topscorer30", label: "Topscorer 30+", icon: "🔥" },
-  { id: "nolosses", label: "Nul verliespartijen", icon: "🚫" },
-  { id: "win30", label: "30+ overwinningen", icon: "🎖️" },
-  { id: "relegation", label: "Degradatie overleefd", icon: "😅" },
-  { id: "gf50", label: "50+ goals", icon: "🥅" },
-  { id: "assister20", label: "Assistkoning 20+", icon: "🎯" },
-];
 
 interface Stats {
   games: number;
@@ -39,13 +22,40 @@ export default function ProfielPage() {
   const username = useAuth((s) => s.username);
   const restore = useAuth((s) => s.restore);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [achievementPcts, setAchievementPcts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [expandedAch, setExpandedAch] = useState<string | null>(null);
 
   useEffect(() => { restore(); }, [restore]);
 
   const fetchStats = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
+
+    // Fetch all results globally for achievement percentages
+    const { data: allResults } = await supabase
+      .from("results")
+      .select("user_id, achievements")
+      .limit(1000);
+
+    if (allResults && allResults.length > 0) {
+      const userAchs = new Map<string, Set<string>>();
+      for (const r of allResults) {
+        const uid = r.user_id as string;
+        if (!userAchs.has(uid)) userAchs.set(uid, new Set());
+        for (const a of ((r.achievements as string[]) ?? [])) {
+          userAchs.get(uid)!.add(a);
+        }
+      }
+      const totalUsers = userAchs.size;
+      const pcts: Record<string, number> = {};
+      for (const ach of ALL_ACHIEVEMENTS) {
+        const count = [...userAchs.values()].filter((s) => s.has(ach.id)).length;
+        pcts[ach.id] = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
+      }
+      setAchievementPcts(pcts);
+    }
+
     const { data } = await supabase
       .from("results")
       .select("points, goals_for, goals_against, team_rating, team_value, position, achievements")
@@ -142,25 +152,31 @@ export default function ProfielPage() {
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ALL_ACHIEVEMENTS.map((a) => {
                   const unlocked = stats.unlockedAchievements.has(a.id);
+                  const pct = achievementPcts[a.id] ?? 0;
+                  const expanded = expandedAch === a.id;
                   return (
-                    <div
+                    <button
                       key={a.id}
-                      className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 transition-all ${
+                      onClick={() => setExpandedAch(expanded ? null : a.id)}
+                      className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-all ${
                         unlocked
                           ? "border-amber-200/60 bg-amber-50/80"
                           : "border-transparent bg-slate-50/50 opacity-40"
                       }`}
                     >
                       <span className="text-xl">{a.icon}</span>
-                      <div>
-                        <div className={`text-sm font-bold ${unlocked ? "text-amber-800" : "text-slate-400"}`}>
-                          {a.label}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`text-sm font-bold ${unlocked ? "text-amber-800" : "text-slate-400"}`}>
+                            {a.label}
+                          </span>
+                          <span className="shrink-0 text-[10px] font-bold text-slate-400">{pct}% heeft dit</span>
                         </div>
-                        {unlocked && (
-                          <div className="text-[10px] font-semibold text-amber-600">Behaald</div>
+                        {expanded && (
+                          <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{a.description}</div>
                         )}
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>

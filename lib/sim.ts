@@ -253,10 +253,10 @@ export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResu
   const strength = teamStrength(lineup.map((e) => e.player));
 
   const avgOpp = opts.opponents.reduce((s, c) => s + c.teamRating, 0) / opts.opponents.length;
-  const COMPRESS = 0.2;
+  const OPP_COMPRESS = 0.2;
 
   const opponents: SimTeam[] = opts.opponents.map((cs) => {
-    const compressed = avgOpp + (cs.teamRating - avgOpp) * (1 - COMPRESS);
+    const compressed = avgOpp + (cs.teamRating - avgOpp) * (1 - OPP_COMPRESS);
     const r = compressed + (rng() - 0.5) * 4;
     return { name: cs.club, attack: r, defense: r, isUser: false };
   });
