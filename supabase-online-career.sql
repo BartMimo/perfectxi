@@ -43,5 +43,11 @@ CREATE POLICY "Anyone can insert players" ON online_career_players FOR INSERT WI
 CREATE POLICY "Anyone can update players" ON online_career_players FOR UPDATE USING (true);
 CREATE POLICY "Anyone can delete players" ON online_career_players FOR DELETE USING (true);
 
--- Als de tabel al bestaat, voer alleen dit uit:
+-- Realtime aanzetten zodat spelers elkaars updates live zien.
+ALTER PUBLICATION supabase_realtime ADD TABLE online_careers;
+ALTER PUBLICATION supabase_realtime ADD TABLE online_career_players;
+
+-- Als de tabellen al bestaan, voer alleen onderstaande regels uit:
 -- ALTER TABLE online_career_players ADD COLUMN is_bot boolean NOT NULL DEFAULT false;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE online_careers;
+-- ALTER PUBLICATION supabase_realtime ADD TABLE online_career_players;

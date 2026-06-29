@@ -42,6 +42,7 @@ interface OnlineCareerState {
   loading: boolean;
   error: string | null;
   subscription: ReturnType<typeof supabase.channel> | null;
+  pollInterval: ReturnType<typeof setInterval> | null;
 
   loadMyLobbies: (userId: string) => Promise<void>;
   createLobby: (userId: string, username: string, teamName: string | null) => Promise<string | null>;
@@ -96,6 +97,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
   loading: false,
   error: null,
   subscription: null,
+  pollInterval: null,
 
   loadMyLobbies: async (userId) => {
     const { data: memberships } = await supabase
@@ -278,29 +280,44 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
   subscribe: (code) => {
     get().unsubscribe();
 
+    // Silent refetch (no loading flicker) used by both realtime and polling.
+    const refetch = async () => {
+      const { data: career } = await supabase
+        .from("online_careers")
+        .select("*")
+        .eq("code", code.toUpperCase().trim())
+        .single();
+      if (!career) return;
+      const players = await fetchPlayers(career.id);
+      set({ lobby: { ...career, players } });
+    };
+
     const channel = supabase
       .channel(`online-career-${code}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "online_careers", filter: `code=eq.${code}` },
-        () => { get().loadLobby(code); },
+        refetch,
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "online_career_players" },
-        () => { get().loadLobby(code); },
+        refetch,
       )
       .subscribe();
 
-    set({ subscription: channel });
+    // Polling fallback: guarantees progress even when Supabase realtime is
+    // not enabled on the tables or a realtime event is missed.
+    const pollInterval = setInterval(refetch, 4000);
+
+    set({ subscription: channel, pollInterval });
   },
 
   unsubscribe: () => {
-    const { subscription } = get();
-    if (subscription) {
-      supabase.removeChannel(subscription);
-      set({ subscription: null });
-    }
+    const { subscription, pollInterval } = get();
+    if (subscription) supabase.removeChannel(subscription);
+    if (pollInterval) clearInterval(pollInterval);
+    set({ subscription: null, pollInterval: null });
   },
 
   kickPlayer: async (userId) => {
@@ -370,12 +387,17 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       .eq("user_id", userId);
   },
 
+  // Records the season result. Does NOT change the division — promotion/
+  // relegation is applied centrally in advanceSeason so the division stays
+  // stable while the result screen is shown (and survives a page reload).
   finishSeason: async (userId, position, points, gf, ga) => {
     const { lobby } = get();
     if (!lobby) return;
 
     const player = lobby.players.find((p) => p.user_id === userId);
     if (!player) return;
+
+    if (player.history.some((h) => h.season === lobby.current_season)) return;
 
     const entry: CareerSeason = {
       season: lobby.current_season,
@@ -386,31 +408,40 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       ga,
     };
     const history = [...player.history, entry];
-
-    let newDiv = player.current_division;
-    let championships = player.championships;
-
-    if (position <= 2 && newDiv > 1) newDiv--;
-    if (position >= 18 && newDiv < 10) newDiv++;
-    if (position === 1) championships++;
+    const championships = player.championships + (position === 1 ? 1 : 0);
 
     await supabase
       .from("online_career_players")
-      .update({
-        current_division: newDiv,
-        history,
-        championships,
-        ready: true,
-      })
+      .update({ history, championships })
       .eq("career_id", lobby.id)
       .eq("user_id", userId);
   },
 
+  // Owner-only. Applies promotion/relegation from each player's recorded
+  // result, then bumps the season and resets readiness.
   advanceSeason: async () => {
     const { lobby } = get();
     if (!lobby) return;
 
     const newSeason = lobby.current_season + 1;
+
+    // Re-fetch the latest players so we use everyone's recorded result.
+    const players = await fetchPlayers(lobby.id);
+    await Promise.all(
+      players.map((p) => {
+        const entry = p.history.find((h) => h.season === lobby.current_season);
+        let newDiv = p.current_division;
+        if (entry) {
+          if (entry.position <= 2 && newDiv > 1) newDiv--;
+          else if (entry.position >= 18 && newDiv < 10) newDiv++;
+        }
+        return supabase
+          .from("online_career_players")
+          .update({ current_division: newDiv, ready: p.is_bot })
+          .eq("id", p.id);
+      }),
+    );
+
     await supabase
       .from("online_careers")
       .update({
@@ -419,18 +450,6 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         updated_at: new Date().toISOString(),
       })
       .eq("id", lobby.id);
-
-    await supabase
-      .from("online_career_players")
-      .update({ ready: false })
-      .eq("career_id", lobby.id)
-      .eq("is_bot", false);
-
-    await supabase
-      .from("online_career_players")
-      .update({ ready: true })
-      .eq("career_id", lobby.id)
-      .eq("is_bot", true);
   },
 
   getDivisionPlayers: (division) => {

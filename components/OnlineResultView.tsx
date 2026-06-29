@@ -14,9 +14,8 @@ export default function OnlineResultView() {
   const formationKey = useGame((s) => s.formationKey);
   const ratingMode = useGame((s) => s.ratingMode);
   const difficulty = useGame((s) => s.difficulty);
-  const newGame = useGame((s) => s.newGame);
   const userId = useAuth((s) => s.userId);
-  const { lobby, finishSeason, saveSquad, advanceSeason, kickPlayer } = useOnlineCareer();
+  const { lobby, finishSeason, advanceSeason, kickPlayer } = useOnlineCareer();
   const [saved, setSaved] = useState(false);
   const [seasonFinished, setSeasonFinished] = useState(false);
   const [showTable, setShowTable] = useState(true);
@@ -25,8 +24,8 @@ export default function OnlineResultView() {
 
   useEffect(() => {
     if (!result || !userId || saved || !me || !lobby) return;
-    const squad = slots.map((s) => s.player!);
-    saveSquad(userId, squad);
+    const hasPlayers = slots.length > 0 && slots.every((s) => s.player);
+    if (!hasPlayers) return;
 
     saveResult({
       userId,
@@ -61,7 +60,6 @@ export default function OnlineResultView() {
 
   const handleNextSeason = async () => {
     await advanceSeason();
-    newGame();
   };
 
   // Check if anyone has won div 1
