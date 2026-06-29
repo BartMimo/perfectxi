@@ -17,7 +17,6 @@ function fitSquadToFormation(squad: DraftedPlayer[]): { formation: typeof FORMAT
   let bestFormation = FORMATIONS[0];
   let bestPlaced = new Map<string, DraftedPlayer>();
   let bestCount = 0;
-
   for (const fm of FORMATIONS) {
     const placed = new Map<string, DraftedPlayer>();
     const used = new Set<string>();
@@ -65,15 +64,15 @@ function MiniToken({ slot, player }: { slot: FormationSlot; player?: DraftedPlay
     >
       {player ? (
         <>
-          <div className={`flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-black tabular-nums shadow ring-[1px] ring-white/80 ${ratingColor(player.overall)}`}>
+          <div className={`flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-black tabular-nums shadow ring-[1px] ring-white/80 ${ratingColor(player.overall)}`}>
             {player.overall}
           </div>
-          <div className="mt-[1px] max-w-[48px] truncate rounded-full bg-white/90 px-1.5 py-[0.5px] text-[7px] font-bold leading-tight text-slate-800">
+          <div className="mt-[1px] max-w-[40px] truncate bg-white/90 px-1 text-[6px] font-bold leading-tight text-slate-800 rounded-sm">
             {player.name.split(" ").slice(-1)[0]}
           </div>
         </>
       ) : (
-        <div className="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-white/40 bg-white/10 text-[8px] font-bold text-white/60">
+        <div className="flex h-5 w-5 items-center justify-center rounded-full border border-dashed border-white/40 bg-white/10 text-[7px] font-bold text-white/60">
           {slot.pos}
         </div>
       )}
@@ -100,73 +99,70 @@ export default function SquadViewModal({ player, onClose }: { player: OnlinePlay
   for (const band of BAND_ORDER) grouped.set(band, []);
   for (const p of player.squad) {
     const posMap: Record<string, Band> = { Goalkeeper: "GK", Defender: "DEF", Midfield: "MID", Attack: "ATT", Missing: "MID" };
-    const band = posMap[p.pos] ?? "MID";
-    grouped.get(band)!.push(p);
+    grouped.get(posMap[p.pos] ?? "MID")!.push(p);
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-6" onClick={onClose}>
       <div
-        className="card w-full max-w-[560px] max-h-[85vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-[420px] max-h-[80vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100 shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <div className="min-w-0">
-            <div className="text-base font-black text-slate-800 truncate">{player.team_name || player.username}</div>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="text-sm font-black text-slate-800 truncate">{player.team_name || player.username}</div>
+            <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[10px] font-bold text-slate-400">{divisionLabel(player.current_division)}</span>
               <span className="text-[10px] font-bold text-emerald-600">{rating} OVR</span>
               <span className="text-[10px] font-bold text-slate-400">{formation.label}</span>
             </div>
           </div>
-          <button onClick={onClose} className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 transition text-xs shrink-0">
+          <button onClick={onClose} className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 hover:bg-slate-200 transition text-[10px] shrink-0">
             ✕
           </button>
         </div>
 
-        {/* Content: pitch left, list right */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="flex flex-row gap-0">
-            {/* Pitch — fixed width left column */}
-            <div className="shrink-0 p-4 flex items-start justify-center border-r border-slate-100">
-              <div className="pitch relative aspect-[3/4] w-[200px] overflow-hidden rounded-xl ring-1 ring-black/10">
-                <MiniPitchMarkings />
-                {formation.slots.map((slot) => (
-                  <MiniToken key={slot.id} slot={slot} player={placed.get(slot.id)} />
-                ))}
-              </div>
+          {/* Mini pitch */}
+          <div className="flex justify-center py-3 bg-slate-50/50">
+            <div className="pitch relative w-[140px] aspect-[3/4] overflow-hidden rounded-lg ring-1 ring-black/10">
+              <MiniPitchMarkings />
+              {formation.slots.map((slot) => (
+                <MiniToken key={slot.id} slot={slot} player={placed.get(slot.id)} />
+              ))}
             </div>
+          </div>
 
-            {/* Player list — scrolls with container */}
-            <div className="flex-1 min-w-0 p-4 flex flex-col gap-2.5">
-              {BAND_ORDER.map((band) => {
-                const players = grouped.get(band)!;
-                if (players.length === 0) return null;
-                return (
-                  <div key={band}>
-                    <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${BAND_COLORS[band]}`}>
-                      {BAND_LABELS[band]}
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      {players
-                        .sort((a, b) => b.overall - a.overall)
-                        .map((p) => (
-                          <div key={p.name} className="flex items-center gap-2 rounded-lg bg-slate-50/80 px-2.5 py-1.5">
-                            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black tabular-nums ${ratingColor(p.overall)}`}>
-                              {p.overall}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="text-xs font-bold text-slate-800 truncate">{p.name}</div>
-                              <div className="text-[9px] text-slate-400 truncate">{p.fromClub} · {p.sub}</div>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
+          {/* Player list */}
+          <div className="px-4 py-3 flex flex-col gap-2">
+            {BAND_ORDER.map((band) => {
+              const players = grouped.get(band)!;
+              if (players.length === 0) return null;
+              return (
+                <div key={band}>
+                  <div className={`text-[9px] font-black uppercase tracking-widest mb-1 ${BAND_COLORS[band]}`}>
+                    {BAND_LABELS[band]}
                   </div>
-                );
-              })}
-            </div>
+                  <div className="flex flex-col gap-[3px]">
+                    {players
+                      .sort((a, b) => b.overall - a.overall)
+                      .map((p) => (
+                        <div key={p.name} className="flex items-center gap-2 rounded-lg bg-slate-50 px-2.5 py-1.5">
+                          <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[9px] font-black tabular-nums ${ratingColor(p.overall)}`}>
+                            {p.overall}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[11px] font-bold text-slate-800 truncate">{p.name}</div>
+                            <div className="text-[9px] text-slate-400 truncate">{p.fromClub} · {p.sub}</div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
