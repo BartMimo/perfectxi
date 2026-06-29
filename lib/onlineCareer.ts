@@ -54,6 +54,8 @@ interface OnlineCareerState {
   loadLobby: (code: string) => Promise<void>;
   leaveLobby: (userId: string) => Promise<void>;
   deleteLobby: () => Promise<void>;
+  archiveLobby: () => Promise<void>;
+  updateLobbyName: (name: string) => Promise<void>;
   subscribe: (code: string) => void;
   unsubscribe: () => void;
 
@@ -125,7 +127,8 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     const { data: careers } = await supabase
       .from("online_careers")
       .select("id, code, lobby_name, status, current_season")
-      .in("id", careerIds);
+      .in("id", careerIds)
+      .neq("status", "archived");
 
     if (!careers) {
       set({ myLobbies: [] });
@@ -305,6 +308,31 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
 
     get().unsubscribe();
     set({ lobby: null });
+  },
+
+  archiveLobby: async () => {
+    const { lobby } = get();
+    if (!lobby) return;
+
+    await supabase
+      .from("online_careers")
+      .update({ status: "archived", updated_at: new Date().toISOString() })
+      .eq("id", lobby.id);
+
+    get().unsubscribe();
+    set({ lobby: null });
+  },
+
+  updateLobbyName: async (name: string) => {
+    const { lobby } = get();
+    if (!lobby) return;
+
+    await supabase
+      .from("online_careers")
+      .update({ lobby_name: name.trim() || null, updated_at: new Date().toISOString() })
+      .eq("id", lobby.id);
+
+    set({ lobby: { ...lobby, lobby_name: name.trim() || null } });
   },
 
   subscribe: (code) => {

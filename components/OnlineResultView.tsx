@@ -7,37 +7,7 @@ import { useOnlineCareer, type OnlinePlayer } from "@/lib/onlineCareer";
 import { divisionLabel } from "@/lib/career";
 import { QUALIFICATION_LABELS } from "@/lib/sim";
 import { saveResult } from "@/lib/saveResult";
-
-function SquadModal({ player, onClose }: { player: OnlinePlayer; onClose: () => void }) {
-  if (player.squad.length === 0) return null;
-  const rating = player.squad.length > 0
-    ? Math.round(player.squad.reduce((s, p) => s + p.overall, 0) / player.squad.length * 10) / 10
-    : 0;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="card max-w-sm w-full max-h-[80vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-base font-black text-slate-800">{player.team_name || player.username}</div>
-            <div className="text-xs text-slate-400">{divisionLabel(player.current_division)} · {rating} OVR</div>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
-        </div>
-        <div className="flex flex-col gap-1">
-          {player.squad.map((p) => (
-            <div key={p.name} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-slate-800 truncate">{p.name}</div>
-                <div className="text-[10px] text-slate-400">{p.fromClub} · {p.sub}</div>
-              </div>
-              <span className="text-sm font-black tabular-nums text-slate-600">{p.overall}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+import SquadViewModal from "@/components/SquadViewModal";
 
 export default function OnlineResultView() {
   const result = useGame((s) => s.result);
@@ -354,7 +324,7 @@ export default function OnlineResultView() {
         </table>
       </div>
 
-      {viewSquadPlayer && <SquadModal player={viewSquadPlayer} onClose={() => setViewSquadPlayer(null)} />}
+      {viewSquadPlayer && <SquadViewModal player={viewSquadPlayer} onClose={() => setViewSquadPlayer(null)} />}
     </div>
   );
 }

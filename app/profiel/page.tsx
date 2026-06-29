@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { ALL_ACHIEVEMENTS } from "@/lib/achievements";
 import { LEAGUES } from "@/lib/leagues";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 interface Stats {
   games: number;
@@ -147,6 +148,7 @@ export default function ProfielPage() {
   if (!userId) {
     return (
       <main className="min-h-screen w-full pb-12">
+        <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
           <p className="text-slate-500">Je bent niet ingelogd.</p>
           <a href="/" className="btn-primary mt-4 inline-block">Ga naar home</a>
@@ -158,18 +160,11 @@ export default function ProfielPage() {
 
   return (
     <main className="min-h-screen w-full pb-12">
+      <Header backHref="/" />
       <div className="mx-auto max-w-2xl px-4 py-10">
-        <div className="flex items-start justify-between mb-8">
-          <div className="animate-fade-up">
-            <a href="/" className="text-base font-black tracking-tight">
-              <span className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
-                Elite Football
-              </span>
-            </a>
-            <h1 className="text-3xl font-black text-slate-800 mt-1">{username}</h1>
-            <p className="text-sm text-slate-400 mt-1">Jouw profiel en statistieken</p>
-          </div>
-          <a href="/" className="btn-secondary mt-1">Speel</a>
+        <div className="mb-8">
+          <h1 className="text-3xl font-black text-slate-800">{username}</h1>
+          <p className="text-sm text-slate-400 mt-1">Jouw profiel en statistieken</p>
         </div>
 
         <TeamNameEditor />

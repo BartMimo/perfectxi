@@ -70,33 +70,20 @@ export default function OnlineCarrierePage() {
                 <div className="text-xs font-black uppercase tracking-widest text-indigo-700 mb-3">
                   Jouw carrières
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {myLobbies.map((l) => (
                     <button
                       key={l.code}
                       onClick={() => router.push(`/online-carriere/${l.code}`)}
-                      className="flex items-center justify-between rounded-xl bg-white/80 border border-indigo-100 px-4 py-3 text-left hover:shadow-sm hover:border-indigo-200 transition"
+                      className="flex items-center justify-between rounded-xl bg-white/80 border border-indigo-100 px-3 py-2.5 text-left hover:shadow-sm hover:border-indigo-200 transition"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="flex flex-col min-w-0">
-                          {l.lobby_name && (
-                            <span className="text-sm font-bold text-slate-800 truncate">{l.lobby_name}</span>
-                          )}
-                          <span className={`font-black tracking-wider text-indigo-600 ${l.lobby_name ? "text-[10px]" : "text-lg"}`}>{l.code}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
-                            {divisionLabel(l.current_division)}
-                          </span>
-                          <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                            Seizoen {l.current_season}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-xs font-black tracking-wider text-indigo-600 shrink-0">{l.code}</span>
+                        <span className="text-sm font-bold text-slate-800 truncate">{l.lobby_name || "—"}</span>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] font-bold text-slate-400">
-                          {l.player_count} spelers
-                        </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] font-bold text-slate-400">{divisionLabel(l.current_division)}</span>
+                        <span className="text-[10px] font-bold text-slate-400">S{l.current_season}</span>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                           l.status === "waiting" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
                         }`}>

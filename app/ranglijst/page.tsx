@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { FORMATIONS } from "@/lib/formations";
 import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 
 type Tab = "records" | "accounts" | "challenge" | "career" | "dailywins";
 type RecordSort = "points" | "goals_for" | "goals_against" | "team_rating" | "team_value";
@@ -270,17 +271,10 @@ export default function RanglijstPage() {
 
   return (
     <main className="min-h-screen w-full pb-12">
+      <Header backHref="/" />
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <div className="flex items-start justify-between mb-8">
-          <div className="animate-fade-up">
-            <a href="/" className="text-base font-black tracking-tight">
-              <span className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
-                Elite Football
-              </span>
-            </a>
-            <h1 className="text-3xl font-black text-slate-800 mt-1">Ranglijst</h1>
-          </div>
-          <a href="/" className="btn-secondary mt-1">Speel</a>
+        <div className="mb-8">
+          <h1 className="text-3xl font-black text-slate-800">Ranglijst</h1>
         </div>
 
         {/* Tabs */}

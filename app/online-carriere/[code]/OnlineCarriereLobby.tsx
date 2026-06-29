@@ -17,6 +17,7 @@ import ReelView from "@/components/ReelView";
 import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
 import OnlineResultView from "@/components/OnlineResultView";
+import SquadViewModal from "@/components/SquadViewModal";
 
 const CURRENT_SEASON = "2025-2026";
 
@@ -55,35 +56,6 @@ function buildOnlineOpponents(
     if (candidates.length >= slotsNeeded) break;
   }
   return candidates;
-}
-
-function SquadModal({ player, onClose }: { player: OnlinePlayer; onClose: () => void }) {
-  if (player.squad.length === 0) return null;
-  const rating = avgRating(player.squad);
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="card max-w-sm w-full max-h-[80vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-base font-black text-slate-800">{player.team_name || player.username}</div>
-            <div className="text-xs text-slate-400">{divisionLabel(player.current_division)} · {rating} OVR</div>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
-        </div>
-        <div className="flex flex-col gap-1">
-          {player.squad.map((p) => (
-            <div key={p.name} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
-              <div className="min-w-0">
-                <div className="text-sm font-bold text-slate-800 truncate">{p.name}</div>
-                <div className="text-[10px] text-slate-400">{p.fromClub} · {p.sub}</div>
-              </div>
-              <span className="text-sm font-black tabular-nums text-slate-600">{p.overall}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject }: {
@@ -284,18 +256,20 @@ function WaitingForOthers({ lobby, userId, title }: { lobby: OnlineCareer; userI
         <h2 className="text-lg font-black text-slate-800">{title}</h2>
       </div>
       <PlayerList players={lobby.players} currentUserId={userId} ownerId={lobby.owner_id} onKick={kickPlayer} onViewSquad={setViewSquadPlayer} />
-      {viewSquadPlayer && <SquadModal player={viewSquadPlayer} onClose={() => setViewSquadPlayer(null)} />}
+      {viewSquadPlayer && <SquadViewModal player={viewSquadPlayer} onClose={() => setViewSquadPlayer(null)} />}
     </div>
   );
 }
 
 function WaitingRoom() {
-  const { lobby, startDraft, leaveLobby, deleteLobby, kickPlayer, acceptPlayer, rejectPlayer } = useOnlineCareer();
+  const { lobby, startDraft, leaveLobby, archiveLobby, kickPlayer, acceptPlayer, rejectPlayer, updateLobbyName } = useOnlineCareer();
   const userId = useAuth((s) => s.userId);
   const formationKey = useGame((s) => s.formationKey);
   const setFormation = useGame((s) => s.setFormation);
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
 
   if (!lobby) return null;
   const isOwner = lobby.owner_id === userId;
@@ -319,9 +293,39 @@ function WaitingRoom() {
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-black text-slate-800">
-          {lobby.lobby_name || "Online Carrière"}
-        </h1>
+        {editingName ? (
+          <form
+            onSubmit={(e) => { e.preventDefault(); updateLobbyName(nameDraft); setEditingName(false); }}
+            className="flex items-center justify-center gap-2"
+          >
+            <input
+              type="text"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              placeholder="Lobby naam"
+              maxLength={30}
+              autoFocus
+              className="rounded-xl border-2 border-indigo-300 px-3 py-2 text-center text-lg font-bold focus:border-indigo-500 focus:outline-none transition"
+            />
+            <button type="submit" className="rounded-xl bg-indigo-500 px-3 py-2 text-sm font-bold text-white">✓</button>
+            <button type="button" onClick={() => setEditingName(false)} className="rounded-xl bg-slate-100 px-3 py-2 text-sm font-bold text-slate-500">✕</button>
+          </form>
+        ) : (
+          <div className="flex items-center justify-center gap-2">
+            <h1 className="text-2xl font-black text-slate-800">
+              {lobby.lobby_name || "Online Carrière"}
+            </h1>
+            {isOwner && (
+              <button
+                onClick={() => { setNameDraft(lobby.lobby_name || ""); setEditingName(true); }}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
+                title="Naam wijzigen"
+              >
+                ✏️
+              </button>
+            )}
+          </div>
+        )}
         <p className="text-sm text-slate-500 mt-1">Seizoen {lobby.current_season} · {activePlayers.length} speler{activePlayers.length !== 1 ? "s" : ""}</p>
       </div>
 
@@ -395,14 +399,14 @@ function WaitingRoom() {
           {isOwner ? (
             <button
               onClick={async () => {
-                if (confirm("Weet je zeker dat je deze lobby wilt verwijderen? Dit kan niet ongedaan worden.")) {
-                  await deleteLobby();
+                if (confirm("Weet je zeker dat je deze lobby wilt archiveren? De gegevens blijven bewaard.")) {
+                  await archiveLobby();
                   router.push("/online-carriere");
                 }
               }}
               className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition"
             >
-              Verwijder
+              Archiveer
             </button>
           ) : (
             <button onClick={handleLeave} className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition">
@@ -736,7 +740,7 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
 
   return (
     <main className="min-h-screen w-full pb-12">
-      {!isWaitingRoom && <Header showMeta backHref="/online-carriere" />}
+      <Header backHref="/online-carriere" showMeta={!isWaitingRoom} />
 
       {isWaitingRoom && <WaitingRoom />}
 
