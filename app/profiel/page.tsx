@@ -18,6 +18,7 @@ interface Stats {
   unlockedAchievements: Set<string>;
   champLeagues: Set<string>;
   div1Champ: boolean;
+  dailyWins: number;
 }
 
 export default function ProfielPage() {
@@ -61,11 +62,11 @@ export default function ProfielPage() {
 
     const { data } = await supabase
       .from("results")
-      .select("points, goals_for, goals_against, team_rating, team_value, position, achievements, league_code, is_career, career_division")
+      .select("points, goals_for, goals_against, team_rating, team_value, position, achievements, league_code, is_career, career_division, is_challenge, challenge_week")
       .eq("user_id", userId);
 
     if (data && data.length > 0) {
-      const nonCareer = data.filter((r: Record<string, unknown>) => !r.is_career);
+      const nonCareer = data.filter((r: Record<string, unknown>) => !r.is_career && !r.is_challenge);
       const s: Stats = {
         games: nonCareer.length,
         champions: 0,
@@ -77,6 +78,7 @@ export default function ProfielPage() {
         unlockedAchievements: new Set(),
         champLeagues: new Set(),
         div1Champ: false,
+        dailyWins: 0,
       };
       for (const r of nonCareer) {
         if (r.position === 1) {
@@ -104,6 +106,35 @@ export default function ProfielPage() {
           }
         }
       }
+      // Count daily wins — fetch all challenge results for days this user played
+      const challengeDays = data
+        .filter((r: Record<string, unknown>) => r.is_challenge && r.challenge_week)
+        .map((r) => r.challenge_week as string);
+      const uniqueDays = [...new Set(challengeDays)];
+      if (uniqueDays.length > 0) {
+        const { data: allDayResults } = await supabase
+          .from("results")
+          .select("user_id, challenge_week, points")
+          .eq("is_challenge", true)
+          .in("challenge_week", uniqueDays);
+        if (allDayResults) {
+          const dayBest = new Map<string, number>();
+          for (const r of allDayResults) {
+            const day = r.challenge_week as string;
+            dayBest.set(day, Math.max(dayBest.get(day) ?? 0, r.points as number));
+          }
+          const myByDay = new Map<string, number>();
+          for (const r of data.filter((r: Record<string, unknown>) => r.is_challenge)) {
+            const day = r.challenge_week as string;
+            myByDay.set(day, Math.max(myByDay.get(day) ?? 0, r.points as number));
+          }
+          for (const [day, myPts] of myByDay) {
+            if (myPts === dayBest.get(day)) s.dailyWins++;
+          }
+        }
+      }
+      if (s.dailyWins > 0) s.unlockedAchievements.add("dailywinner");
+
       setStats(s);
     } else {
       setStats(null);
@@ -162,6 +193,7 @@ export default function ProfielPage() {
                 <StatBox label="Minste tegen" value={stats.leastGa === 9999 ? "—" : stats.leastGa} />
                 <StatBox label="Beste rating" value={stats.bestRating.toFixed(1)} />
                 <StatBox label="Beste waarde" value={fmtValue(stats.bestValue)} />
+                <StatBox label="Daily wins" value={stats.dailyWins} accent />
               </div>
             </div>
 

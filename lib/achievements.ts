@@ -33,6 +33,7 @@ export const ALL_ACHIEVEMENTS: AchievementDef[] = [
   { id: "gf50", label: "50+ goals", icon: "🥅", description: "Scoor 50 of meer doelpunten in één seizoen.", check: (r) => r.userRow.gf >= 50 },
   { id: "assister20", label: "Assistkoning 20+", icon: "🎯", description: "Heb een speler met 20 of meer assists in één seizoen.", check: (r) => (r.awards.topAssister?.assists ?? 0) >= 20 },
   { id: "div1champ", label: "Divisie 1 Kampioen", icon: "👑", description: "Word kampioen in Divisie 1 in de carrièremodus.", check: () => false },
+  { id: "dailywinner", label: "Daily Winner", icon: "🌟", description: "Win een daily challenge (hoogste score van de dag).", check: () => false },
 ];
 
 export function computeAchievements(result: SimResult): Achievement[] {

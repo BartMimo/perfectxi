@@ -5,7 +5,7 @@ import { useGame } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { FORMATIONS } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
-import { getCurrentChallenge, getChallengeWeekId } from "@/lib/challenge";
+import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
 import { supabase } from "@/lib/supabase";
 import { CareerStartCard } from "./CareerView";
 
@@ -84,7 +84,7 @@ export default function StartView() {
 
   useEffect(() => {
     if (!userId) { setChallengeChecked(true); return; }
-    const weekId = getChallengeWeekId();
+    const weekId = getChallengeDayId();
     supabase
       .from("results")
       .select("points")
@@ -124,7 +124,7 @@ export default function StartView() {
                 setScreen("home");
                 return;
               }
-              startChallenge(challenge.leagueCode, challenge.formationKey, challenge.ratingMode, challenge.difficulty, challenge.week);
+              startChallenge(challenge.leagueCode, challenge.formationKey, challenge.ratingMode, challenge.difficulty, challenge.day);
             }}
             accent="border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50"
           />
