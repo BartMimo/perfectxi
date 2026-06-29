@@ -112,13 +112,13 @@ function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: 
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 9999 }}
-      className="bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col"
+      className="bg-gradient-to-br from-slate-50 to-slate-100"
     >
-      {/* Top bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200/60 bg-white/80 backdrop-blur shrink-0">
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200/60 bg-white/90 backdrop-blur-xl">
         <div className="min-w-0">
-          <div className="text-xl font-black text-slate-800 truncate">{player.team_name || player.username}</div>
-          <div className="flex items-center gap-2.5 mt-0.5">
+          <div className="text-lg font-black text-slate-800 truncate">{player.team_name || player.username}</div>
+          <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs font-bold text-slate-400">{divisionLabel(player.current_division)}</span>
             <span className="text-xs font-bold text-emerald-600">{rating} OVR</span>
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-500">{formation.label}</span>
@@ -129,57 +129,82 @@ function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: 
         </div>
         <button
           onClick={onClose}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition text-lg font-bold shrink-0"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition text-sm font-bold shrink-0"
         >
           ✕
         </button>
       </div>
 
-      {/* Main: pitch left, list right */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
-        {/* Pitch — takes up available height */}
-        <div className="flex-1 flex items-center justify-center p-4 lg:p-8 min-h-0">
-          <div className="pitch relative aspect-[3/4] max-h-full w-auto overflow-hidden rounded-2xl ring-1 ring-black/10 shadow-lg"
-               style={{ height: "100%", maxWidth: "100%" }}>
-            <PitchMarkings />
-            {formation.slots.map((slot) => (
-              <PitchToken key={slot.id} slot={slot} player={placed.get(slot.id)} />
-            ))}
+      {/* Scrollable content */}
+      <div className="overflow-y-auto" style={{ height: "calc(100% - 60px)" }}>
+        {/* --- Desktop: side by side --- */}
+        <div className="hidden lg:flex h-full">
+          {/* Pitch */}
+          <div className="flex-1 flex items-center justify-center p-8 min-h-0">
+            <div className="pitch relative aspect-[3/4] max-h-full w-auto overflow-hidden rounded-2xl ring-1 ring-black/10 shadow-lg"
+                 style={{ height: "100%" }}>
+              <PitchMarkings />
+              {formation.slots.map((slot) => (
+                <PitchToken key={slot.id} slot={slot} player={placed.get(slot.id)} />
+              ))}
+            </div>
+          </div>
+          {/* List */}
+          <div className="w-[380px] shrink-0 overflow-y-auto border-l border-slate-200/60 bg-white/60 p-6">
+            <PlayerList grouped={grouped} />
           </div>
         </div>
 
-        {/* Player list */}
-        <div className="lg:w-[380px] shrink-0 overflow-y-auto border-t lg:border-t-0 lg:border-l border-slate-200/60 bg-white/60 p-5 lg:p-6">
-          <div className="flex flex-col gap-4">
-            {BAND_ORDER.map((band) => {
-              const players = grouped.get(band)!;
-              if (players.length === 0) return null;
-              return (
-                <div key={band}>
-                  <div className={`text-[10px] font-black uppercase tracking-widest mb-2 ${BAND_COLORS[band]}`}>
-                    {BAND_LABELS[band]}
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    {players
-                      .sort((a, b) => b.overall - a.overall)
-                      .map((p) => (
-                        <div key={p.name} className="flex items-center gap-3 rounded-xl bg-white/80 border border-slate-100 px-3.5 py-2.5 shadow-sm">
-                          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black tabular-nums shadow-sm ${ratingColor(p.overall)}`}>
-                            {p.overall}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-sm font-bold text-slate-800 truncate">{p.name}</div>
-                            <div className="text-[11px] text-slate-400 truncate">{p.fromClub} · {p.sub}</div>
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              );
-            })}
+        {/* --- Mobile: pitch then list stacked, scrollable --- */}
+        <div className="lg:hidden">
+          {/* Pitch — near full width */}
+          <div className="px-4 pt-4 pb-2">
+            <div className="pitch relative aspect-[3/4] w-full overflow-hidden rounded-2xl ring-1 ring-black/10 shadow-lg">
+              <PitchMarkings />
+              {formation.slots.map((slot) => (
+                <PitchToken key={slot.id} slot={slot} player={placed.get(slot.id)} />
+              ))}
+            </div>
+          </div>
+          {/* List */}
+          <div className="px-4 py-4">
+            <PlayerList grouped={grouped} />
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function PlayerList({ grouped }: { grouped: Map<Band, DraftedPlayer[]> }) {
+  return (
+    <div className="flex flex-col gap-4">
+      {BAND_ORDER.map((band) => {
+        const players = grouped.get(band)!;
+        if (players.length === 0) return null;
+        return (
+          <div key={band}>
+            <div className={`text-[10px] font-black uppercase tracking-widest mb-2 ${BAND_COLORS[band]}`}>
+              {BAND_LABELS[band]}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {players
+                .sort((a, b) => b.overall - a.overall)
+                .map((p) => (
+                  <div key={p.name} className="flex items-center gap-3 rounded-xl bg-white/80 border border-slate-100 px-3.5 py-2.5 shadow-sm">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black tabular-nums shadow-sm ${ratingColor(p.overall)}`}>
+                      {p.overall}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-slate-800 truncate">{p.name}</div>
+                      <div className="text-[11px] text-slate-400 truncate">{p.fromClub} · {p.sub}</div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
