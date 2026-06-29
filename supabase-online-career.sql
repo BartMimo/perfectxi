@@ -51,3 +51,9 @@ ALTER PUBLICATION supabase_realtime ADD TABLE online_career_players;
 -- ALTER TABLE online_career_players ADD COLUMN is_bot boolean NOT NULL DEFAULT false;
 -- ALTER PUBLICATION supabase_realtime ADD TABLE online_careers;
 -- ALTER PUBLICATION supabase_realtime ADD TABLE online_career_players;
+
+-- Lobby naam + delete policy + acknowledged kolom
+-- ALTER TABLE online_careers ADD COLUMN lobby_name text;
+-- ALTER TABLE online_career_players ADD COLUMN acknowledged boolean NOT NULL DEFAULT false;
+-- ALTER TABLE online_career_players ADD COLUMN pending boolean NOT NULL DEFAULT false;
+-- CREATE POLICY "Anyone can delete online careers" ON online_careers FOR DELETE USING (true);

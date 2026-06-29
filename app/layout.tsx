@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Perfect XI — Draft & Domineer",
+  title: "Elite Football — Draft & Domineer",
   description:
     "Draai aan het rad, draft je droomelftal uit echte historische squads en kijk of je het seizoen ongeslagen door komt: 38-0-0.",
 };

@@ -16,11 +16,14 @@ export interface OnlinePlayer {
   championships: number;
   ready: boolean;
   is_bot: boolean;
+  acknowledged: boolean;
+  pending: boolean;
 }
 
 export interface OnlineCareer {
   id: string;
   code: string;
+  lobby_name: string | null;
   owner_id: string;
   status: "waiting" | "drafting" | "simulating" | "finished";
   current_season: number;
@@ -30,6 +33,7 @@ export interface OnlineCareer {
 
 export interface MyLobbyInfo {
   code: string;
+  lobby_name: string | null;
   status: string;
   current_season: number;
   player_count: number;
@@ -45,7 +49,7 @@ interface OnlineCareerState {
   pollInterval: ReturnType<typeof setInterval> | null;
 
   loadMyLobbies: (userId: string) => Promise<void>;
-  createLobby: (userId: string, username: string, teamName: string | null) => Promise<string | null>;
+  createLobby: (userId: string, username: string, teamName: string | null, lobbyName?: string) => Promise<string | null>;
   joinLobby: (code: string, userId: string, username: string, teamName: string | null) => Promise<boolean>;
   loadLobby: (code: string) => Promise<void>;
   leaveLobby: (userId: string) => Promise<void>;
@@ -54,10 +58,13 @@ interface OnlineCareerState {
   unsubscribe: () => void;
 
   kickPlayer: (userId: string) => Promise<void>;
+  acceptPlayer: (userId: string) => Promise<void>;
+  rejectPlayer: (userId: string) => Promise<void>;
   startDraft: () => Promise<void>;
   setReady: (userId: string, ready: boolean) => Promise<void>;
   saveSquad: (userId: string, squad: DraftedPlayer[]) => Promise<void>;
   finishSeason: (userId: string, position: number, points: number, gf: number, ga: number) => Promise<void>;
+  acknowledge: (userId: string) => Promise<void>;
   advanceSeason: () => Promise<void>;
   getDivisionPlayers: (division: number) => OnlinePlayer[];
   getSeasonSeed: (division: number) => number;
@@ -88,6 +95,8 @@ async function fetchPlayers(careerId: string): Promise<OnlinePlayer[]> {
     championships: p.championships as number,
     ready: p.ready as boolean,
     is_bot: p.is_bot as boolean,
+    acknowledged: (p.acknowledged as boolean) ?? false,
+    pending: (p.pending as boolean) ?? false,
   }));
 }
 
@@ -104,7 +113,8 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       .from("online_career_players")
       .select("career_id, current_division")
       .eq("user_id", userId)
-      .eq("is_bot", false);
+      .eq("is_bot", false)
+      .eq("pending", false);
 
     if (!memberships || memberships.length === 0) {
       set({ myLobbies: [] });
@@ -114,7 +124,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     const careerIds = memberships.map((m) => m.career_id as string);
     const { data: careers } = await supabase
       .from("online_careers")
-      .select("id, code, status, current_season")
+      .select("id, code, lobby_name, status, current_season")
       .in("id", careerIds);
 
     if (!careers) {
@@ -127,11 +137,13 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       const { count } = await supabase
         .from("online_career_players")
         .select("*", { count: "exact", head: true })
-        .eq("career_id", c.id);
+        .eq("career_id", c.id)
+        .eq("pending", false);
 
       const mem = memberships.find((m) => m.career_id === c.id);
       lobbies.push({
         code: c.code as string,
+        lobby_name: (c.lobby_name as string | null) ?? null,
         status: c.status as string,
         current_season: c.current_season as number,
         player_count: count ?? 0,
@@ -142,13 +154,19 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     set({ myLobbies: lobbies });
   },
 
-  createLobby: async (userId, username, teamName) => {
+  createLobby: async (userId, username, teamName, lobbyName) => {
     set({ loading: true, error: null });
     const code = generateCode();
 
     const { data: career, error } = await supabase
       .from("online_careers")
-      .insert({ code, owner_id: userId, status: "waiting", current_season: 1 })
+      .insert({
+        code,
+        owner_id: userId,
+        status: "waiting",
+        current_season: 1,
+        lobby_name: lobbyName?.trim() || null,
+      })
       .select()
       .single();
 
@@ -162,6 +180,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       user_id: userId,
       username,
       team_name: teamName,
+      pending: false,
     });
 
     const players = await fetchPlayers(career.id);
@@ -169,6 +188,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       lobby: {
         id: career.id,
         code: career.code,
+        lobby_name: career.lobby_name ?? null,
         owner_id: career.owner_id,
         status: career.status,
         current_season: career.current_season,
@@ -200,14 +220,16 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     }
 
     const players = await fetchPlayers(career.id);
-    if (players.length >= career.max_players) {
+    const activePlayers = players.filter((p) => !p.pending);
+    if (activePlayers.length >= career.max_players) {
       set({ loading: false, error: "Lobby is vol (max 20 spelers)" });
       return false;
     }
 
-    if (players.some((p) => p.user_id === userId)) {
+    const existing = players.find((p) => p.user_id === userId);
+    if (existing) {
       set({
-        lobby: { ...career, players },
+        lobby: { ...career, lobby_name: career.lobby_name ?? null, players },
         loading: false,
       });
       return true;
@@ -218,6 +240,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       user_id: userId,
       username,
       team_name: teamName,
+      pending: true,
     });
 
     if (error) {
@@ -227,7 +250,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
 
     const updatedPlayers = await fetchPlayers(career.id);
     set({
-      lobby: { ...career, players: updatedPlayers },
+      lobby: { ...career, lobby_name: career.lobby_name ?? null, players: updatedPlayers },
       loading: false,
     });
     return true;
@@ -248,7 +271,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
 
     const players = await fetchPlayers(career.id);
     set({
-      lobby: { ...career, players },
+      lobby: { ...career, lobby_name: career.lobby_name ?? null, players },
       loading: false,
     });
   },
@@ -271,7 +294,14 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     const { lobby } = get();
     if (!lobby) return;
 
-    await supabase.from("online_careers").delete().eq("id", lobby.id);
+    // Players are deleted by ON DELETE CASCADE
+    const { error } = await supabase.from("online_careers").delete().eq("id", lobby.id);
+    if (error) {
+      console.error("Delete lobby error:", error);
+      // Fallback: delete players first, then career
+      await supabase.from("online_career_players").delete().eq("career_id", lobby.id);
+      await supabase.from("online_careers").delete().eq("id", lobby.id);
+    }
 
     get().unsubscribe();
     set({ lobby: null });
@@ -280,7 +310,6 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
   subscribe: (code) => {
     get().unsubscribe();
 
-    // Silent refetch (no loading flicker) used by both realtime and polling.
     const refetch = async () => {
       const { data: career } = await supabase
         .from("online_careers")
@@ -289,7 +318,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         .single();
       if (!career) return;
       const players = await fetchPlayers(career.id);
-      set({ lobby: { ...career, players } });
+      set({ lobby: { ...career, lobby_name: career.lobby_name ?? null, players } });
     };
 
     const channel = supabase
@@ -306,10 +335,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       )
       .subscribe();
 
-    // Polling fallback: guarantees progress even when Supabase realtime is
-    // not enabled on the tables or a realtime event is missed.
     const pollInterval = setInterval(refetch, 4000);
-
     set({ subscription: channel, pollInterval });
   },
 
@@ -341,6 +367,26 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     }
   },
 
+  acceptPlayer: async (userId) => {
+    const { lobby } = get();
+    if (!lobby) return;
+    await supabase
+      .from("online_career_players")
+      .update({ pending: false })
+      .eq("career_id", lobby.id)
+      .eq("user_id", userId);
+  },
+
+  rejectPlayer: async (userId) => {
+    const { lobby } = get();
+    if (!lobby) return;
+    await supabase
+      .from("online_career_players")
+      .delete()
+      .eq("career_id", lobby.id)
+      .eq("user_id", userId);
+  },
+
   startDraft: async () => {
     const { lobby } = get();
     if (!lobby) return;
@@ -352,17 +398,18 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
 
     await supabase
       .from("online_career_players")
-      .update({ ready: false })
+      .update({ ready: false, acknowledged: false })
       .eq("career_id", lobby.id)
-      .eq("is_bot", false);
+      .eq("is_bot", false)
+      .eq("pending", false);
 
     await supabase
       .from("online_career_players")
-      .update({ ready: true })
+      .update({ ready: true, acknowledged: true })
       .eq("career_id", lobby.id)
       .eq("is_bot", true);
 
-    set({ lobby: { ...lobby, status: "drafting", players: lobby.players.map((p) => ({ ...p, ready: p.is_bot })) } });
+    set({ lobby: { ...lobby, status: "drafting", players: lobby.players.filter((p) => !p.pending).map((p) => ({ ...p, ready: p.is_bot, acknowledged: p.is_bot })) } });
   },
 
   setReady: async (userId, ready) => {
@@ -387,9 +434,6 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       .eq("user_id", userId);
   },
 
-  // Records the season result. Does NOT change the division — promotion/
-  // relegation is applied centrally in advanceSeason so the division stays
-  // stable while the result screen is shown (and survives a page reload).
   finishSeason: async (userId, position, points, gf, ga) => {
     const { lobby } = get();
     if (!lobby) return;
@@ -417,18 +461,26 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       .eq("user_id", userId);
   },
 
-  // Owner-only. Applies promotion/relegation from each player's recorded
-  // result, then bumps the season and resets readiness.
+  acknowledge: async (userId) => {
+    const { lobby } = get();
+    if (!lobby) return;
+
+    await supabase
+      .from("online_career_players")
+      .update({ acknowledged: true })
+      .eq("career_id", lobby.id)
+      .eq("user_id", userId);
+  },
+
   advanceSeason: async () => {
     const { lobby } = get();
     if (!lobby) return;
 
     const newSeason = lobby.current_season + 1;
 
-    // Re-fetch the latest players so we use everyone's recorded result.
     const players = await fetchPlayers(lobby.id);
     await Promise.all(
-      players.map((p) => {
+      players.filter((p) => !p.pending).map((p) => {
         const entry = p.history.find((h) => h.season === lobby.current_season);
         let newDiv = p.current_division;
         if (entry) {
@@ -437,7 +489,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         }
         return supabase
           .from("online_career_players")
-          .update({ current_division: newDiv, ready: p.is_bot })
+          .update({ current_division: newDiv, ready: p.is_bot, acknowledged: p.is_bot })
           .eq("id", p.id);
       }),
     );
@@ -455,7 +507,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
   getDivisionPlayers: (division) => {
     const { lobby } = get();
     if (!lobby) return [];
-    return lobby.players.filter((p) => p.current_division === division);
+    return lobby.players.filter((p) => p.current_division === division && !p.pending);
   },
 
   getSeasonSeed: (division) => {

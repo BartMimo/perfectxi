@@ -3,10 +3,41 @@
 import { useEffect, useState } from "react";
 import { useGame } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { useOnlineCareer } from "@/lib/onlineCareer";
+import { useOnlineCareer, type OnlinePlayer } from "@/lib/onlineCareer";
 import { divisionLabel } from "@/lib/career";
 import { QUALIFICATION_LABELS } from "@/lib/sim";
 import { saveResult } from "@/lib/saveResult";
+
+function SquadModal({ player, onClose }: { player: OnlinePlayer; onClose: () => void }) {
+  if (player.squad.length === 0) return null;
+  const rating = player.squad.length > 0
+    ? Math.round(player.squad.reduce((s, p) => s + p.overall, 0) / player.squad.length * 10) / 10
+    : 0;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="card max-w-sm w-full max-h-[80vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-base font-black text-slate-800">{player.team_name || player.username}</div>
+            <div className="text-xs text-slate-400">{divisionLabel(player.current_division)} · {rating} OVR</div>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+        </div>
+        <div className="flex flex-col gap-1">
+          {player.squad.map((p) => (
+            <div key={p.name} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-slate-800 truncate">{p.name}</div>
+                <div className="text-[10px] text-slate-400">{p.fromClub} · {p.sub}</div>
+              </div>
+              <span className="text-sm font-black tabular-nums text-slate-600">{p.overall}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function OnlineResultView() {
   const result = useGame((s) => s.result);
@@ -15,10 +46,11 @@ export default function OnlineResultView() {
   const ratingMode = useGame((s) => s.ratingMode);
   const difficulty = useGame((s) => s.difficulty);
   const userId = useAuth((s) => s.userId);
-  const { lobby, finishSeason, advanceSeason, kickPlayer } = useOnlineCareer();
+  const { lobby, finishSeason, advanceSeason, acknowledge, kickPlayer } = useOnlineCareer();
   const [saved, setSaved] = useState(false);
   const [seasonFinished, setSeasonFinished] = useState(false);
   const [showTable, setShowTable] = useState(true);
+  const [viewSquadPlayer, setViewSquadPlayer] = useState<OnlinePlayer | null>(null);
 
   const me = lobby?.players.find((p) => p.user_id === userId);
 
@@ -55,14 +87,20 @@ export default function OnlineResultView() {
   const relegated = position >= 18 && me.current_division < 10;
   const champion = position === 1;
 
-  const allReady = lobby.players.every((p) => p.ready);
+  const activePlayers = lobby.players.filter((p) => !p.pending);
+  const allAcknowledged = activePlayers.every((p) => p.acknowledged);
   const isOwner = lobby.owner_id === userId;
+  const iAcknowledged = me.acknowledged;
+
+  const handleAcknowledge = async () => {
+    if (!userId) return;
+    await acknowledge(userId);
+  };
 
   const handleNextSeason = async () => {
     await advanceSeason();
   };
 
-  // Check if anyone has won div 1
   const div1Winner = lobby.players.find(
     (p) => p.history.some((h) => h.division === 1 && h.position === 1),
   );
@@ -134,7 +172,7 @@ export default function OnlineResultView() {
           Overzicht spelers
         </div>
         <div className="flex flex-col gap-1.5">
-          {[...lobby.players]
+          {[...activePlayers]
             .sort((a, b) => a.current_division - b.current_division || a.username.localeCompare(b.username))
             .map((p) => {
               const lastSeason = p.history[p.history.length - 1];
@@ -185,6 +223,20 @@ export default function OnlineResultView() {
                         {lastSeason.position}e
                       </span>
                     )}
+                    {p.squad.length > 0 && !isMe && (
+                      <button
+                        onClick={() => setViewSquadPlayer(p)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-xs text-indigo-500 hover:bg-indigo-100 transition"
+                        title="Bekijk team"
+                      >
+                        👁
+                      </button>
+                    )}
+                    {p.acknowledged ? (
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs text-white shadow-sm shadow-emerald-200">✓</span>
+                    ) : (
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-400">…</span>
+                    )}
                     {isOwner && !isMe && !p.is_bot && (
                       <button
                         onClick={() => kickPlayer(p.user_id)}
@@ -201,11 +253,24 @@ export default function OnlineResultView() {
         </div>
       </div>
 
-      {/* Next season button */}
+      {/* Continue / Next season buttons */}
       {!div1Winner && (
-        isOwner ? (
-          <button onClick={handleNextSeason} className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5">
-            Start seizoen {lobby.current_season + 1}
+        !iAcknowledged ? (
+          <button
+            onClick={handleAcknowledge}
+            className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-emerald-200/50 transition hover:shadow-lg hover:-translate-y-0.5"
+          >
+            Verder gaan
+          </button>
+        ) : isOwner ? (
+          <button
+            disabled={!allAcknowledged}
+            onClick={handleNextSeason}
+            className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+          >
+            {allAcknowledged
+              ? `Start seizoen ${lobby.current_season + 1}`
+              : `Wacht tot iedereen op "Verder gaan" klikt…`}
           </button>
         ) : (
           <div className="rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
@@ -288,6 +353,8 @@ export default function OnlineResultView() {
           </tbody>
         </table>
       </div>
+
+      {viewSquadPlayer && <SquadModal player={viewSquadPlayer} onClose={() => setViewSquadPlayer(null)} />}
     </div>
   );
 }

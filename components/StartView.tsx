@@ -46,6 +46,23 @@ function OptionCard({
   );
 }
 
+type StartScreen = "home" | "single";
+
+function ModeCard({ icon, title, desc, onClick, accent }: {
+  icon: string; title: string; desc: string; onClick: () => void; accent: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-6 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${accent}`}
+    >
+      <span className="text-3xl">{icon}</span>
+      <span className="text-base font-black text-slate-800">{title}</span>
+      <span className="text-xs leading-relaxed text-slate-500">{desc}</span>
+    </button>
+  );
+}
+
 export default function StartView() {
   const formationKey = useGame((s) => s.formationKey);
   const setFormation = useGame((s) => s.setFormation);
@@ -63,6 +80,7 @@ export default function StartView() {
   const challenge = getCurrentChallenge();
   const [challengePlayed, setChallengePlayed] = useState<number | null>(null);
   const [challengeChecked, setChallengeChecked] = useState(false);
+  const [screen, setScreen] = useState<StartScreen>("home");
 
   useEffect(() => {
     if (!userId) { setChallengeChecked(true); return; }
@@ -82,71 +100,95 @@ export default function StartView() {
 
   const ready = loaded && !!leagueCode;
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
-      <div className="animate-fade-up text-center">
-        <div className="text-4xl mb-2">⚽</div>
-        <h1 className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
-          Perfect&nbsp;XI
-        </h1>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-500">
-          Kies een formatie en competitie, draft je droomelftal en jaag op het
-          perfecte seizoen: <span className="font-bold text-emerald-600">38-0-0</span>.
-        </p>
-      </div>
+  if (screen === "home") {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10">
+        <div className="animate-fade-up text-center">
+          <div className="text-4xl mb-2">⚽</div>
+          <h1 className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
+            Elite&nbsp;Football
+          </h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-500">
+            Draft je droomelftal en jaag op het perfecte seizoen: <span className="font-bold text-emerald-600">38-0-0</span>.
+          </p>
+        </div>
 
-      {/* Challenge van de week */}
-      {challengeChecked && (
-        <div className="mt-8 card p-5 border-2 border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🏅</span>
-            <span className="text-xs font-black uppercase tracking-widest text-amber-700">Challenge van de week</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="rounded-full bg-white/80 border border-amber-200/60 px-3 py-1.5 font-bold text-slate-700">
-              {challenge.leagueFlag} {challenge.leagueName}
-            </span>
-            <span className="rounded-full bg-white/80 border border-amber-200/60 px-3 py-1.5 font-bold text-slate-700">
-              {challenge.formationLabel}
-            </span>
-            <span className="rounded-full bg-white/80 border border-amber-200/60 px-3 py-1.5 font-bold text-slate-700">
-              {challenge.ratingMode === "prime" ? "Prime" : "Actueel"}
-            </span>
-          </div>
-          {challengePlayed !== null ? (
-            <div className="mt-4 flex items-center gap-3">
-              <span className="text-sm font-bold text-amber-800">Al gespeeld deze week!</span>
+        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <ModeCard
+            icon="🏅"
+            title="Challenge van de dag"
+            desc="Dagelijkse challenge met vaste instellingen. Vergelijk je score!"
+            onClick={() => {
+              if (!loaded) return;
+              if (challengePlayed !== null) {
+                setScreen("home");
+                return;
+              }
+              startChallenge(challenge.leagueCode, challenge.formationKey, challenge.ratingMode, challenge.difficulty, challenge.week);
+            }}
+            accent="border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50"
+          />
+          <ModeCard
+            icon="⚽"
+            title="Single Season"
+            desc="Kies een competitie en formatie, draft je team en speel één seizoen."
+            onClick={() => setScreen("single")}
+            accent="border-emerald-200/60 bg-gradient-to-br from-emerald-50/60 to-teal-50/40"
+          />
+          <ModeCard
+            icon="🏆"
+            title="Offline Carrière"
+            desc="Begin in Divisie 10 en werk je omhoog naar Divisie 1!"
+            onClick={() => {
+              const el = document.getElementById("career-card");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+            accent="border-indigo-200/60 bg-gradient-to-br from-indigo-50/60 to-purple-50/40"
+          />
+          <ModeCard
+            icon="🌐"
+            title="Online Carrière"
+            desc="Speel de carrièremodus met vrienden! Race samen naar Divisie 1."
+            onClick={() => { window.location.href = "/online-carriere"; }}
+            accent="border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/40"
+          />
+        </div>
+
+        {/* Challenge detail als al gespeeld */}
+        {challengeChecked && challengePlayed !== null && (
+          <div className="mt-6 card p-5 border-2 border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">🏅</span>
+              <span className="text-xs font-black uppercase tracking-widest text-amber-700">Challenge van de dag</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-amber-800">Al gespeeld!</span>
               <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">{challengePlayed} punten</span>
               <a href="/ranglijst" className="text-xs font-bold text-amber-600 hover:text-amber-700 underline transition">Bekijk ranglijst</a>
             </div>
-          ) : (
-            <button
-              disabled={!loaded}
-              onClick={() => startChallenge(challenge.leagueCode, challenge.formationKey, challenge.ratingMode, challenge.difficulty, challenge.week)}
-              className="mt-4 w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-amber-200/50 transition hover:shadow-lg hover:-translate-y-0.5"
-            >
-              {loaded ? "Speel de challenge" : "Laden…"}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Carrière */}
-      <div className="mt-6">
-        <CareerStartCard />
-      </div>
-
-      {/* Online Carrière */}
-      <div className="mt-4">
-        <a href="/online-carriere" className="block card p-5 border-2 border-cyan-200/40 bg-gradient-to-br from-cyan-50/40 to-blue-50/30 hover:shadow-md transition">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-lg">🌐</span>
-            <span className="text-xs font-black uppercase tracking-widest text-cyan-700">Online Carrière</span>
           </div>
-          <p className="text-sm text-slate-500">
-            Speel de carrièremodus met vrienden! Race samen naar Divisie 1.
-          </p>
-        </a>
+        )}
+
+        {/* Carrière card */}
+        <div className="mt-6" id="career-card">
+          <CareerStartCard />
+        </div>
+      </div>
+    );
+  }
+
+  // Single Season configuratie scherm
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-10">
+      <div className="animate-fade-up text-center">
+        <button onClick={() => setScreen("home")} className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-400 hover:text-slate-600 transition mb-4">
+          ← Terug
+        </button>
+        <h1 className="text-3xl font-black text-slate-800">Single Season</h1>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+          Kies een formatie en competitie, draft je droomelftal en jaag op het
+          perfecte seizoen.
+        </p>
       </div>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
@@ -184,7 +226,7 @@ export default function StartView() {
                     : "border-transparent bg-white/60 hover:bg-white/80"
                 }`}
               >
-                <span className="text-2xl">{l.flag}</span>
+                <span className="text-2xl leading-none">{l.flag}</span>
                 <span className="flex-1 font-bold text-slate-800">{l.name}</span>
                 {leagueCode === l.code && (
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs text-white">✓</span>

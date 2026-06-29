@@ -81,7 +81,7 @@ export default function ResultView() {
       try {
         const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
         if (nav.canShare?.({ files: [file] })) {
-          await nav.share({ files: [file], title: "Perfect XI", text: "Mijn Perfect XI seizoen! Speel jij het beter?" });
+          await nav.share({ files: [file], title: "Elite Football", text: "Mijn Elite Football seizoen! Speel jij het beter?" });
           shared = true;
         }
       } catch {

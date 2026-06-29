@@ -207,7 +207,7 @@ export default function RanglijstPage() {
           <div className="animate-fade-up">
             <a href="/" className="text-base font-black tracking-tight">
               <span className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
-                Perfect XI
+                Elite Football
               </span>
             </a>
             <h1 className="text-3xl font-black text-slate-800 mt-1">Ranglijst</h1>

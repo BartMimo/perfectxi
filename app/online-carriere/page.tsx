@@ -23,6 +23,7 @@ export default function OnlineCarrierePage() {
   const teamName = useAuth((s) => s.teamName);
   const { createLobby, joinLobby, loadMyLobbies, myLobbies, loading, error } = useOnlineCareer();
   const [joinCode, setJoinCode] = useState("");
+  const [lobbyName, setLobbyName] = useState("");
   const [showLogin, setShowLogin] = useState(false);
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function OnlineCarrierePage() {
 
   const handleCreate = async () => {
     if (!userId || !username) return;
-    const code = await createLobby(userId, username, teamName);
+    const code = await createLobby(userId, username, teamName, lobbyName);
     if (code) router.push(`/online-carriere/${code}`);
   };
 
@@ -77,7 +78,12 @@ export default function OnlineCarrierePage() {
                       className="flex items-center justify-between rounded-xl bg-white/80 border border-indigo-100 px-4 py-3 text-left hover:shadow-sm hover:border-indigo-200 transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-lg font-black tracking-wider text-indigo-600">{l.code}</span>
+                        <div className="flex flex-col min-w-0">
+                          {l.lobby_name && (
+                            <span className="text-sm font-bold text-slate-800 truncate">{l.lobby_name}</span>
+                          )}
+                          <span className={`font-black tracking-wider text-indigo-600 ${l.lobby_name ? "text-[10px]" : "text-lg"}`}>{l.code}</span>
+                        </div>
                         <div className="flex flex-wrap gap-1.5">
                           <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
                             {divisionLabel(l.current_division)}
@@ -107,6 +113,14 @@ export default function OnlineCarrierePage() {
               <h2 className="text-sm font-black uppercase tracking-widest text-indigo-700 mb-3">
                 Nieuw spel maken
               </h2>
+              <input
+                type="text"
+                value={lobbyName}
+                onChange={(e) => setLobbyName(e.target.value)}
+                placeholder="Geef je lobby een naam (optioneel)"
+                maxLength={30}
+                className="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm font-bold focus:border-indigo-400 focus:outline-none transition mb-3"
+              />
               <p className="text-sm text-slate-500 mb-4">
                 Maak een lobby aan en deel de code met je vrienden (max 20 spelers).
               </p>
@@ -160,7 +174,7 @@ export default function OnlineCarrierePage() {
           <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Hoe werkt het?</h3>
           <ol className="text-sm text-slate-600 space-y-2 list-decimal list-inside">
             <li>Maak een lobby aan of join met een code</li>
-            <li>De eigenaar drukt op Start als iedereen er is</li>
+            <li>De eigenaar accepteert aanmeldingen en start het spel</li>
             <li>Iedereen draft een team en simuleert het seizoen</li>
             <li>Nr. 1 & 2 promoveren, laatste 3 degraderen</li>
             <li>Vervang 2 spelers en speel het volgende seizoen</li>

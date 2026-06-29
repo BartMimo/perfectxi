@@ -36,7 +36,6 @@ function buildLineupFromSquad(squad: DraftedPlayer[]): { player: DraftedPlayer; 
   return squad.map((p) => ({ player: p, pos: posMap[p.pos] ?? "CM" }));
 }
 
-/** Build the 19 AI opponents for a division, excluding the human teams. */
 function buildOnlineOpponents(
   index: ClubSeasonLite[],
   division: number,
@@ -58,9 +57,78 @@ function buildOnlineOpponents(
   return candidates;
 }
 
-function PlayerCard({ p, isMe, isOwner, onKick }: { p: OnlinePlayer; isMe: boolean; isOwner: boolean; onKick?: (userId: string) => void }) {
+function SquadModal({ player, onClose }: { player: OnlinePlayer; onClose: () => void }) {
+  if (player.squad.length === 0) return null;
+  const rating = avgRating(player.squad);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="card max-w-sm w-full max-h-[80vh] overflow-y-auto p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-base font-black text-slate-800">{player.team_name || player.username}</div>
+            <div className="text-xs text-slate-400">{divisionLabel(player.current_division)} · {rating} OVR</div>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+        </div>
+        <div className="flex flex-col gap-1">
+          {player.squad.map((p) => (
+            <div key={p.name} className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2">
+              <div className="min-w-0">
+                <div className="text-sm font-bold text-slate-800 truncate">{p.name}</div>
+                <div className="text-[10px] text-slate-400">{p.fromClub} · {p.sub}</div>
+              </div>
+              <span className="text-sm font-black tabular-nums text-slate-600">{p.overall}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject }: {
+  p: OnlinePlayer; isMe: boolean; isOwner: boolean;
+  onKick?: (userId: string) => void;
+  onViewSquad?: (p: OnlinePlayer) => void;
+  onAccept?: (userId: string) => void;
+  onReject?: (userId: string) => void;
+}) {
   const rating = avgRating(p.squad);
   const lastSeason = p.history[p.history.length - 1];
+
+  if (p.pending) {
+    return (
+      <div className="rounded-2xl p-3.5 bg-amber-50/60 border-2 border-dashed border-amber-200">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-200 text-xs font-black text-amber-700">
+              {(p.team_name || p.username).charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <span className="text-sm font-bold text-slate-800 truncate">{p.team_name || p.username}</span>
+              <div className="text-[10px] font-bold text-amber-600">Wacht op goedkeuring</div>
+            </div>
+          </div>
+          {isOwner && onAccept && onReject && (
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                onClick={() => onAccept(p.user_id)}
+                className="rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-600 transition"
+              >
+                ✓
+              </button>
+              <button
+                onClick={() => onReject(p.user_id)}
+                className="rounded-full bg-rose-100 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-200 transition"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -113,6 +181,15 @@ function PlayerCard({ p, isMe, isOwner, onKick }: { p: OnlinePlayer; isMe: boole
               {lastSeason.position}e
             </span>
           )}
+          {onViewSquad && p.squad.length > 0 && !isMe && (
+            <button
+              onClick={() => onViewSquad(p)}
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-xs text-indigo-500 hover:bg-indigo-100 transition"
+              title="Bekijk team"
+            >
+              👁
+            </button>
+          )}
           {p.ready ? (
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs text-white shadow-sm shadow-emerald-200">✓</span>
           ) : (
@@ -133,10 +210,18 @@ function PlayerCard({ p, isMe, isOwner, onKick }: { p: OnlinePlayer; isMe: boole
   );
 }
 
-function PlayerList({ players, currentUserId, ownerId, onKick }: { players: OnlinePlayer[]; currentUserId: string | null; ownerId?: string; onKick?: (userId: string) => void }) {
+function PlayerList({ players, currentUserId, ownerId, onKick, onViewSquad, onAccept, onReject }: {
+  players: OnlinePlayer[]; currentUserId: string | null; ownerId?: string;
+  onKick?: (userId: string) => void;
+  onViewSquad?: (p: OnlinePlayer) => void;
+  onAccept?: (userId: string) => void;
+  onReject?: (userId: string) => void;
+}) {
   const isOwner = currentUserId === ownerId;
+  const pending = players.filter((p) => p.pending);
+  const active = players.filter((p) => !p.pending);
   const divisions = new Map<number, OnlinePlayer[]>();
-  for (const p of players) {
+  for (const p of active) {
     const list = divisions.get(p.current_division) || [];
     list.push(p);
     divisions.set(p.current_division, list);
@@ -146,6 +231,18 @@ function PlayerList({ players, currentUserId, ownerId, onKick }: { players: Onli
 
   return (
     <div className="flex flex-col gap-3">
+      {pending.length > 0 && isOwner && (
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-1.5 px-1">
+            Aanmeldingen ({pending.length})
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {pending.map((p) => (
+              <PlayerCard key={p.user_id} p={p} isMe={false} isOwner={isOwner} onAccept={onAccept} onReject={onReject} />
+            ))}
+          </div>
+        </div>
+      )}
       {sortedDivs.map(([div, divPlayers]) => (
         <div key={div}>
           {hasManyDivisions && (
@@ -167,6 +264,7 @@ function PlayerList({ players, currentUserId, ownerId, onKick }: { players: Onli
                   isMe={p.user_id === currentUserId}
                   isOwner={isOwner}
                   onKick={onKick}
+                  onViewSquad={onViewSquad}
                 />
               ))}
           </div>
@@ -178,19 +276,21 @@ function PlayerList({ players, currentUserId, ownerId, onKick }: { players: Onli
 
 function WaitingForOthers({ lobby, userId, title }: { lobby: OnlineCareer; userId: string; title: string }) {
   const kickPlayer = useOnlineCareer((s) => s.kickPlayer);
+  const [viewSquadPlayer, setViewSquadPlayer] = useState<OnlinePlayer | null>(null);
   return (
     <div className="card p-6">
       <div className="text-center mb-4">
         <div className="text-2xl mb-2">⏳</div>
         <h2 className="text-lg font-black text-slate-800">{title}</h2>
       </div>
-      <PlayerList players={lobby.players} currentUserId={userId} ownerId={lobby.owner_id} onKick={kickPlayer} />
+      <PlayerList players={lobby.players} currentUserId={userId} ownerId={lobby.owner_id} onKick={kickPlayer} onViewSquad={setViewSquadPlayer} />
+      {viewSquadPlayer && <SquadModal player={viewSquadPlayer} onClose={() => setViewSquadPlayer(null)} />}
     </div>
   );
 }
 
 function WaitingRoom() {
-  const { lobby, startDraft, leaveLobby, deleteLobby, kickPlayer } = useOnlineCareer();
+  const { lobby, startDraft, leaveLobby, deleteLobby, kickPlayer, acceptPlayer, rejectPlayer } = useOnlineCareer();
   const userId = useAuth((s) => s.userId);
   const formationKey = useGame((s) => s.formationKey);
   const setFormation = useGame((s) => s.setFormation);
@@ -199,6 +299,8 @@ function WaitingRoom() {
 
   if (!lobby) return null;
   const isOwner = lobby.owner_id === userId;
+  const me = lobby.players.find((p) => p.user_id === userId);
+  const isPending = me?.pending;
 
   const copyCode = () => {
     navigator.clipboard.writeText(lobby.code);
@@ -212,12 +314,22 @@ function WaitingRoom() {
     router.push("/online-carriere");
   };
 
+  const activePlayers = lobby.players.filter((p) => !p.pending);
+
   return (
     <div className="mx-auto max-w-lg px-4 py-8">
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-black text-slate-800">Online Carrière</h1>
-        <p className="text-sm text-slate-500 mt-1">Seizoen {lobby.current_season} · {lobby.players.length} speler{lobby.players.length !== 1 ? "s" : ""}</p>
+        <h1 className="text-2xl font-black text-slate-800">
+          {lobby.lobby_name || "Online Carrière"}
+        </h1>
+        <p className="text-sm text-slate-500 mt-1">Seizoen {lobby.current_season} · {activePlayers.length} speler{activePlayers.length !== 1 ? "s" : ""}</p>
       </div>
+
+      {isPending && (
+        <div className="rounded-2xl bg-amber-50 border-2 border-amber-200 px-4 py-3 mb-5 text-center">
+          <span className="text-sm font-bold text-amber-700">⏳ Wacht op goedkeuring van de eigenaar…</span>
+        </div>
+      )}
 
       <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 px-4 py-3 mb-5">
         <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Code</div>
@@ -232,67 +344,77 @@ function WaitingRoom() {
       <div className="mb-5">
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-xs font-black uppercase tracking-widest text-slate-400">Spelers</span>
-          <span className="text-xs font-bold text-slate-400">{lobby.players.length}/20</span>
+          <span className="text-xs font-bold text-slate-400">{activePlayers.length}/20</span>
         </div>
-        <PlayerList players={lobby.players} currentUserId={userId} ownerId={lobby.owner_id} onKick={kickPlayer} />
+        <PlayerList
+          players={lobby.players}
+          currentUserId={userId}
+          ownerId={lobby.owner_id}
+          onKick={kickPlayer}
+          onAccept={isOwner ? acceptPlayer : undefined}
+          onReject={isOwner ? rejectPlayer : undefined}
+        />
       </div>
 
-      <div className="mb-5">
-        <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Jouw formatie</div>
-        <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
-          {FORMATIONS.map((fm) => (
-            <button
-              key={fm.key}
-              onClick={() => setFormation(fm.key)}
-              className={`rounded-xl border-2 px-1.5 py-2 text-xs font-bold transition-all ${
-                formationKey === fm.key
-                  ? "border-indigo-400 bg-indigo-50 text-indigo-700 shadow-sm"
-                  : "border-transparent bg-white/60 text-slate-500 hover:bg-white/80"
-              }`}
-            >
-              {fm.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        {isOwner ? (
-          <button
-            disabled={lobby.players.length < 2}
-            onClick={startDraft}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
-          >
-            {lobby.players.length < 2 ? "Wacht op spelers…" : "Start het spel!"}
-          </button>
-        ) : (
-          <div className="flex-1 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
-            Wacht tot de host start…
+      {!isPending && (
+        <div className="mb-5">
+          <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Jouw formatie</div>
+          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+            {FORMATIONS.map((fm) => (
+              <button
+                key={fm.key}
+                onClick={() => setFormation(fm.key)}
+                className={`rounded-xl border-2 px-1.5 py-2 text-xs font-bold transition-all ${
+                  formationKey === fm.key
+                    ? "border-indigo-400 bg-indigo-50 text-indigo-700 shadow-sm"
+                    : "border-transparent bg-white/60 text-slate-500 hover:bg-white/80"
+                }`}
+              >
+                {fm.label}
+              </button>
+            ))}
           </div>
-        )}
-        {isOwner ? (
-          <button
-            onClick={async () => {
-              if (confirm("Weet je zeker dat je deze lobby wilt verwijderen? Dit kan niet ongedaan worden.")) {
-                await deleteLobby();
-                router.push("/online-carriere");
-              }
-            }}
-            className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition"
-          >
-            Verwijder
-          </button>
-        ) : (
-          <button onClick={handleLeave} className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition">
-            Verlaat
-          </button>
-        )}
-      </div>
+        </div>
+      )}
+
+      {!isPending && (
+        <div className="flex gap-2">
+          {isOwner ? (
+            <button
+              disabled={activePlayers.length < 2}
+              onClick={startDraft}
+              className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+            >
+              {activePlayers.length < 2 ? "Wacht op spelers…" : "Start het spel!"}
+            </button>
+          ) : (
+            <div className="flex-1 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
+              Wacht tot de host start…
+            </div>
+          )}
+          {isOwner ? (
+            <button
+              onClick={async () => {
+                if (confirm("Weet je zeker dat je deze lobby wilt verwijderen? Dit kan niet ongedaan worden.")) {
+                  await deleteLobby();
+                  router.push("/online-carriere");
+                }
+              }}
+              className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition"
+            >
+              Verwijder
+            </button>
+          ) : (
+            <button onClick={handleLeave} className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition">
+              Verlaat
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-/** The pitch + reel/picker board where the user drafts their XI. */
 function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePlayer; onSubmit: () => void }) {
   const slots = useGame((s) => s.slots);
   const filled = filledCount(slots);
@@ -349,7 +471,6 @@ function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePl
   );
 }
 
-/** The transfer window: pick up to 2 players to replace before drafting. */
 function TransferWindow({ squad, division, season, disabled, onConfirm }: {
   squad: DraftedPlayer[];
   division: number;
@@ -418,10 +539,6 @@ function TransferWindow({ squad, division, season, disabled, onConfirm }: {
   );
 }
 
-/**
- * Owns the entire per-season drafting flow: transfer → draft → submit → wait.
- * Keyed by season in the parent so all local state resets cleanly each season.
- */
 function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string; me: OnlinePlayer }) {
   const startCareerSeason = useGame((s) => s.startCareerSeason);
   const slots = useGame((s) => s.slots);
@@ -433,7 +550,6 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
   const [submitting, setSubmitting] = useState(false);
   const initRef = useRef(false);
 
-  // Initialise the draft board exactly once when we enter the draft step.
   useEffect(() => {
     if (step === "draft" && !initRef.current && loaded) {
       initRef.current = true;
@@ -441,7 +557,6 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
     }
   }, [step, loaded]);
 
-  // Already submitted (locally or persisted) → wait for the others.
   if (me.ready || submitting) {
     return (
       <div className="mx-auto max-w-lg px-4 py-8">
@@ -458,7 +573,7 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
         season={lobby.current_season}
         disabled={!loaded}
         onConfirm={(remaining) => {
-          initRef.current = true; // we initialise the board ourselves now
+          initRef.current = true;
           startCareerSeason(me.current_division, remaining);
           setStep("draft");
         }}
@@ -497,7 +612,6 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
   const index = useGame((s) => s.index);
   const [gamePhase, setGamePhase] = useState<"lobby" | "playing" | "simulating" | "result">("lobby");
 
-  // Load the club index once.
   useEffect(() => {
     if (indexLoaded) return;
     fetch("/api/clubseasons")
@@ -506,7 +620,6 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
       .catch(() => {});
   }, [indexLoaded, setIndex]);
 
-  // Load + subscribe to the lobby.
   useEffect(() => {
     if (!userId) return;
     loadLobby(code);
@@ -514,15 +627,14 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
     return () => unsubscribe();
   }, [code, userId]);
 
-  const playersReadyKey = lobby?.players?.map((p) => (p.ready ? "1" : "0")).join("") ?? "";
+  const playersReadyKey = lobby?.players?.filter((p) => !p.pending).map((p) => (p.ready ? "1" : "0")).join("") ?? "";
   const currentSeason = lobby?.current_season ?? 0;
   const simulatedSeasonRef = useRef(0);
 
-  // Drive simulation when everyone in the lobby is ready.
   useEffect(() => {
     if (!lobby || !userId || !indexLoaded) return;
     const me = lobby.players.find((p) => p.user_id === userId);
-    if (!me) return;
+    if (!me || me.pending) return;
 
     if (lobby.status === "waiting") {
       setGamePhase("lobby");
@@ -530,21 +642,20 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
     }
     if (lobby.status !== "drafting") return;
 
-    // We already ran (or are running) the sim for this season — leave the view alone.
     if (simulatedSeasonRef.current === lobby.current_season) return;
 
-    const allReady = lobby.players.every((p) => p.ready);
+    const activePlayers = lobby.players.filter((p) => !p.pending);
+    const allReady = activePlayers.every((p) => p.ready);
     if (!allReady || me.squad.length === 0) {
       setGamePhase("playing");
       return;
     }
 
-    // Everyone is ready → run the shared, deterministic simulation.
     simulatedSeasonRef.current = lobby.current_season;
     setGamePhase("simulating");
     try {
       const myDiv = me.current_division;
-      const divPlayers = lobby.players.filter((p) => p.current_division === myDiv && p.squad.length > 0);
+      const divPlayers = activePlayers.filter((p) => p.current_division === myDiv && p.squad.length > 0);
       const userTeams: OnlineUserTeam[] = divPlayers.map((p) => ({
         userId: p.user_id,
         name: p.team_name || p.username,
@@ -569,12 +680,10 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
     }
   }, [lobby?.status, currentSeason, playersReadyKey, indexLoaded, userId]);
 
-  // Hand off from the match animation to the result screen.
   useEffect(() => {
     if (gamePhase === "simulating" && phase === "result") setGamePhase("result");
   }, [gamePhase, phase]);
 
-  // Auto-join if we opened a lobby we're not a member of yet.
   const me = lobby?.players.find((p) => p.user_id === userId);
   const [joining, setJoining] = useState(false);
   useEffect(() => {

@@ -228,7 +228,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
           marginTop: "auto",
         }}
       >
-        Bouw jouw Perfect XI · jaag op 38-0-0
+        Bouw jouw Elite Football · jaag op 38-0-0
       </div>
     </div>
   );
