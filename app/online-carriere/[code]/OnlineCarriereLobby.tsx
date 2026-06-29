@@ -603,6 +603,59 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
   return <DraftBoard lobby={lobby} me={me} onSubmit={handleSubmit} />;
 }
 
+function LobbySettingsBar({ lobby }: { lobby: OnlineCareer }) {
+  const router = useRouter();
+  const { archiveLobby, updateLobbyName } = useOnlineCareer();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(lobby.lobby_name || "");
+
+  return (
+    <div className="border-b border-slate-100 bg-slate-50/60">
+      <div className="mx-auto max-w-6xl flex items-center justify-between gap-2 px-4 py-2">
+        {editing ? (
+          <form
+            onSubmit={(e) => { e.preventDefault(); updateLobbyName(draft); setEditing(false); }}
+            className="flex items-center gap-2 flex-1"
+          >
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder="Lobby naam"
+              maxLength={30}
+              autoFocus
+              className="rounded-lg border border-indigo-300 px-2.5 py-1.5 text-sm font-bold focus:border-indigo-500 focus:outline-none transition flex-1 max-w-[200px]"
+            />
+            <button type="submit" className="rounded-lg bg-indigo-500 px-2.5 py-1.5 text-xs font-bold text-white">Opslaan</button>
+            <button type="button" onClick={() => setEditing(false)} className="text-xs font-bold text-slate-400">Annuleer</button>
+          </form>
+        ) : (
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm font-bold text-slate-600 truncate">{lobby.lobby_name || "Geen naam"}</span>
+            <button
+              onClick={() => { setDraft(lobby.lobby_name || ""); setEditing(true); }}
+              className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition shrink-0"
+            >
+              Wijzig
+            </button>
+          </div>
+        )}
+        <button
+          onClick={async () => {
+            if (confirm("Lobby archiveren? Gegevens blijven bewaard.")) {
+              await archiveLobby();
+              router.push("/online-carriere");
+            }
+          }}
+          className="shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[10px] font-bold text-rose-500 hover:bg-rose-100 transition"
+        >
+          Archiveer
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function OnlineCarriereLobby({ code }: { code: string }) {
   const userId = useAuth((s) => s.userId);
   const username = useAuth((s) => s.username);
@@ -737,10 +790,15 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
   }
 
   const isWaitingRoom = lobby.status === "waiting";
+  const isOwner = lobby.owner_id === userId;
 
   return (
     <main className="min-h-screen w-full pb-12">
       <Header backHref="/online-carriere" showMeta={!isWaitingRoom} />
+
+      {!isWaitingRoom && isOwner && (
+        <LobbySettingsBar lobby={lobby} />
+      )}
 
       {isWaitingRoom && <WaitingRoom />}
 
