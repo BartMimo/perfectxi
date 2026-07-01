@@ -146,6 +146,13 @@ export default function StartView() {
             onClick={() => { window.location.href = "/ranglijst"; }}
             accent="border-slate-200/60 bg-gradient-to-br from-slate-50/80 to-slate-100/50"
           />
+          <ModeCard
+            icon="👤"
+            title={t("start.mode.profile.title")}
+            desc={t("start.mode.profile.desc")}
+            onClick={() => { window.location.href = "/profiel"; }}
+            accent="border-violet-200/60 bg-gradient-to-br from-violet-50/60 to-fuchsia-50/40"
+          />
         </div>
       </div>
     );
