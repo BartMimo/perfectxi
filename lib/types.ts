@@ -21,6 +21,8 @@ export interface Player {
   mv: number;
   /** Beste bekende rating van deze speler in de hele dataset (server-side berekend). */
   prime?: { overall: number; attack: number; defense: number };
+  /** Alleen voor de zelf-aangemaakte profielspeler: overschrijft de normale sub-positie-logica. */
+  customPositions?: string[];
 }
 
 export interface ClubSeason {

@@ -5,6 +5,7 @@ import { filledCount, useGame } from "@/lib/store";
 import type { ClubSeasonLite } from "@/lib/types";
 import PitchView from "@/components/PitchView";
 import StartView from "@/components/StartView";
+import AddCustomPlayerCard from "@/components/AddCustomPlayerCard";
 import ReelView from "@/components/ReelView";
 import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
@@ -12,6 +13,7 @@ import ResultView from "@/components/ResultView";
 import { TransferWindow, CareerResultBanner } from "@/components/CareerView";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/lib/auth";
+import { useEnsureCustomPlayerLoaded, useCustomPlayerSlot } from "@/lib/customPlayer";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -32,10 +34,13 @@ function CompleteCTA() {
 }
 
 function PlayView() {
+  const userId = useAuth((s) => s.userId);
   const slots = useGame((s) => s.slots);
   const filled = filledCount(slots);
   const total = slots.length;
   const complete = filled === total;
+  const customPlayerReady = useEnsureCustomPlayerLoaded(userId);
+  const { blocking: customPlayerBlocking } = useCustomPlayerSlot();
 
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-start">
@@ -59,6 +64,10 @@ function PlayView() {
       <div className="flex min-w-0 flex-col gap-4">
         {complete ? (
           <CompleteCTA />
+        ) : !customPlayerReady ? (
+          <div className="card p-6 text-center text-sm text-slate-400">Laden…</div>
+        ) : customPlayerBlocking ? (
+          <AddCustomPlayerCard />
         ) : (
           <>
             <ReelView />

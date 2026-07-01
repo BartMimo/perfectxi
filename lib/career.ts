@@ -11,6 +11,7 @@ export interface CareerSeason {
   points: number;
   gf: number;
   ga: number;
+  avgRating?: number;
 }
 
 export interface CareerState {

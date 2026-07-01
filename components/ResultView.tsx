@@ -8,6 +8,7 @@ import { QUALIFICATION_LABELS } from "@/lib/sim";
 import { saveResult } from "@/lib/saveResult";
 import { leagueName } from "@/lib/leagues";
 import { computeAchievements, type Achievement } from "@/lib/achievements";
+import { useCustomPlayer, isCustomPlayer } from "@/lib/customPlayer";
 import ShareCard from "./ShareCard";
 import { LoginPrompt } from "./AuthGate";
 import { CareerResultBanner, TransferWindow } from "./CareerView";
@@ -26,9 +27,11 @@ export default function ResultView() {
   const gameMode = useGame((s) => s.gameMode);
   const userId = useAuth((s) => s.userId);
   const career = useCareer();
+  const recordCustomPlayerSeason = useCustomPlayer((s) => s.recordSeason);
   const [showTable, setShowTable] = useState(true);
   const [sharing, setSharing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [xpAwarded, setXpAwarded] = useState(false);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [showLogin, setShowLogin] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -59,6 +62,19 @@ export default function ResultView() {
       careerSeason: gameMode === "career" ? career.season : undefined,
     }).then(() => setSaved(true));
   }, [result, userId, leagueCode, saved, slots, formationKey, ratingMode, difficulty]);
+
+  useEffect(() => {
+    if (!result || !userId || xpAwarded) return;
+    setXpAwarded(true);
+    if (!slots.some((s) => isCustomPlayer(s.player))) return;
+    const stat = result.squadStats.find((p) => p.fromClub === "Jouw speler");
+    recordCustomPlayerSeason(userId, {
+      champion: result.position === 1,
+      goals: stat?.goals ?? 0,
+      assists: stat?.assists ?? 0,
+      cleanSheets: stat?.cleanSheets ?? 0,
+    });
+  }, [result, userId, xpAwarded, slots, recordCustomPlayerSeason]);
 
   async function shareResult() {
     if (sharing) return;

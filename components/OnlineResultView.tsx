@@ -7,8 +7,9 @@ import { useOnlineCareer, type OnlinePlayer } from "@/lib/onlineCareer";
 import { divisionLabel } from "@/lib/career";
 import { QUALIFICATION_LABELS } from "@/lib/sim";
 import { saveResult } from "@/lib/saveResult";
+import { useCustomPlayer, isCustomPlayer } from "@/lib/customPlayer";
 import SquadViewModal from "@/components/SquadViewModal";
-import CareerTimeline from "@/components/CareerTimeline";
+import MultiCareerTimeline from "@/components/MultiCareerTimeline";
 
 export default function OnlineResultView() {
   const result = useGame((s) => s.result);
@@ -18,8 +19,10 @@ export default function OnlineResultView() {
   const difficulty = useGame((s) => s.difficulty);
   const userId = useAuth((s) => s.userId);
   const { lobby, finishSeason, advanceSeason, acknowledge, kickPlayer } = useOnlineCareer();
+  const recordCustomPlayerSeason = useCustomPlayer((s) => s.recordSeason);
   const [saved, setSaved] = useState(false);
   const [seasonFinished, setSeasonFinished] = useState(false);
+  const [xpAwarded, setXpAwarded] = useState(false);
   const [showTable, setShowTable] = useState(true);
   const [viewSquadPlayer, setViewSquadPlayer] = useState<OnlinePlayer | null>(null);
 
@@ -47,9 +50,26 @@ export default function OnlineResultView() {
 
   useEffect(() => {
     if (!result || !userId || seasonFinished || !me || !lobby) return;
-    finishSeason(userId, result.position, result.userRow.points, result.userRow.gf, result.userRow.ga);
+    const players = slots.map((s) => s.player).filter((p): p is NonNullable<typeof p> => !!p);
+    const avgRating = players.length > 0
+      ? Math.round((players.reduce((sum, p) => sum + p.overall, 0) / players.length) * 10) / 10
+      : 0;
+    finishSeason(userId, result.position, result.userRow.points, result.userRow.gf, result.userRow.ga, avgRating);
     setSeasonFinished(true);
   }, [result, userId, seasonFinished]);
+
+  useEffect(() => {
+    if (!result || !userId || xpAwarded) return;
+    setXpAwarded(true);
+    if (!slots.some((s) => isCustomPlayer(s.player))) return;
+    const stat = result.squadStats.find((p) => p.fromClub === "Jouw speler");
+    recordCustomPlayerSeason(userId, {
+      champion: result.position === 1,
+      goals: stat?.goals ?? 0,
+      assists: stat?.assists ?? 0,
+      cleanSheets: stat?.cleanSheets ?? 0,
+    });
+  }, [result, userId, xpAwarded, slots, recordCustomPlayerSeason]);
 
   if (!result || !lobby || !me) return null;
 
@@ -126,7 +146,16 @@ export default function OnlineResultView() {
 
       {/* Career timeline */}
       {me.history.length > 0 && (
-        <CareerTimeline history={me.history} currentDivision={me.current_division} currentSeason={lobby.current_season + 1} />
+        <MultiCareerTimeline
+          players={activePlayers.map((p) => ({
+            id: p.user_id,
+            name: p.team_name || p.username,
+            isMe: p.user_id === userId,
+            history: p.history,
+            currentDivision: p.current_division,
+          }))}
+          currentSeason={lobby.current_season + 1}
+        />
       )}
 
       {/* Game winner */}

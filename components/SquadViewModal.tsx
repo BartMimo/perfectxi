@@ -8,6 +8,7 @@ import { divisionLabel } from "@/lib/career";
 import { FORMATIONS, type FormationSlot } from "@/lib/formations";
 import { canPlayerPlay } from "@/lib/positions";
 import type { Band } from "@/lib/positions";
+import { isCustomPlayer } from "@/lib/customPlayer";
 import { ratingColor } from "./ui";
 
 function avgRating(squad: DraftedPlayer[]): number {
@@ -70,7 +71,9 @@ function PitchToken({ slot, player }: { slot: FormationSlot; player?: DraftedPla
     >
       {player ? (
         <>
-          <div className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-black tabular-nums shadow-[0_3px_8px_rgba(0,0,0,0.35)] ring-2 ring-white/90 ${ratingColor(player.overall)}`}>
+          <div className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-black tabular-nums shadow-[0_3px_8px_rgba(0,0,0,0.35)] ring-2 ${
+            isCustomPlayer(player) ? "ring-[3px] ring-amber-400" : "ring-white/90"
+          } ${ratingColor(player.overall)}`}>
             {player.overall}
           </div>
           <div className="mt-1 max-w-[64px] truncate rounded-full bg-white/95 px-2 py-[2px] text-[10px] font-bold leading-tight text-slate-800 shadow-sm">

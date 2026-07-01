@@ -186,6 +186,7 @@ interface GameState {
   land: (pick: ClubSeasonLite) => Promise<void>;
   requestSpin: () => void;
   reroll: () => void;
+  addCustomPlayer: (player: DraftedPlayer) => boolean;
   pickPlayer: (player: Player) => void;
   placeInSlot: (player: Player, slotId: string) => void;
   cancelPick: () => void;
@@ -345,6 +346,16 @@ export const useGame = create<GameState>((set, get) => ({
     if (get().rerollsLeft <= 0) return;
     set((s) => ({ rerollsLeft: s.rerollsLeft - 1 }));
     get().requestSpin();
+  },
+
+  addCustomPlayer: (player: DraftedPlayer) => {
+    const { slots } = get();
+    if (slots.some((s) => s.player?.fromId === player.fromId)) return false;
+    const eligible = slots.filter((s) => !s.player && canPlayerPlay(player, s.pos));
+    if (eligible.length === 0) return false;
+    const target = eligible[0];
+    set({ slots: slots.map((s) => (s.id === target.id ? { ...s, player } : s)) });
+    return true;
   },
 
   // Speler gekozen uit de squad: direct plaatsen bij één optie, anders

@@ -79,7 +79,7 @@ interface OnlineCareerState {
   startDraft: () => Promise<void>;
   setReady: (userId: string, ready: boolean) => Promise<void>;
   saveSquad: (userId: string, squad: DraftedPlayer[]) => Promise<void>;
-  finishSeason: (userId: string, position: number, points: number, gf: number, ga: number) => Promise<void>;
+  finishSeason: (userId: string, position: number, points: number, gf: number, ga: number, avgRating: number) => Promise<void>;
   acknowledge: (userId: string) => Promise<void>;
   advanceSeason: () => Promise<void>;
   getDivisionPlayers: (division: number) => OnlinePlayer[];
@@ -496,7 +496,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       .eq("user_id", userId);
   },
 
-  finishSeason: async (userId, position, points, gf, ga) => {
+  finishSeason: async (userId, position, points, gf, ga, avgRating) => {
     const { lobby } = get();
     if (!lobby) return;
 
@@ -512,6 +512,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       points,
       gf,
       ga,
+      avgRating,
     };
     const history = [...player.history, entry];
     const championships = player.championships + (position === 1 ? 1 : 0);

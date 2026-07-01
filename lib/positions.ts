@@ -89,13 +89,14 @@ const RAW_TO_POS: Record<RawPos, PosKey[]> = {
 };
 
 /** De posities die deze speler kan bekleden. */
-export function eligibleSlots(p: Pick<Player, "pos" | "sub">): PosKey[] {
+export function eligibleSlots(p: Pick<Player, "pos" | "sub" | "customPositions">): PosKey[] {
+  if (p.customPositions && p.customPositions.length > 0) return p.customPositions as PosKey[];
   const bySub = SUB_TO_POS[p.sub];
   if (bySub) return bySub;
   return RAW_TO_POS[p.pos] ?? RAW_TO_POS.Missing;
 }
 
-export function canPlayerPlay(p: Pick<Player, "pos" | "sub">, pos: PosKey): boolean {
+export function canPlayerPlay(p: Pick<Player, "pos" | "sub" | "customPositions">, pos: PosKey): boolean {
   return eligibleSlots(p).includes(pos);
 }
 

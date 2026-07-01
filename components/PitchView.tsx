@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { filledCount, useGame, validTargets, placementTargets, type Slot } from "@/lib/store";
 import { POS_BAND, type Band } from "@/lib/positions";
 import { POS_LABEL } from "@/lib/positions";
+import { isCustomPlayer } from "@/lib/customPlayer";
 import { ratingColor, shortSeason } from "./ui";
 
 /** Crispe veldlijnen als SVG (coördinaten 75×100, matcht de 3:4 verhouding). */
@@ -56,6 +57,7 @@ function Token({
   onClick: () => void;
 }) {
   const p = slot.player;
+  const custom = isCustomPlayer(p);
 
   return (
     <button
@@ -69,12 +71,14 @@ function Token({
           <div
             className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-black tabular-nums shadow-[0_3px_8px_rgba(0,0,0,0.35)] ring-2 transition ${
               hideRating ? "bg-slate-700 text-white" : ratingColor(p.overall)
-            } ${
-              selected
-                ? "scale-110 ring-emerald-300"
-                : isTarget
-                  ? "ring-amber-300"
-                  : "ring-white/90"
+            } ${selected ? "scale-110" : ""} ${
+              custom
+                ? "ring-[3px] ring-amber-400"
+                : selected
+                  ? "ring-emerald-300"
+                  : isTarget
+                    ? "ring-amber-300"
+                    : "ring-white/90"
             }`}
           >
             {hideRating ? "?" : p.overall}

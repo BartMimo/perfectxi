@@ -10,9 +10,11 @@ import { FORMATIONS } from "@/lib/formations";
 import type { ClubSeasonLite, DraftedPlayer } from "@/lib/types";
 import { simulateOnlineSeason, type OnlineUserTeam } from "@/lib/sim";
 import type { PosKey } from "@/lib/positions";
+import { useEnsureCustomPlayerLoaded, useCustomPlayerSlot } from "@/lib/customPlayer";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PitchView from "@/components/PitchView";
+import AddCustomPlayerCard from "@/components/AddCustomPlayerCard";
 import ReelView from "@/components/ReelView";
 import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
@@ -477,10 +479,13 @@ function WaitingRoom() {
 }
 
 function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePlayer; onSubmit: () => void }) {
+  const userId = useAuth((s) => s.userId);
   const slots = useGame((s) => s.slots);
   const filled = filledCount(slots);
   const total = slots.length;
   const complete = total > 0 && filled === total;
+  const customPlayerReady = useEnsureCustomPlayerLoaded(userId);
+  const { blocking: customPlayerBlocking } = useCustomPlayerSlot();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5">
@@ -520,6 +525,10 @@ function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePl
                 Bevestig opstelling
               </button>
             </div>
+          ) : !customPlayerReady ? (
+            <div className="card p-6 text-center text-sm text-slate-400">Laden…</div>
+          ) : customPlayerBlocking ? (
+            <AddCustomPlayerCard />
           ) : (
             <>
               <ReelView />
