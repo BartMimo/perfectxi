@@ -32,7 +32,7 @@ export default function MijnSpelerPage() {
     return (
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
-        <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <div className="mx-auto max-w-2xl px-4 py-20 text-center">
           <div className="text-4xl mb-2">⭐</div>
           <p className="text-sm text-slate-500 mb-4">{t("mijnSpeler.loginPrompt")}</p>
           <button onClick={() => setShowLogin(true)} className="btn-primary">{t("common.login")}</button>
@@ -46,7 +46,7 @@ export default function MijnSpelerPage() {
   return (
     <main className="min-h-screen w-full pb-12">
       <Header backHref="/" />
-      <div className="mx-auto max-w-lg px-4 py-10">
+      <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8 text-center">
           <div className="text-4xl mb-2">⭐</div>
           <h1 className="text-2xl font-black text-slate-800">{t("mijnSpeler.title")}</h1>

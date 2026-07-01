@@ -3,56 +3,63 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { FORMATIONS } from "@/lib/formations";
+import { LEAGUES } from "@/lib/leagues";
+import { posLabel, type PosKey } from "@/lib/positions";
 import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
+import type { CareerSeason } from "@/lib/career";
+import SortableTable, { UserLink, type RanglijstColumn } from "@/components/ranglijst/SortableTable";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { useT } from "@/lib/i18n/core";
 
-type Tab = "records" | "accounts" | "challenge" | "career" | "dailywins";
-type RecordSort = "points" | "goals_for" | "goals_against" | "team_rating" | "team_value";
-type AccountSort = "achievements" | "champions";
+type Tab = "myPlayer" | "onlineCareer" | "offlineCareer" | "singleSeason" | "daily";
+type DailySubTab = "today" | "wins";
+type TFunc = (key: string, vars?: Record<string, string | number>) => string;
 
-interface GameRow {
+interface MyPlayerRow {
+  id: string;
+  playerName: string;
+  username: string;
+  position: PosKey;
+  extraPositions: PosKey[];
+  overall: number;
+  seasonsPlayed: number;
+  championships: number;
+}
+
+interface CareerRow {
   id: string;
   username: string;
+  seasons: number;
+  championships: number;
+  fastestDiv1: number | null;
+  teamRating: number;
+  formation: string | null;
+  leagues: string[];
+}
+
+interface SingleSeasonRow {
+  id: string;
+  username: string;
+  leagueName: string;
   formation: string;
-  team_rating: number;
-  team_value: number;
   points: number;
   won: number;
   drawn: number;
   lost: number;
-  goals_for: number;
-  goals_against: number;
-  goal_diff: number;
-  league_name: string;
+  goalsFor: number;
+  goalsAgainst: number;
+  teamRating: number;
   position: number;
 }
 
-interface AccountRow {
-  username: string;
-  games: number;
-  champions: number;
-  unique_achievements: string[];
-}
-
-interface CareerRow {
-  username: string;
-  seasons: number;
-  championships: number;
-  bestDivision: number;
-  seasonsToDiv1Champ: number | null;
-}
-
-interface ChallengeRow {
+interface DailyTodayRow {
   id: string;
   username: string;
   points: number;
-  goals_for: number;
-  goals_against: number;
-  goal_diff: number;
   position: number;
-  team_rating: number;
+  teamRating: number;
+  goalDiff: number;
 }
 
 interface DailyWinRow {
@@ -60,369 +67,567 @@ interface DailyWinRow {
   wins: number;
 }
 
-function UserLink({ username }: { username: string }) {
+function avgRating(squad: { overall: number }[] | null | undefined): number {
+  if (!squad || squad.length === 0) return 0;
+  return Math.round((squad.reduce((s, p) => s + p.overall, 0) / squad.length) * 10) / 10;
+}
+
+function fastestDiv1Champion(history: CareerSeason[] | null | undefined): number | null {
+  let best: number | null = null;
+  for (const h of history ?? []) {
+    if (h.division === 1 && h.position === 1) {
+      if (best === null || h.season < best) best = h.season;
+    }
+  }
+  return best;
+}
+
+function fmtFormation(key: string): string {
+  return FORMATIONS.find((f) => f.key === key)?.label ?? key;
+}
+
+function fmtLeagues(t: TFunc, codes: string[]): string {
+  if (!codes || codes.length === 0) return t("ranglijst.allLeagues");
+  return codes.map((c) => LEAGUES.find((l) => l.code === c)?.flag ?? c).join(" ");
+}
+
+function PosBadge({ position }: { position: number }) {
   return (
-    <a
-      href={`/profiel/${encodeURIComponent(username)}`}
-      className="font-bold text-slate-800 hover:text-indigo-600 transition"
-    >
-      {username}
-    </a>
+    <span className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[10px] font-bold ${
+      position === 1 ? "bg-amber-100/80 text-amber-700"
+        : position <= 4 ? "bg-emerald-100/80 text-emerald-700"
+        : position >= 18 ? "bg-rose-100/80 text-rose-600"
+        : "bg-slate-100/80 text-slate-500"
+    }`}>
+      {position}e
+    </span>
   );
+}
+
+function careerColumns(t: TFunc): RanglijstColumn<CareerRow>[] {
+  return [
+    {
+      key: "username",
+      label: t("ranglijst.col.username"),
+      value: (r) => r.username,
+      cell: (r) => <UserLink username={r.username} />,
+      defaultDir: "asc",
+    },
+    {
+      key: "seasons",
+      label: t("ranglijst.col.seasons"),
+      align: "right",
+      value: (r) => r.seasons,
+      cell: (r) => r.seasons,
+      defaultDir: "desc",
+    },
+    {
+      key: "titles",
+      label: t("ranglijst.col.titles"),
+      align: "right",
+      value: (r) => r.championships,
+      cell: (r) => r.championships,
+      defaultDir: "desc",
+    },
+    {
+      key: "fastest",
+      label: t("ranglijst.col.fastestDiv1"),
+      align: "right",
+      value: (r) => r.fastestDiv1 ?? Infinity,
+      cell: (r) => (r.fastestDiv1 !== null ? t("ranglijst.seasonsShort", { n: r.fastestDiv1 }) : "—"),
+      defaultDir: "asc",
+    },
+    {
+      key: "rating",
+      label: t("ranglijst.col.teamRating"),
+      align: "right",
+      value: (r) => r.teamRating,
+      cell: (r) => (r.teamRating > 0 ? r.teamRating.toFixed(1) : "—"),
+      defaultDir: "desc",
+    },
+    {
+      key: "formation",
+      label: t("ranglijst.col.formation"),
+      value: (r) => (r.formation ? fmtFormation(r.formation) : ""),
+      cell: (r) => (r.formation ? fmtFormation(r.formation) : "—"),
+      defaultDir: "desc",
+    },
+    {
+      key: "leagues",
+      label: t("ranglijst.col.leagues"),
+      value: (r) => (r.leagues.length === 0 ? 999 : r.leagues.length),
+      cell: (r) => fmtLeagues(t, r.leagues),
+      defaultDir: "desc",
+    },
+  ];
 }
 
 export default function RanglijstPage() {
   const t = useT();
-  const [tab, setTab] = useState<Tab>("records");
-  const [gameRows, setGameRows] = useState<GameRow[]>([]);
-  const [accountRows, setAccountRows] = useState<AccountRow[]>([]);
-  const [challengeRows, setChallengeRows] = useState<ChallengeRow[]>([]);
-  const [careerRows, setCareerRows] = useState<CareerRow[]>([]);
+  const [tab, setTab] = useState<Tab>("myPlayer");
+  const [dailySubTab, setDailySubTab] = useState<DailySubTab>("today");
+  const [loadedTabs, setLoadedTabs] = useState<Set<Tab>>(new Set());
+  const [loading, setLoading] = useState(false);
+
+  const [myPlayerRows, setMyPlayerRows] = useState<MyPlayerRow[]>([]);
+  const [onlineCareerRows, setOnlineCareerRows] = useState<CareerRow[]>([]);
+  const [offlineCareerRows, setOfflineCareerRows] = useState<CareerRow[]>([]);
+  const [singleSeasonRows, setSingleSeasonRows] = useState<SingleSeasonRow[]>([]);
+  const [dailyTodayRows, setDailyTodayRows] = useState<DailyTodayRow[]>([]);
   const [dailyWinRows, setDailyWinRows] = useState<DailyWinRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [recordSort, setRecordSort] = useState<RecordSort>("points");
-  const [accountSort, setAccountSort] = useState<AccountSort>("achievements");
+
   const challenge = getCurrentChallenge();
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
+  const loadMyPlayer = useCallback(async () => {
+    const { data } = await supabase
+      .from("custom_players")
+      .select("id, name, position, extra_positions, overall, seasons_played, championships, users!inner(username)")
+      .limit(500);
+    setMyPlayerRows(
+      ((data as Record<string, unknown>[]) ?? []).map((r) => ({
+        id: r.id as string,
+        playerName: r.name as string,
+        username: (r.users as Record<string, string>).username,
+        position: r.position as PosKey,
+        extraPositions: (r.extra_positions as PosKey[]) ?? [],
+        overall: r.overall as number,
+        seasonsPlayed: (r.seasons_played as number) ?? 0,
+        championships: (r.championships as number) ?? 0,
+      })),
+    );
+  }, []);
+
+  const loadOnlineCareer = useCallback(async () => {
+    const { data } = await supabase
+      .from("online_career_players")
+      .select("id, username, squad, history, championships, formation_key, online_careers(leagues)")
+      .eq("is_bot", false)
+      .eq("pending", false)
+      .limit(1000);
+    const rows: CareerRow[] = ((data as Record<string, unknown>[]) ?? [])
+      .map((r) => {
+        const history = (r.history as CareerSeason[]) ?? [];
+        return {
+          id: r.id as string,
+          username: r.username as string,
+          seasons: history.length,
+          championships: (r.championships as number) ?? 0,
+          fastestDiv1: fastestDiv1Champion(history),
+          teamRating: avgRating(r.squad as { overall: number }[]),
+          formation: (r.formation_key as string | null) ?? null,
+          leagues: ((r.online_careers as Record<string, unknown> | null)?.leagues as string[]) ?? [],
+        };
+      })
+      .filter((r) => r.seasons > 0);
+    setOnlineCareerRows(rows);
+  }, []);
+
+  const loadOfflineCareer = useCallback(async () => {
+    const { data } = await supabase
+      .from("careers")
+      .select("id, user_id, squad, history, championships, formation_key, leagues")
+      .limit(1000);
+    const list = (data as Record<string, unknown>[]) ?? [];
+    const userIds = [...new Set(list.map((r) => r.user_id as string))];
+    let nameById = new Map<string, string>();
+    if (userIds.length > 0) {
+      const { data: users } = await supabase.from("users").select("id, username").in("id", userIds);
+      nameById = new Map(((users as Record<string, string>[]) ?? []).map((u) => [u.id, u.username]));
+    }
+    const rows: CareerRow[] = list
+      .map((r) => {
+        const history = (r.history as CareerSeason[]) ?? [];
+        return {
+          id: r.id as string,
+          username: nameById.get(r.user_id as string) ?? "?",
+          seasons: history.length,
+          championships: (r.championships as number) ?? 0,
+          fastestDiv1: fastestDiv1Champion(history),
+          teamRating: avgRating(r.squad as { overall: number }[]),
+          formation: (r.formation_key as string | null) ?? null,
+          leagues: (r.leagues as string[]) ?? [],
+        };
+      })
+      .filter((r) => r.seasons > 0);
+    setOfflineCareerRows(rows);
+  }, []);
+
+  const loadSingleSeason = useCallback(async () => {
     const { data } = await supabase
       .from("results")
-      .select("id, user_id, formation, team_rating, team_value, points, won, drawn, lost, goals_for, goals_against, goal_diff, league_name, position, achievements, users!inner(username)")
+      .select("id, user_id, formation, team_rating, points, won, drawn, lost, goals_for, goals_against, league_name, position, users!inner(username)")
       .or("is_career.is.null,is_career.eq.false")
-      .limit(500);
+      .or("is_challenge.is.null,is_challenge.eq.false")
+      .limit(3000);
 
-    if (data) {
-      const games: GameRow[] = (data as Record<string, unknown>[]).map((r) => ({
+    const bestByUser = new Map<string, SingleSeasonRow>();
+    for (const r of (data as Record<string, unknown>[]) ?? []) {
+      const row: SingleSeasonRow = {
         id: r.id as string,
         username: (r.users as Record<string, string>).username,
+        leagueName: r.league_name as string,
         formation: r.formation as string,
-        team_rating: r.team_rating as number,
-        team_value: r.team_value as number,
         points: r.points as number,
         won: r.won as number,
         drawn: r.drawn as number,
         lost: r.lost as number,
-        goals_for: r.goals_for as number,
-        goals_against: r.goals_against as number,
-        goal_diff: r.goal_diff as number,
-        league_name: r.league_name as string,
+        goalsFor: r.goals_for as number,
+        goalsAgainst: r.goals_against as number,
+        teamRating: r.team_rating as number,
         position: r.position as number,
-      }));
-      setGameRows(games);
-
-      const byUser = new Map<string, AccountRow>();
-      for (const r of data as Record<string, unknown>[]) {
-        const uid = r.user_id as string;
-        const username = (r.users as Record<string, string>).username;
-        let u = byUser.get(uid);
-        if (!u) {
-          u = { username, games: 0, champions: 0, unique_achievements: [] };
-          byUser.set(uid, u);
-        }
-        u.games++;
-        if ((r.position as number) === 1) u.champions++;
-        for (const a of ((r.achievements as string[]) ?? [])) {
-          if (!u.unique_achievements.includes(a)) u.unique_achievements.push(a);
-        }
-      }
-      setAccountRows([...byUser.values()]);
+      };
+      const existing = bestByUser.get(r.user_id as string);
+      if (!existing || row.points > existing.points) bestByUser.set(r.user_id as string, row);
     }
+    setSingleSeasonRows([...bestByUser.values()]);
+  }, []);
 
-    // Fetch challenge results for today
+  const loadDaily = useCallback(async () => {
     const dayId = getChallengeDayId();
-    const { data: cData } = await supabase
+    const { data: todayData } = await supabase
       .from("results")
-      .select("id, points, goals_for, goals_against, goal_diff, position, team_rating, users!inner(username)")
+      .select("id, points, goal_diff, position, team_rating, users!inner(username)")
       .eq("is_challenge", true)
       .eq("challenge_week", dayId)
-      .order("points", { ascending: false })
-      .limit(100);
-
-    if (cData) {
-      setChallengeRows((cData as Record<string, unknown>[]).map((r) => ({
+      .limit(200);
+    setDailyTodayRows(
+      ((todayData as Record<string, unknown>[]) ?? []).map((r) => ({
         id: r.id as string,
         username: (r.users as Record<string, string>).username,
         points: r.points as number,
-        goals_for: r.goals_for as number,
-        goals_against: r.goals_against as number,
-        goal_diff: r.goal_diff as number,
         position: r.position as number,
-        team_rating: r.team_rating as number,
-      })));
-    }
+        teamRating: r.team_rating as number,
+        goalDiff: r.goal_diff as number,
+      })),
+    );
 
-    // Fetch career data
-    const { data: carData } = await supabase
-      .from("results")
-      .select("user_id, career_division, career_season, position, users!inner(username)")
-      .eq("is_career", true)
-      .limit(500);
-
-    if (carData) {
-      const byUser = new Map<string, CareerRow>();
-      for (const r of carData as Record<string, unknown>[]) {
-        const uid = r.user_id as string;
-        const username = (r.users as Record<string, string>).username;
-        let u = byUser.get(uid);
-        if (!u) {
-          u = { username, seasons: 0, championships: 0, bestDivision: 10, seasonsToDiv1Champ: null };
-          byUser.set(uid, u);
-        }
-        u.seasons++;
-        const div = r.career_division as number;
-        const season = r.career_season as number;
-        if ((r.position as number) === 1) {
-          u.championships++;
-          if (div === 1 && (u.seasonsToDiv1Champ === null || season < u.seasonsToDiv1Champ)) {
-            u.seasonsToDiv1Champ = season;
-          }
-        }
-        if (div < u.bestDivision) u.bestDivision = div;
-      }
-      setCareerRows([...byUser.values()].sort((a, b) => {
-        if (a.seasonsToDiv1Champ !== null && b.seasonsToDiv1Champ !== null) return a.seasonsToDiv1Champ - b.seasonsToDiv1Champ;
-        if (a.seasonsToDiv1Champ !== null) return -1;
-        if (b.seasonsToDiv1Champ !== null) return 1;
-        return a.bestDivision - b.bestDivision || b.championships - a.championships;
-      }));
-    }
-
-    // Fetch daily challenge wins (best score per day, count #1 finishes)
-    const { data: allChallenges } = await supabase
+    const { data: allData } = await supabase
       .from("results")
       .select("user_id, challenge_week, points, users!inner(username)")
       .eq("is_challenge", true)
-      .limit(2000);
+      .limit(5000);
 
-    if (allChallenges) {
-      // Group by day, find winner(s)
-      const dayResults = new Map<string, { userId: string; username: string; points: number }[]>();
-      for (const r of allChallenges as Record<string, unknown>[]) {
-        const day = r.challenge_week as string;
-        if (!day) continue;
-        const list = dayResults.get(day) || [];
-        list.push({
-          userId: r.user_id as string,
-          username: (r.users as Record<string, string>).username,
-          points: r.points as number,
-        });
-        dayResults.set(day, list);
-      }
-
-      const winsByUser = new Map<string, DailyWinRow>();
-      for (const [, entries] of dayResults) {
-        if (entries.length === 0) continue;
-        const maxPoints = Math.max(...entries.map((e) => e.points));
-        const winners = entries.filter((e) => e.points === maxPoints);
-        for (const w of winners) {
-          const existing = winsByUser.get(w.username);
-          if (existing) {
-            existing.wins++;
-          } else {
-            winsByUser.set(w.username, { username: w.username, wins: 1 });
-          }
-        }
-      }
-      setDailyWinRows([...winsByUser.values()].sort((a, b) => b.wins - a.wins));
+    const dayResults = new Map<string, { username: string; points: number }[]>();
+    for (const r of (allData as Record<string, unknown>[]) ?? []) {
+      const day = r.challenge_week as string;
+      if (!day) continue;
+      const list = dayResults.get(day) ?? [];
+      list.push({ username: (r.users as Record<string, string>).username, points: r.points as number });
+      dayResults.set(day, list);
     }
-
-    setLoading(false);
+    const winsByUser = new Map<string, number>();
+    for (const [, entries] of dayResults) {
+      if (entries.length === 0) continue;
+      const maxPoints = Math.max(...entries.map((e) => e.points));
+      for (const w of entries.filter((e) => e.points === maxPoints)) {
+        winsByUser.set(w.username, (winsByUser.get(w.username) ?? 0) + 1);
+      }
+    }
+    setDailyWinRows(
+      [...winsByUser.entries()]
+        .map(([username, wins]) => ({ username, wins }))
+        .sort((a, b) => b.wins - a.wins),
+    );
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const loadTab = useCallback(async (t: Tab) => {
+    setLoading(true);
+    if (t === "myPlayer") await loadMyPlayer();
+    else if (t === "onlineCareer") await loadOnlineCareer();
+    else if (t === "offlineCareer") await loadOfflineCareer();
+    else if (t === "singleSeason") await loadSingleSeason();
+    else if (t === "daily") await loadDaily();
+    setLoading(false);
+  }, [loadMyPlayer, loadOnlineCareer, loadOfflineCareer, loadSingleSeason, loadDaily]);
 
-  const sortedGames = [...gameRows].sort((a, b) => {
-    if (recordSort === "points") return b.points - a.points || b.goal_diff - a.goal_diff;
-    if (recordSort === "goals_for") return b.goals_for - a.goals_for;
-    if (recordSort === "goals_against") return a.goals_against - b.goals_against;
-    if (recordSort === "team_rating") return b.team_rating - a.team_rating;
-    return b.team_value - a.team_value;
-  });
+  useEffect(() => {
+    if (loadedTabs.has(tab)) return;
+    setLoadedTabs((prev) => new Set(prev).add(tab));
+    loadTab(tab);
+  }, [tab, loadedTabs, loadTab]);
 
-  const sortedAccounts = [...accountRows].sort((a, b) => {
-    if (accountSort === "achievements") return b.unique_achievements.length - a.unique_achievements.length;
-    return b.champions - a.champions || b.unique_achievements.length - a.unique_achievements.length;
-  });
-
-  const RECORD_SORTS: { key: RecordSort; label: string }[] = [
-    { key: "points", label: t("ranglijst.sort.points") },
-    { key: "goals_for", label: t("ranglijst.sort.goalsFor") },
-    { key: "goals_against", label: t("ranglijst.sort.goalsAgainst") },
-    { key: "team_rating", label: t("ranglijst.sort.rating") },
-    { key: "team_value", label: t("ranglijst.sort.value") },
+  const TABS: { id: Tab; label: string; accent: string }[] = [
+    { id: "myPlayer", label: t("ranglijst.tab.myPlayer"), accent: "rose" },
+    { id: "onlineCareer", label: t("ranglijst.tab.onlineCareer"), accent: "cyan" },
+    { id: "offlineCareer", label: t("ranglijst.tab.offlineCareer"), accent: "indigo" },
+    { id: "singleSeason", label: t("ranglijst.tab.singleSeason"), accent: "emerald" },
+    { id: "daily", label: t("ranglijst.tab.daily"), accent: "amber" },
   ];
 
-  const ACCOUNT_SORTS: { key: AccountSort; label: string }[] = [
-    { key: "achievements", label: t("ranglijst.sort.achievements") },
-    { key: "champions", label: t("ranglijst.sort.championships") },
+  const myPlayerColumns: RanglijstColumn<MyPlayerRow>[] = [
+    {
+      key: "playerName",
+      label: t("ranglijst.col.playerName"),
+      value: (r) => r.playerName,
+      cell: (r) => <span className="font-bold text-slate-800">{r.playerName}</span>,
+      defaultDir: "asc",
+    },
+    {
+      key: "username",
+      label: t("ranglijst.col.username"),
+      value: (r) => r.username,
+      cell: (r) => <UserLink username={r.username} />,
+      defaultDir: "asc",
+    },
+    {
+      key: "positions",
+      label: t("ranglijst.col.positions"),
+      value: (r) => [r.position, ...r.extraPositions].map((p) => posLabel(t, p)).join(", "),
+      cell: (r) => [r.position, ...r.extraPositions].map((p) => posLabel(t, p)).join(", "),
+      defaultDir: "asc",
+    },
+    {
+      key: "rating",
+      label: t("ranglijst.col.rating"),
+      align: "right",
+      value: (r) => r.overall,
+      cell: (r) => r.overall,
+      defaultDir: "desc",
+    },
+    {
+      key: "seasonsPlayed",
+      label: t("ranglijst.col.seasons"),
+      align: "right",
+      value: (r) => r.seasonsPlayed,
+      cell: (r) => r.seasonsPlayed,
+      defaultDir: "desc",
+    },
+    {
+      key: "titles",
+      label: t("ranglijst.col.titles"),
+      align: "right",
+      value: (r) => r.championships,
+      cell: (r) => r.championships,
+      defaultDir: "desc",
+    },
   ];
 
-  const TabButton = ({ id, label, accent }: { id: Tab; label: string; accent?: string }) => (
-    <button
-      onClick={() => setTab(id)}
-      className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-        tab === id
-          ? accent || "bg-white shadow-sm border border-slate-200/60 text-slate-800"
-          : accent ? accent.replace("bg-", "text-").replace("shadow-sm border border-", "hover:text-").split(" ").slice(0, 2).join(" ") : "text-slate-400 hover:text-slate-600"
-      }`}
-    >
-      {label}
-    </button>
-  );
+  const singleSeasonColumns: RanglijstColumn<SingleSeasonRow>[] = [
+    {
+      key: "username",
+      label: t("ranglijst.col.player"),
+      value: (r) => r.username,
+      cell: (r) => <UserLink username={r.username} />,
+      defaultDir: "asc",
+    },
+    {
+      key: "competition",
+      label: t("ranglijst.col.competition"),
+      value: (r) => r.leagueName,
+      cell: (r) => <span className="text-slate-500">{r.leagueName}</span>,
+      defaultDir: "desc",
+    },
+    {
+      key: "formation",
+      label: t("ranglijst.col.formation"),
+      value: (r) => fmtFormation(r.formation),
+      cell: (r) => (
+        <span className="rounded-lg bg-slate-100/80 px-2 py-1 text-[11px] font-bold text-slate-600">
+          {fmtFormation(r.formation)}
+        </span>
+      ),
+      defaultDir: "desc",
+    },
+    {
+      key: "points",
+      label: t("ranglijst.col.pts"),
+      align: "right",
+      value: (r) => r.points,
+      cell: (r) => r.points,
+      defaultDir: "desc",
+    },
+    {
+      key: "record",
+      label: t("ranglijst.col.record"),
+      align: "center",
+      value: (r) => r.won,
+      cell: (r) => <span className="text-[11px] text-slate-500">{r.won}-{r.drawn}-{r.lost}</span>,
+      defaultDir: "desc",
+    },
+    {
+      key: "gf",
+      label: t("ranglijst.col.gf"),
+      align: "right",
+      value: (r) => r.goalsFor,
+      cell: (r) => r.goalsFor,
+      defaultDir: "desc",
+    },
+    {
+      key: "ga",
+      label: t("ranglijst.col.ga"),
+      align: "right",
+      value: (r) => r.goalsAgainst,
+      cell: (r) => r.goalsAgainst,
+      defaultDir: "asc",
+    },
+    {
+      key: "rating",
+      label: t("ranglijst.col.rating"),
+      align: "right",
+      value: (r) => r.teamRating,
+      cell: (r) => r.teamRating.toFixed(1),
+      defaultDir: "desc",
+    },
+    {
+      key: "position",
+      label: t("ranglijst.col.pos"),
+      value: (r) => r.position,
+      cell: (r) => <PosBadge position={r.position} />,
+      defaultDir: "asc",
+    },
+  ];
+
+  const dailyTodayColumns: RanglijstColumn<DailyTodayRow>[] = [
+    {
+      key: "username",
+      label: t("ranglijst.col.player"),
+      value: (r) => r.username,
+      cell: (r) => <UserLink username={r.username} />,
+      defaultDir: "asc",
+    },
+    {
+      key: "points",
+      label: t("ranglijst.col.pts"),
+      align: "right",
+      value: (r) => r.points,
+      cell: (r) => r.points,
+      defaultDir: "desc",
+    },
+    {
+      key: "position",
+      label: t("ranglijst.col.pos"),
+      value: (r) => r.position,
+      cell: (r) => <PosBadge position={r.position} />,
+      defaultDir: "asc",
+    },
+    {
+      key: "rating",
+      label: t("ranglijst.col.rating"),
+      align: "right",
+      value: (r) => r.teamRating,
+      cell: (r) => r.teamRating.toFixed(1),
+      defaultDir: "desc",
+    },
+    {
+      key: "goalDiff",
+      label: t("ranglijst.col.gd"),
+      align: "right",
+      value: (r) => r.goalDiff,
+      cell: (r) => (r.goalDiff >= 0 ? "+" : "") + r.goalDiff,
+      defaultDir: "desc",
+    },
+  ];
+
+  const dailyWinColumns: RanglijstColumn<DailyWinRow>[] = [
+    {
+      key: "username",
+      label: t("ranglijst.col.player"),
+      value: (r) => r.username,
+      cell: (r) => <UserLink username={r.username} />,
+      defaultDir: "asc",
+    },
+    {
+      key: "wins",
+      label: t("ranglijst.col.dailyWins"),
+      align: "right",
+      value: (r) => r.wins,
+      cell: (r) => r.wins,
+      defaultDir: "desc",
+    },
+  ];
 
   return (
     <main className="min-h-screen w-full pb-12">
       <Header backHref="/" />
-      <div className="mx-auto max-w-4xl px-4 py-10">
+      <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="mb-8">
           <h1 className="text-3xl font-black text-slate-800">{t("ranglijst.title")}</h1>
         </div>
 
-        {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-5">
-          <button
-            onClick={() => setTab("records")}
-            className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-              tab === "records" ? "bg-white shadow-sm border border-slate-200/60 text-slate-800" : "text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            {t("ranglijst.tab.seasons")}
-          </button>
-          <button
-            onClick={() => setTab("accounts")}
-            className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-              tab === "accounts" ? "bg-white shadow-sm border border-slate-200/60 text-slate-800" : "text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            {t("ranglijst.tab.players")}
-          </button>
-          <button
-            onClick={() => setTab("challenge")}
-            className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-              tab === "challenge" ? "bg-amber-50 shadow-sm border border-amber-200/60 text-amber-800" : "text-amber-500 hover:text-amber-700"
-            }`}
-          >
-            {t("ranglijst.tab.daily")}
-          </button>
-          <button
-            onClick={() => setTab("dailywins")}
-            className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-              tab === "dailywins" ? "bg-amber-50 shadow-sm border border-amber-200/60 text-amber-800" : "text-amber-500 hover:text-amber-700"
-            }`}
-          >
-            {t("ranglijst.tab.dailyWins")}
-          </button>
-          <button
-            onClick={() => setTab("career")}
-            className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
-              tab === "career" ? "bg-indigo-50 shadow-sm border border-indigo-200/60 text-indigo-800" : "text-indigo-500 hover:text-indigo-700"
-            }`}
-          >
-            {t("ranglijst.tab.career")}
-          </button>
-        </div>
-
-        {/* Sort pills */}
-        {tab !== "challenge" && tab !== "career" && tab !== "dailywins" && <div className="flex flex-wrap gap-2 mb-5">
-          {(tab === "records" ? RECORD_SORTS : ACCOUNT_SORTS).map((opt) => (
+          {TABS.map((tb) => (
             <button
-              key={opt.key}
-              onClick={() => tab === "records" ? setRecordSort(opt.key as RecordSort) : setAccountSort(opt.key as AccountSort)}
-              className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
-                (tab === "records" ? recordSort : accountSort) === opt.key
-                  ? "bg-gradient-to-r from-emerald-500 to-cyan-500 text-white shadow-md shadow-emerald-100"
-                  : "bg-white/70 border border-slate-200/60 text-slate-500 hover:bg-white hover:shadow-sm backdrop-blur"
+              key={tb.id}
+              onClick={() => setTab(tb.id)}
+              className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+                tab === tb.id ? "bg-white shadow-sm border border-slate-200/60 text-slate-800" : "text-slate-400 hover:text-slate-600"
               }`}
             >
-              {opt.label}
+              {tb.label}
             </button>
           ))}
-        </div>}
+        </div>
 
-        {/* Content */}
+        {tab === "daily" && (
+          <div className="flex flex-wrap gap-2 mb-5">
+            {(["today", "wins"] as DailySubTab[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setDailySubTab(s)}
+                className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                  dailySubTab === s
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-100"
+                    : "bg-white/70 border border-slate-200/60 text-slate-500 hover:bg-white hover:shadow-sm backdrop-blur"
+                }`}
+              >
+                {t(s === "today" ? "ranglijst.subtab.today" : "ranglijst.subtab.wins")}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="card overflow-hidden">
-          {loading ? (
+          {loading && !loadedTabs.has(tab) ? (
             <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
-          ) : tab === "dailywins" ? (
-            dailyWinRows.length === 0 ? (
-              <div className="p-12 text-center">
-                <div className="text-3xl mb-3">🏆</div>
-                <div className="text-sm text-slate-400">{t("ranglijst.empty.dailyWins")}</div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.dailyWins")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dailyWinRows.map((r, i) => (
-                      <tr key={r.username} className="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30">
-                        <td className="px-4 py-3"><RankBadge rank={i + 1} /></td>
-                        <td className="px-3 py-3"><UserLink username={r.username} /></td>
-                        <td className="px-3 py-3 text-right tabular-nums font-black text-amber-700">{r.wins}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )
-          ) : tab === "career" ? (
-            careerRows.length === 0 ? (
-              <div className="p-12 text-center">
-                <div className="text-3xl mb-3">🏟️</div>
-                <div className="text-sm text-slate-400">{t("ranglijst.empty.career")}</div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-indigo-50/50 text-[10px] uppercase tracking-widest text-indigo-600">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.seasons")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.titles")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.bestDivision")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.div1In")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {careerRows.map((r, i) => (
-                      <tr key={r.username} className="border-t border-indigo-100/60 text-slate-600 transition hover:bg-indigo-50/30">
-                        <td className="px-4 py-3"><RankBadge rank={i + 1} /></td>
-                        <td className="px-3 py-3"><UserLink username={r.username} /></td>
-                        <td className="px-3 py-3 text-right tabular-nums">{r.seasons}</td>
-                        <td className="px-3 py-3 text-right tabular-nums font-semibold text-amber-600">{r.championships}</td>
-                        <td className="px-3 py-3 text-right">
-                          <span className={`inline-flex min-w-[3rem] items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                            r.bestDivision <= 3 ? "bg-amber-100/80 text-amber-700" :
-                            r.bestDivision <= 6 ? "bg-emerald-100/80 text-emerald-700" :
-                            "bg-slate-100/80 text-slate-500"
-                          }`}>
-                            {t("ranglijst.div", { n: r.bestDivision })}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-right">
-                          {r.seasonsToDiv1Champ !== null ? (
-                            <span className="inline-flex items-center justify-center rounded-full bg-amber-100/80 px-2.5 py-1 text-[10px] font-black text-amber-700">
-                              {t("ranglijst.seasonsShort", { n: r.seasonsToDiv1Champ })}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] text-slate-300">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )
-          ) : tab === "challenge" ? (
+          ) : tab === "myPlayer" ? (
+            <SortableTable
+              key="myPlayer"
+              rows={myPlayerRows}
+              columns={myPlayerColumns}
+              rowKey={(r) => r.id}
+              initialSortKey="rating"
+              initialSortDir="desc"
+              emptyIcon="⭐"
+              emptyText={t("ranglijst.empty.myPlayer")}
+            />
+          ) : tab === "onlineCareer" ? (
+            <SortableTable
+              key="onlineCareer"
+              rows={onlineCareerRows}
+              columns={careerColumns(t)}
+              rowKey={(r) => r.id}
+              initialSortKey="fastest"
+              initialSortDir="asc"
+              headerClassName="bg-cyan-50/50 text-cyan-600"
+              rowClassName="border-t border-cyan-100/60 text-slate-600 transition hover:bg-cyan-50/30"
+              emptyIcon="🌐"
+              emptyText={t("ranglijst.empty.onlineCareer")}
+            />
+          ) : tab === "offlineCareer" ? (
+            <SortableTable
+              key="offlineCareer"
+              rows={offlineCareerRows}
+              columns={careerColumns(t)}
+              rowKey={(r) => r.id}
+              initialSortKey="fastest"
+              initialSortDir="asc"
+              headerClassName="bg-indigo-50/50 text-indigo-600"
+              rowClassName="border-t border-indigo-100/60 text-slate-600 transition hover:bg-indigo-50/30"
+              emptyIcon="🏆"
+              emptyText={t("ranglijst.empty.offlineCareer")}
+            />
+          ) : tab === "singleSeason" ? (
+            <SortableTable
+              key="singleSeason"
+              rows={singleSeasonRows}
+              columns={singleSeasonColumns}
+              rowKey={(r) => r.id}
+              initialSortKey="points"
+              initialSortDir="desc"
+              emptyIcon="⚽"
+              emptyText={t("ranglijst.empty.singleSeason")}
+            />
+          ) : dailySubTab === "today" ? (
             <>
               <div className="px-5 py-3 border-b border-slate-100/60 flex flex-wrap items-center gap-2">
                 <span className="text-sm font-bold text-amber-800">{t("ranglijst.dailyChallenge")}</span>
@@ -436,179 +641,36 @@ export default function RanglijstPage() {
                   {challenge.ratingMode === "prime" ? t("ranglijst.ratingMode.prime") : t("ranglijst.ratingMode.current")}
                 </span>
               </div>
-              {challengeRows.length === 0 ? (
-                <div className="p-12 text-center">
-                  <div className="text-3xl mb-3">🏅</div>
-                  <div className="text-sm text-slate-400">{t("ranglijst.empty.challenge")}</div>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
-                      <tr>
-                        <th className="px-4 py-3 text-left">#</th>
-                        <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
-                        <th className="px-3 py-3 text-right">{t("ranglijst.col.pts")}</th>
-                        <th className="px-3 py-3 text-right">{t("ranglijst.col.gf")}</th>
-                        <th className="px-3 py-3 text-right">{t("ranglijst.col.ga")}</th>
-                        <th className="px-3 py-3 text-right">{t("ranglijst.col.gd")}</th>
-                        <th className="px-3 py-3 text-right">{t("ranglijst.col.rating")}</th>
-                        <th className="px-3 py-3 text-left">{t("ranglijst.col.pos")}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {challengeRows.map((r, i) => (
-                        <tr key={r.id} className="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30">
-                          <td className="px-4 py-3"><RankBadge rank={i + 1} /></td>
-                          <td className="px-3 py-3"><UserLink username={r.username} /></td>
-                          <td className="px-3 py-3 text-right tabular-nums font-black text-amber-700">{r.points}</td>
-                          <td className="px-3 py-3 text-right tabular-nums">{r.goals_for}</td>
-                          <td className="px-3 py-3 text-right tabular-nums">{r.goals_against}</td>
-                          <td className="px-3 py-3 text-right tabular-nums text-slate-400">{(r.goal_diff >= 0 ? "+" : "")}{r.goal_diff}</td>
-                          <td className="px-3 py-3 text-right tabular-nums">{r.team_rating.toFixed(1)}</td>
-                          <td className="px-3 py-3">
-                            <span className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[10px] font-bold ${
-                              r.position === 1 ? "bg-amber-100/80 text-amber-700"
-                                : r.position <= 4 ? "bg-emerald-100/80 text-emerald-700"
-                                : "bg-slate-100/80 text-slate-500"
-                            }`}>
-                              {r.position}e
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <SortableTable
+                key="dailyToday"
+                rows={dailyTodayRows}
+                columns={dailyTodayColumns}
+                rowKey={(r) => r.id}
+                initialSortKey="points"
+                initialSortDir="desc"
+                headerClassName="bg-amber-50/50 text-amber-600"
+                rowClassName="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30"
+                emptyIcon="🏅"
+                emptyText={t("ranglijst.empty.today")}
+              />
             </>
-          ) : tab === "records" ? (
-            sortedGames.length === 0 ? (
-              <EmptyState text={t("ranglijst.empty.default")} />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-slate-50/80 text-[10px] uppercase tracking-widest text-slate-400">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
-                      <th className="px-3 py-3 text-left">{t("ranglijst.col.competition")}</th>
-                      <th className="px-3 py-3 text-left">{t("ranglijst.col.formation")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.pts")}</th>
-                      <th className="px-3 py-3 text-center">{t("ranglijst.col.record")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.gf")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.ga")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.rating")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.value")}</th>
-                      <th className="px-3 py-3 text-left">{t("ranglijst.col.pos")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedGames.map((r, i) => (
-                      <tr key={r.id} className="border-t border-slate-100/60 text-slate-600 transition hover:bg-emerald-50/30">
-                        <td className="px-4 py-3">
-                          <RankBadge rank={i + 1} />
-                        </td>
-                        <td className="px-3 py-3"><UserLink username={r.username} /></td>
-                        <td className="px-3 py-3 text-slate-500 truncate max-w-[120px]">{r.league_name}</td>
-                        <td className="px-3 py-3">
-                          <span className="rounded-lg bg-slate-100/80 px-2 py-1 text-[11px] font-bold text-slate-600">
-                            {fmtFormation(r.formation)}
-                          </span>
-                        </td>
-                        <td className={`px-3 py-3 text-right tabular-nums font-semibold ${recordSort === "points" ? "font-black text-emerald-600" : ""}`}>{r.points}</td>
-                        <td className="px-3 py-3 text-center tabular-nums text-[11px] text-slate-500">{r.won}-{r.drawn}-{r.lost}</td>
-                        <td className={`px-3 py-3 text-right tabular-nums ${recordSort === "goals_for" ? "font-black text-emerald-600" : ""}`}>{r.goals_for}</td>
-                        <td className={`px-3 py-3 text-right tabular-nums ${recordSort === "goals_against" ? "font-black text-emerald-600" : ""}`}>{r.goals_against}</td>
-                        <td className={`px-3 py-3 text-right tabular-nums ${recordSort === "team_rating" ? "font-black text-emerald-600" : ""}`}>{r.team_rating.toFixed(1)}</td>
-                        <td className={`px-3 py-3 text-right tabular-nums ${recordSort === "team_value" ? "font-black text-emerald-600" : "text-slate-400"}`}>{fmtValue(r.team_value)}</td>
-                        <td className="px-3 py-3">
-                          <span className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[10px] font-bold ${
-                            r.position === 1 ? "bg-amber-100/80 text-amber-700"
-                              : r.position <= 4 ? "bg-emerald-100/80 text-emerald-700"
-                              : r.position >= 18 ? "bg-rose-100/80 text-rose-600"
-                              : "bg-slate-100/80 text-slate-500"
-                          }`}>
-                            {r.position}e
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )
           ) : (
-            sortedAccounts.length === 0 ? (
-              <EmptyState text={t("ranglijst.empty.default")} />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-slate-50/80 text-[10px] uppercase tracking-widest text-slate-400">
-                    <tr>
-                      <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.played")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.titles")}</th>
-                      <th className="px-3 py-3 text-right">{t("ranglijst.col.achievements")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedAccounts.map((r, i) => (
-                      <tr key={r.username} className="border-t border-slate-100/60 text-slate-600 transition hover:bg-emerald-50/30">
-                        <td className="px-4 py-3">
-                          <RankBadge rank={i + 1} />
-                        </td>
-                        <td className="px-3 py-3"><UserLink username={r.username} /></td>
-                        <td className="px-3 py-3 text-right tabular-nums">{r.games}</td>
-                        <td className={`px-3 py-3 text-right tabular-nums font-semibold ${accountSort === "champions" ? "font-black text-amber-600" : "text-amber-600"}`}>
-                          {r.champions}
-                        </td>
-                        <td className={`px-3 py-3 text-right tabular-nums font-semibold ${accountSort === "achievements" ? "font-black text-emerald-600" : ""}`}>
-                          {t("ranglijst.achievementsOutOf", { n: r.unique_achievements.length })}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )
+            <SortableTable
+              key="dailyWins"
+              rows={dailyWinRows}
+              columns={dailyWinColumns}
+              rowKey={(r) => r.username}
+              initialSortKey="wins"
+              initialSortDir="desc"
+              headerClassName="bg-amber-50/50 text-amber-600"
+              rowClassName="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30"
+              emptyIcon="🏆"
+              emptyText={t("ranglijst.empty.wins")}
+            />
           )}
         </div>
       </div>
       <Footer />
     </main>
   );
-}
-
-function RankBadge({ rank }: { rank: number }) {
-  if (rank <= 3) {
-    return (
-      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black text-white ${
-        rank === 1 ? "bg-amber-400" : rank === 2 ? "bg-slate-400" : "bg-amber-600"
-      }`}>
-        {rank}
-      </span>
-    );
-  }
-  return <span className="pl-1.5 font-bold text-slate-400">{rank}</span>;
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div className="p-12 text-center">
-      <div className="text-3xl mb-3">🏟️</div>
-      <div className="text-sm text-slate-400">{text}</div>
-    </div>
-  );
-}
-
-function fmtFormation(key: string): string {
-  return FORMATIONS.find((f) => f.key === key)?.label ?? key;
-}
-
-function fmtValue(mv: number): string {
-  if (mv >= 1_000_000) return `€${(mv / 1_000_000).toFixed(0)}M`;
-  if (mv >= 1000) return `€${(mv / 1000).toFixed(0)}K`;
-  return `€${Math.round(mv)}`;
 }

@@ -328,7 +328,11 @@ export const useGame = create<GameState>((set, get) => ({
 
   land: async (pick) => {
     const cached = squadCache.get(pick.id);
-    set({ spinning: false, landed: pick, squad: cached ?? null, loadingSquad: !cached, error: null });
+    // Een selectie op het veld die is blijven staan tijdens het draaien (bv. een
+    // speler die je uit nieuwsgierigheid aantikte) mag niet overleven tot deze
+    // nieuwe ronde: anders wisselt de volgende toevallige tik op het veld
+    // stilletjes twee spelers om.
+    set({ spinning: false, landed: pick, squad: cached ?? null, loadingSquad: !cached, error: null, selectedSlotId: null });
     if (cached) return;
     try {
       const squad = await loadSquad(pick.id);
@@ -340,7 +344,7 @@ export const useGame = create<GameState>((set, get) => ({
 
   // Vraag een nieuwe draai aan (ReelView pakt dit op en animeert).
   requestSpin: () =>
-    set({ landed: null, squad: null, pendingPlayer: null, error: null, spinRequested: true }),
+    set({ landed: null, squad: null, pendingPlayer: null, error: null, spinRequested: true, selectedSlotId: null }),
 
   reroll: () => {
     if (get().rerollsLeft <= 0) return;

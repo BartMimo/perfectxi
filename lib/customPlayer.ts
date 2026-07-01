@@ -34,6 +34,7 @@ export interface CustomPlayerData {
   totalAssists: number;
   totalCleanSheets: number;
   seasonsPlayed: number;
+  championships: number;
 }
 
 interface SeasonStats {
@@ -70,6 +71,7 @@ function fromRow(data: Record<string, unknown>): CustomPlayerData {
     totalAssists: (data.total_assists as number) ?? 0,
     totalCleanSheets: (data.total_clean_sheets as number) ?? 0,
     seasonsPlayed: (data.seasons_played as number) ?? 0,
+    championships: (data.championships as number) ?? 0,
   };
 }
 
@@ -143,12 +145,13 @@ export const useCustomPlayer = create<CustomPlayerState>((set, get) => ({
     const totalAssists = player.totalAssists + stats.assists;
     const totalCleanSheets = player.totalCleanSheets + stats.cleanSheets;
     const seasonsPlayed = player.seasonsPlayed + 1;
+    const championships = player.championships + (stats.champion ? 1 : 0);
     await supabase.from("custom_players").update({
       xp, level, skill_points: skillPoints,
       total_goals: totalGoals, total_assists: totalAssists, total_clean_sheets: totalCleanSheets,
-      seasons_played: seasonsPlayed,
+      seasons_played: seasonsPlayed, championships,
     }).eq("user_id", userId);
-    set({ player: { ...player, xp, level, skillPoints, totalGoals, totalAssists, totalCleanSheets, seasonsPlayed } });
+    set({ player: { ...player, xp, level, skillPoints, totalGoals, totalAssists, totalCleanSheets, seasonsPlayed, championships } });
   },
 
   spendOnOverall: async (userId) => {

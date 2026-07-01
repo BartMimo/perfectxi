@@ -315,7 +315,7 @@ function WaitingRoom() {
   const activePlayers = lobby.players.filter((p) => !p.pending);
 
   return (
-    <div className="mx-auto max-w-lg px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-8">
       <div className="text-center mb-6">
         {editingName ? (
           <form
@@ -640,7 +640,7 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
 
   if (me.ready || submitting) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-8">
+      <div className="mx-auto max-w-2xl px-4 py-8">
         <WaitingForOthers lobby={lobby} userId={userId} title={t("onlineCarriere.waitingForEveryoneReady")} />
       </div>
     );
@@ -846,7 +846,7 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
     return (
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/online-carriere" />
-        <div className="mx-auto max-w-lg px-4 py-20 text-center">
+        <div className="mx-auto max-w-2xl px-4 py-20 text-center">
           <div className="text-4xl mb-4">😕</div>
           <h1 className="text-xl font-black text-slate-800 mb-2">{t("onlineCarriere.lobbyNotFound")}</h1>
           <p className="text-sm text-slate-500 mb-4">{error || t("onlineCarriere.codeDoesNotExist", { code })}</p>

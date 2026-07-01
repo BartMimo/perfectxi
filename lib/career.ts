@@ -22,6 +22,7 @@ export interface CareerSettings {
 }
 
 export interface CareerState {
+  id: string | null;
   active: boolean;
   currentDivision: number;
   season: number;
@@ -46,12 +47,12 @@ export interface CareerState {
   endCareer: (userId: string) => void;
 }
 
-function saveToDb(userId: string, state: {
+function saveToDb(id: string | null, state: {
   currentDivision: number; season: number; squad: DraftedPlayer[]; history: CareerSeason[]; championships: number;
   formationKey: string; rerollCount: number; wisselCount: number; leagues: string[];
 }) {
-  supabase.from("careers").upsert({
-    user_id: userId,
+  if (!id) return;
+  supabase.from("careers").update({
     current_division: state.currentDivision,
     season: state.season,
     championships: state.championships,
@@ -62,10 +63,11 @@ function saveToDb(userId: string, state: {
     wissel_count: state.wisselCount,
     leagues: state.leagues,
     updated_at: new Date().toISOString(),
-  }, { onConflict: "user_id" }).then(() => {});
+  }).eq("id", id).then(() => {});
 }
 
 export const useCareer = create<CareerState>((set, get) => ({
+  id: null,
   active: false,
   currentDivision: 10,
   season: 1,
@@ -92,8 +94,20 @@ export const useCareer = create<CareerState>((set, get) => ({
       wisselCount: settings.wisselCount,
       leagues: settings.leagues,
     };
-    set({ active: true, ...state, transferring: false, playersToReplace: new Set() });
-    saveToDb(userId, state);
+    const { data } = await supabase.from("careers").insert({
+      user_id: userId,
+      current_division: state.currentDivision,
+      season: state.season,
+      championships: state.championships,
+      squad: state.squad,
+      history: state.history,
+      formation_key: state.formationKey,
+      reroll_count: state.rerollCount,
+      wissel_count: state.wisselCount,
+      leagues: state.leagues,
+      active: true,
+    }).select("id").single();
+    set({ id: (data?.id as string) ?? null, active: true, ...state, transferring: false, playersToReplace: new Set() });
   },
 
   loadCareer: async (userId) => {
@@ -102,10 +116,12 @@ export const useCareer = create<CareerState>((set, get) => ({
       .from("careers")
       .select("*")
       .eq("user_id", userId)
+      .eq("active", true)
       .single();
 
     if (data) {
       set({
+        id: data.id as string,
         active: true,
         currentDivision: data.current_division,
         season: data.season,
@@ -119,14 +135,14 @@ export const useCareer = create<CareerState>((set, get) => ({
         loading: false,
       });
     } else {
-      set({ active: false, loading: false });
+      set({ active: false, id: null, loading: false });
     }
   },
 
   setSquad: (userId, squad) => {
     set({ squad });
     const s = get();
-    saveToDb(userId, { currentDivision: s.currentDivision, season: s.season, squad, history: s.history, championships: s.championships, formationKey: s.formationKey, rerollCount: s.rerollCount, wisselCount: s.wisselCount, leagues: s.leagues });
+    saveToDb(s.id, { currentDivision: s.currentDivision, season: s.season, squad, history: s.history, championships: s.championships, formationKey: s.formationKey, rerollCount: s.rerollCount, wisselCount: s.wisselCount, leagues: s.leagues });
   },
 
   finishSeason: (userId, position, points, gf, ga) => {
@@ -144,7 +160,7 @@ export const useCareer = create<CareerState>((set, get) => ({
     }
 
     set({ history, championships, currentDivision: newDiv, season: s.season + 1 });
-    saveToDb(userId, { currentDivision: newDiv, season: s.season + 1, squad: s.squad, history, championships, formationKey: s.formationKey, rerollCount: s.rerollCount, wisselCount: s.wisselCount, leagues: s.leagues });
+    saveToDb(s.id, { currentDivision: newDiv, season: s.season + 1, squad: s.squad, history, championships, formationKey: s.formationKey, rerollCount: s.rerollCount, wisselCount: s.wisselCount, leagues: s.leagues });
   },
 
   startTransferWindow: () => {
@@ -170,7 +186,9 @@ export const useCareer = create<CareerState>((set, get) => ({
   },
 
   endCareer: (userId) => {
+    const { id } = get();
     set({
+      id: null,
       active: false,
       currentDivision: 10,
       season: 1,
@@ -180,7 +198,7 @@ export const useCareer = create<CareerState>((set, get) => ({
       transferring: false,
       playersToReplace: new Set(),
     });
-    supabase.from("careers").delete().eq("user_id", userId).then(() => {});
+    if (id) supabase.from("careers").update({ active: false, updated_at: new Date().toISOString() }).eq("id", id).then(() => {});
   },
 }));
 
