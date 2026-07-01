@@ -6,7 +6,7 @@ import type { PosKey } from "./positions";
 import { canPlayerPlay } from "./positions";
 import { getFormation } from "./formations";
 import { simulateSeason, type SimResult } from "./sim";
-import { getDivisionRatingRange } from "./career";
+import { getAdjustedDivisionRange } from "./career";
 
 export type Phase = "start" | "play" | "simulating" | "result";
 export type GameMode = "league" | "career";
@@ -88,8 +88,8 @@ function buildOpponents(index: ClubSeasonLite[], leagueCode: string): ClubSeason
   return result.slice(0, OPPONENT_COUNT);
 }
 
-function buildDivisionOpponents(index: ClubSeasonLite[], division: number): ClubSeasonLite[] {
-  const [minR, maxR] = getDivisionRatingRange(division);
+function buildDivisionOpponents(index: ClubSeasonLite[], division: number, leagues: string[] = []): ClubSeasonLite[] {
+  const [minR, maxR] = getAdjustedDivisionRange(division, index, leagues);
   const mid = (minR + maxR) / 2;
   const all = index.filter((c) => c.season === CURRENT_SEASON);
   const seen = new Set<string>();
@@ -275,7 +275,7 @@ export const useGame = create<GameState>((set, get) => ({
       ratingMode: "actual",
       difficulty: "normal",
       slots: newSlots,
-      opponents: buildDivisionOpponents(index, division),
+      opponents: buildDivisionOpponents(index, division, allowedLeagues),
       landed: null,
       squad: null,
       result: null,

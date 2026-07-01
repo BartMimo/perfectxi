@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { supabase } from "./supabase";
-import type { DraftedPlayer } from "./types";
+import type { DraftedPlayer, ClubSeasonLite } from "./types";
 
 export interface CareerSeason {
   season: number;
@@ -199,6 +199,33 @@ const DIV_RATINGS: Record<number, [number, number]> = {
 
 export function getDivisionRatingRange(div: number): [number, number] {
   return DIV_RATINGS[div] ?? [65, 70];
+}
+
+/**
+ * Divisie-ratingrange, herschaald naar de daadwerkelijk haalbare teamsterkte
+ * binnen de gekozen competitie(s). Zonder dit zou bv. een carrière met alleen
+ * de Eredivisie nooit divisie 1 (83-88) kunnen bereiken, omdat die range
+ * gekalibreerd is op toegang tot alle competities. De hele ladder schuift op
+ * zodat het plafond van divisie 1 altijd overeenkomt met het beste dat binnen
+ * de gekozen competities haalbaar is — de progressie (breedte per divisie)
+ * blijft ongewijzigd.
+ */
+export function getAdjustedDivisionRange(
+  div: number,
+  index: Pick<ClubSeasonLite, "leagueCode" | "teamRating">[],
+  leagues: string[],
+): [number, number] {
+  const [minR, maxR] = getDivisionRatingRange(div);
+  if (index.length === 0) return [minR, maxR];
+
+  const pool = leagues.length === 0 ? index : index.filter((c) => leagues.includes(c.leagueCode));
+  if (pool.length === 0) return [minR, maxR];
+
+  const globalCeiling = Math.max(...index.map((c) => c.teamRating));
+  const leagueCeiling = Math.max(...pool.map((c) => c.teamRating));
+  const shift = Math.max(-20, Math.min(10, Math.round(leagueCeiling - globalCeiling)));
+
+  return [minR + shift, maxR + shift];
 }
 
 export function divisionLabel(div: number): string {

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useOnlineCareer, type OnlinePlayer, type OnlineCareer } from "@/lib/onlineCareer";
 import { useGame, filledCount } from "@/lib/store";
-import { divisionLabel, getDivisionRatingRange } from "@/lib/career";
+import { divisionLabel, getAdjustedDivisionRange } from "@/lib/career";
 import { FORMATIONS } from "@/lib/formations";
 import type { ClubSeasonLite, DraftedPlayer } from "@/lib/types";
 import { simulateOnlineSeason, type OnlineUserTeam } from "@/lib/sim";
@@ -44,8 +44,9 @@ function buildOnlineOpponents(
   division: number,
   humanNames: Set<string>,
   slotsNeeded: number,
+  leagues: string[],
 ): ClubSeasonLite[] {
-  const [minR, maxR] = getDivisionRatingRange(division);
+  const [minR, maxR] = getAdjustedDivisionRange(division, index, leagues);
   const mid = (minR + maxR) / 2;
   const all = index.filter((c) => c.season === CURRENT_SEASON);
   const seen = new Set(humanNames);
@@ -789,7 +790,7 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
         lineup: buildLineupFromSquad(p.squad),
       }));
       const humanNames = new Set(divPlayers.map((p) => p.team_name || p.username));
-      const candidates = buildOnlineOpponents(index, myDiv, humanNames, 20 - userTeams.length);
+      const candidates = buildOnlineOpponents(index, myDiv, humanNames, 20 - userTeams.length, lobby.leagues);
       const seed = getSeasonSeed(myDiv);
       const simResult = simulateOnlineSeason(userTeams, candidates, seed);
       const myResult = simResult.userResults.get(userId);

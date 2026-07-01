@@ -90,25 +90,18 @@ export default function StartView() {
 
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ModeCard
+            icon="⭐"
+            title="Mijn Speler"
+            desc="Maak je eigen speler aan en laat hem groeien in elke spelmodus."
+            onClick={() => { window.location.href = "/mijn-speler"; }}
+            accent="border-rose-200/60 bg-gradient-to-br from-rose-50/60 to-pink-50/40"
+          />
+          <ModeCard
             icon="🏅"
             title="Challenge van de dag"
             desc="Dagelijkse challenge met vaste instellingen. Vergelijk je score!"
             onClick={() => { window.location.href = "/challenge"; }}
             accent="border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50"
-          />
-          <ModeCard
-            icon="⚽"
-            title="Single Season"
-            desc="Kies een competitie en formatie, draft je team en speel één seizoen."
-            onClick={() => setScreen("single")}
-            accent="border-emerald-200/60 bg-gradient-to-br from-emerald-50/60 to-teal-50/40"
-          />
-          <ModeCard
-            icon="🏆"
-            title="Offline Carrière"
-            desc="Begin in Divisie 10 en werk je omhoog naar Divisie 1!"
-            onClick={() => { window.location.href = "/offline-carriere"; }}
-            accent="border-indigo-200/60 bg-gradient-to-br from-indigo-50/60 to-purple-50/40"
           />
           <ModeCard
             icon="🌐"
@@ -118,18 +111,25 @@ export default function StartView() {
             accent="border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/40"
           />
           <ModeCard
+            icon="🏆"
+            title="Offline Carrière"
+            desc="Begin in Divisie 10 en werk je omhoog naar Divisie 1!"
+            onClick={() => { window.location.href = "/offline-carriere"; }}
+            accent="border-indigo-200/60 bg-gradient-to-br from-indigo-50/60 to-purple-50/40"
+          />
+          <ModeCard
+            icon="⚽"
+            title="Single Season"
+            desc="Kies een competitie en formatie, draft je team en speel één seizoen."
+            onClick={() => setScreen("single")}
+            accent="border-emerald-200/60 bg-gradient-to-br from-emerald-50/60 to-teal-50/40"
+          />
+          <ModeCard
             icon="📊"
             title="Ranglijst"
             desc="Bekijk records, accounts en de beste carrières."
             onClick={() => { window.location.href = "/ranglijst"; }}
             accent="border-slate-200/60 bg-gradient-to-br from-slate-50/80 to-slate-100/50"
-          />
-          <ModeCard
-            icon="⭐"
-            title="Mijn Speler"
-            desc="Maak je eigen speler aan en laat hem groeien in elke spelmodus."
-            onClick={() => { window.location.href = "/mijn-speler"; }}
-            accent="border-rose-200/60 bg-gradient-to-br from-rose-50/60 to-pink-50/40"
           />
         </div>
       </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useCareer, divisionLabel } from "@/lib/career";
 import { useGame } from "@/lib/store";
+import type { ClubSeasonLite } from "@/lib/types";
 import { FORMATIONS } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
 import { LoginPrompt } from "@/components/AuthGate";
@@ -31,6 +32,7 @@ export default function OfflineCarrierePage() {
   const career = useCareer();
   const startCareerSeason = useGame((s) => s.startCareerSeason);
   const setFormation = useGame((s) => s.setFormation);
+  const setIndex = useGame((s) => s.setIndex);
   const loaded = useGame((s) => s.index.length > 0);
   const [showLogin, setShowLogin] = useState(false);
 
@@ -42,6 +44,14 @@ export default function OfflineCarrierePage() {
   useEffect(() => {
     if (userId) career.loadCareer(userId);
   }, [userId]);
+
+  useEffect(() => {
+    if (loaded) return;
+    fetch("/api/clubseasons")
+      .then((r) => r.json())
+      .then((data: ClubSeasonLite[]) => setIndex(data))
+      .catch(() => {});
+  }, [loaded, setIndex]);
 
   const toggleLeague = (code: string) => {
     setSelectedLeagues((prev) => {

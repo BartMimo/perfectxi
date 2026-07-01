@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useGame } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
+import type { ClubSeasonLite } from "@/lib/types";
 import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -41,9 +42,18 @@ export default function ChallengePage() {
   const router = useRouter();
   const userId = useAuth((s) => s.userId);
   const startChallenge = useGame((s) => s.startChallenge);
+  const setIndex = useGame((s) => s.setIndex);
   const loaded = useGame((s) => s.index.length > 0);
   const challenge = getCurrentChallenge();
   const dayId = getChallengeDayId();
+
+  useEffect(() => {
+    if (loaded) return;
+    fetch("/api/clubseasons")
+      .then((r) => r.json())
+      .then((data: ClubSeasonLite[]) => setIndex(data))
+      .catch(() => {});
+  }, [loaded, setIndex]);
 
   const [challengePlayed, setChallengePlayed] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
