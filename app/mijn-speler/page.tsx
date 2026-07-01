@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 import { POS_KEYS, POS_LABEL, type PosKey } from "@/lib/positions";
 import { useCustomPlayer, xpProgress, BASE_OVERALL, MAX_OVERALL, EXTRA_POSITION_COST } from "@/lib/customPlayer";
 import { RatingBadge } from "@/components/ui";
@@ -13,6 +14,7 @@ export default function MijnSpelerPage() {
   const userId = useAuth((s) => s.userId);
   const authLoading = useAuth((s) => s.loading);
   const [showLogin, setShowLogin] = useState(false);
+  const [showUitleg, setShowUitleg] = useState(false);
 
   if (authLoading) {
     return (
@@ -49,11 +51,122 @@ export default function MijnSpelerPage() {
           <p className="mt-2 text-sm text-slate-500">
             Jouw eigen profielspeler. Voeg hem als eerste toe aan je opstelling in elke spelmodus en verdien XP door seizoenen te spelen.
           </p>
+          <button
+            onClick={() => setShowUitleg((v) => !v)}
+            className="mt-2 text-xs font-bold text-indigo-500 hover:text-indigo-700 transition"
+          >
+            {showUitleg ? "Verberg uitleg ▲" : "Hoe werkt dit? ▼"}
+          </button>
         </div>
+        {showUitleg && (
+          <div className="mb-6 rounded-2xl bg-indigo-50/80 border border-indigo-100 px-4 py-3 text-sm text-slate-600">
+            <ul className="list-disc pl-4 space-y-1.5">
+              <li>Speel seizoenen in elke spelmodus met je speler in de opstelling om XP te verdienen: 1 XP per seizoen, 2 XP als je kampioen wordt.</li>
+              <li>Elke keer dat je een level opgaat, krijg je 1 skillpoint.</li>
+              <li>Besteed skillpoints aan <strong>+1 Overall</strong> (1 punt, tot max {MAX_OVERALL}) of een <strong>extra positie</strong> ({EXTRA_POSITION_COST} punten).</li>
+              <li>Goals, assists en clean sheets die je speler maakt tellen mee in zijn persoonlijke statistieken hieronder.</li>
+            </ul>
+          </div>
+        )}
         <CustomPlayerCard userId={userId} />
+        <TopSpelersRanglijst />
       </div>
       <Footer />
     </main>
+  );
+}
+
+interface TopSpelerRow {
+  id: string;
+  username: string;
+  name: string;
+  position: PosKey;
+  extraPositions: PosKey[];
+  overall: number;
+  seasonsPlayed: number;
+  totalGoals: number;
+  totalAssists: number;
+  totalCleanSheets: number;
+}
+
+function TopSpelersRanglijst() {
+  const [rows, setRows] = useState<TopSpelerRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("custom_players")
+      .select("id, name, position, extra_positions, overall, seasons_played, total_goals, total_assists, total_clean_sheets, users!inner(username)")
+      .order("overall", { ascending: false })
+      .limit(20);
+    if (data) {
+      setRows((data as Record<string, unknown>[]).map((r) => ({
+        id: r.id as string,
+        username: (r.users as Record<string, string>).username,
+        name: r.name as string,
+        position: r.position as PosKey,
+        extraPositions: (r.extra_positions as PosKey[]) ?? [],
+        overall: r.overall as number,
+        seasonsPlayed: (r.seasons_played as number) ?? 0,
+        totalGoals: (r.total_goals as number) ?? 0,
+        totalAssists: (r.total_assists as number) ?? 0,
+        totalCleanSheets: (r.total_clean_sheets as number) ?? 0,
+      })));
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  return (
+    <div className="card mt-6 overflow-hidden">
+      <div className="px-5 py-3 border-b border-slate-100/60">
+        <span className="text-sm font-bold text-slate-700">⭐ Ranglijst eigen spelers</span>
+      </div>
+      {loading ? (
+        <div className="p-8 text-center text-sm text-slate-400">Laden…</div>
+      ) : rows.length === 0 ? (
+        <div className="p-8 text-center text-sm text-slate-400">Nog geen eigen spelers.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-slate-50/80 text-[10px] uppercase tracking-widest text-slate-400">
+              <tr>
+                <th className="px-4 py-3 text-left">#</th>
+                <th className="px-3 py-3 text-left">Account</th>
+                <th className="px-3 py-3 text-left">Speler</th>
+                <th className="px-3 py-3 text-left">Positie</th>
+                <th className="px-3 py-3 text-right">Overall</th>
+                <th className="px-3 py-3 text-right">Seizoenen</th>
+                <th className="px-3 py-3 text-right">Goals</th>
+                <th className="px-3 py-3 text-right">Assists</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r, i) => (
+                <tr key={r.id} className="border-t border-slate-100/60 text-slate-600 transition hover:bg-emerald-50/30">
+                  <td className="px-4 py-3 font-bold text-slate-400">{i + 1}</td>
+                  <td className="px-3 py-3">
+                    <a href={`/profiel/${encodeURIComponent(r.username)}`} className="font-bold text-slate-800 hover:text-indigo-600 transition">
+                      {r.username}
+                    </a>
+                  </td>
+                  <td className="px-3 py-3 font-semibold">{r.name}</td>
+                  <td className="px-3 py-3 text-slate-500">
+                    {[r.position, ...r.extraPositions].map((p) => POS_LABEL[p]).join(", ")}
+                  </td>
+                  <td className="px-3 py-3 text-right font-black text-indigo-600 tabular-nums">{r.overall}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{r.seasonsPlayed}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{r.totalGoals}</td>
+                  <td className="px-3 py-3 text-right tabular-nums">{r.totalAssists}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   );
 }
 

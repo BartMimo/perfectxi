@@ -33,9 +33,6 @@ export default function Footer() {
           )}
           <a href="/ranglijst" className="font-semibold text-emerald-600 hover:text-emerald-700 transition">Ranglijst</a>
         </div>
-        <div className="mt-2 text-[10px] text-slate-400/70">
-          Spelersdata: EA Sports FC via SoFIFA / Kaggle. Fan-project, geen officiële merken.
-        </div>
       </footer>
       {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}
     </>

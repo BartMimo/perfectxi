@@ -25,7 +25,7 @@ export default function OnlineCarrierePage() {
   const userId = useAuth((s) => s.userId);
   const username = useAuth((s) => s.username);
   const teamName = useAuth((s) => s.teamName);
-  const { createLobby, joinLobby, loadMyLobbies, myLobbies, loading, error } = useOnlineCareer();
+  const { createLobby, joinLobby, loadMyLobbies, myLobbies, loadOpenLobbies, openLobbies, loading, error } = useOnlineCareer();
   const [joinCode, setJoinCode] = useState("");
   const [lobbyName, setLobbyName] = useState("");
   const [showLogin, setShowLogin] = useState(false);
@@ -33,10 +33,15 @@ export default function OnlineCarrierePage() {
   const [wisselCount, setWisselCount] = useState(2);
   const [selectedLeagues, setSelectedLeagues] = useState<string[]>(LEAGUES.map((l) => l.code));
   const [sameFormation, setSameFormation] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
 
   useEffect(() => {
     if (userId) loadMyLobbies(userId);
   }, [userId]);
+
+  useEffect(() => {
+    loadOpenLobbies();
+  }, []);
 
   const toggleLeague = (code: string) => {
     setSelectedLeagues((prev) => {
@@ -55,6 +60,7 @@ export default function OnlineCarrierePage() {
       wisselCount,
       leagues: selectedLeagues.length === LEAGUES.length ? [] : selectedLeagues,
       sameFormation,
+      isPublic,
     });
     if (code) router.push(`/online-carriere/${code}`);
   };
@@ -63,6 +69,12 @@ export default function OnlineCarrierePage() {
     if (!userId || !username || !joinCode.trim()) return;
     const ok = await joinLobby(joinCode, userId, username, teamName);
     if (ok) router.push(`/online-carriere/${joinCode.toUpperCase().trim()}`);
+  };
+
+  const handleJoinOpen = async (code: string) => {
+    if (!userId || !username) { setShowLogin(true); return; }
+    const ok = await joinLobby(code, userId, username, teamName);
+    if (ok) router.push(`/online-carriere/${code}`);
   };
 
   return (
@@ -77,6 +89,42 @@ export default function OnlineCarrierePage() {
             en race naar het kampioenschap in Divisie 1!
           </p>
         </div>
+
+        <div className="mb-6 card p-5">
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Hoe werkt het?</h3>
+          <ol className="text-sm text-slate-600 space-y-2 list-decimal list-inside">
+            <li>Maak een lobby aan of join met een code</li>
+            <li>De eigenaar accepteert aanmeldingen en start het spel</li>
+            <li>Iedereen draft een team en simuleert het seizoen</li>
+            <li>Nr. 1 & 2 promoveren, laatste 3 degraderen</li>
+            <li>Vervang 2 spelers en speel het volgende seizoen</li>
+            <li>Eerste die Divisie 1 wint, wint het spel!</li>
+          </ol>
+        </div>
+
+        {openLobbies.length > 0 && (
+          <div className="mb-6 card p-5 border-2 border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/30">
+            <div className="text-xs font-black uppercase tracking-widest text-cyan-700 mb-3">
+              🔓 Open lobby&apos;s — join direct mee
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {openLobbies.map((l) => (
+                <button
+                  key={l.code}
+                  onClick={() => handleJoinOpen(l.code)}
+                  disabled={loading}
+                  className="flex items-center justify-between rounded-xl bg-white/80 border border-cyan-100 px-3 py-2.5 text-left hover:shadow-sm hover:border-cyan-200 transition disabled:opacity-40"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-xs font-black tracking-wider text-cyan-600 shrink-0">{l.code}</span>
+                    <span className="text-sm font-bold text-slate-800 truncate">{l.lobby_name || "—"}</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 shrink-0">{l.player_count}/20 spelers</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {!userId ? (
           <div className="card p-6 text-center">
@@ -198,13 +246,30 @@ export default function OnlineCarrierePage() {
 
               <button
                 onClick={() => setSameFormation((v) => !v)}
-                className="mb-4 flex w-full items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition"
+                className="mb-3 flex w-full items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition"
               >
                 <span className="text-sm font-bold text-slate-600">Iedereen dezelfde formatie</span>
                 <span className={`rounded-full px-3 py-1 text-xs font-black ${
                   sameFormation ? "bg-indigo-500 text-white" : "bg-white text-slate-400 border border-slate-200"
                 }`}>
                   {sameFormation ? "Aan" : "Uit"}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setIsPublic((v) => !v)}
+                className="mb-4 flex w-full items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition"
+              >
+                <span className="text-left">
+                  <span className="block text-sm font-bold text-slate-600">{isPublic ? "Open lobby" : "Gesloten lobby"}</span>
+                  <span className="block text-[11px] text-slate-400">
+                    {isPublic ? "Zichtbaar voor iedereen, direct joinen zonder code" : "Alleen via code, jij keurt aanmeldingen goed"}
+                  </span>
+                </span>
+                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
+                  isPublic ? "bg-cyan-500 text-white" : "bg-white text-slate-400 border border-slate-200"
+                }`}>
+                  {isPublic ? "Open" : "Gesloten"}
                 </span>
               </button>
 
@@ -253,18 +318,6 @@ export default function OnlineCarrierePage() {
             )}
           </div>
         )}
-
-        <div className="mt-8 card p-5">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Hoe werkt het?</h3>
-          <ol className="text-sm text-slate-600 space-y-2 list-decimal list-inside">
-            <li>Maak een lobby aan of join met een code</li>
-            <li>De eigenaar accepteert aanmeldingen en start het spel</li>
-            <li>Iedereen draft een team en simuleert het seizoen</li>
-            <li>Nr. 1 & 2 promoveren, laatste 3 degraderen</li>
-            <li>Vervang 2 spelers en speel het volgende seizoen</li>
-            <li>Eerste die Divisie 1 wint, wint het spel!</li>
-          </ol>
-        </div>
       </div>
       {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}
       <Footer />

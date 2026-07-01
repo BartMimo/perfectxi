@@ -44,17 +44,24 @@ function OptionCard({
 
 type StartScreen = "home" | "single";
 
-function ModeCard({ icon, title, desc, onClick, accent }: {
-  icon: string; title: string; desc: string; onClick: () => void; accent: string;
+function ModeCard({ icon, title, desc, onClick, accent, badge, featured }: {
+  icon: string; title: string; desc: string; onClick: () => void; accent: string; badge?: string; featured?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 rounded-2xl border-2 p-6 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${accent}`}
+      className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 p-6 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${accent} ${featured ? "sm:col-span-2 sm:flex-row sm:text-left sm:gap-5 sm:py-7" : ""}`}
     >
-      <span className="text-3xl">{icon}</span>
-      <span className="text-base font-black text-slate-800">{title}</span>
-      <span className="text-xs leading-relaxed text-slate-500">{desc}</span>
+      {badge && (
+        <span className="absolute -top-2.5 right-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
+          {badge}
+        </span>
+      )}
+      <span className={featured ? "text-5xl sm:shrink-0" : "text-3xl"}>{icon}</span>
+      <span className={featured ? "flex flex-col gap-1" : "contents"}>
+        <span className="text-base font-black text-slate-800 sm:text-lg">{title}</span>
+        <span className="text-xs leading-relaxed text-slate-500 sm:text-sm">{desc}</span>
+      </span>
     </button>
   );
 }
@@ -90,6 +97,15 @@ export default function StartView() {
 
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ModeCard
+            icon="🌐"
+            title="Online Carrière"
+            desc="Speel de carrièremodus met vrienden! Race samen naar Divisie 1."
+            onClick={() => { window.location.href = "/online-carriere"; }}
+            accent="border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/40"
+            badge="Speel met vrienden"
+            featured
+          />
+          <ModeCard
             icon="⭐"
             title="Mijn Speler"
             desc="Maak je eigen speler aan en laat hem groeien in elke spelmodus."
@@ -102,13 +118,6 @@ export default function StartView() {
             desc="Dagelijkse challenge met vaste instellingen. Vergelijk je score!"
             onClick={() => { window.location.href = "/challenge"; }}
             accent="border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50"
-          />
-          <ModeCard
-            icon="🌐"
-            title="Online Carrière"
-            desc="Speel de carrièremodus met vrienden! Race samen naar Divisie 1."
-            onClick={() => { window.location.href = "/online-carriere"; }}
-            accent="border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/40"
           />
           <ModeCard
             icon="🏆"

@@ -34,6 +34,7 @@ export interface OnlineCareer {
   wissel_count: number;
   leagues: string[];
   same_formation: boolean;
+  is_public: boolean;
   players: OnlinePlayer[];
 }
 
@@ -42,6 +43,7 @@ export interface LobbySettings {
   wisselCount: number;
   leagues: string[];
   sameFormation: boolean;
+  isPublic: boolean;
 }
 
 export interface MyLobbyInfo {
@@ -53,15 +55,26 @@ export interface MyLobbyInfo {
   current_division: number;
 }
 
+export interface OpenLobbyInfo {
+  code: string;
+  lobby_name: string | null;
+  reroll_count: number;
+  wissel_count: number;
+  leagues: string[];
+  player_count: number;
+}
+
 interface OnlineCareerState {
   lobby: OnlineCareer | null;
   myLobbies: MyLobbyInfo[];
+  openLobbies: OpenLobbyInfo[];
   loading: boolean;
   error: string | null;
   subscription: ReturnType<typeof supabase.channel> | null;
   pollInterval: ReturnType<typeof setInterval> | null;
 
   loadMyLobbies: (userId: string) => Promise<void>;
+  loadOpenLobbies: () => Promise<void>;
   createLobby: (userId: string, username: string, teamName: string | null, lobbyName: string | undefined, settings: LobbySettings) => Promise<string | null>;
   joinLobby: (code: string, userId: string, username: string, teamName: string | null) => Promise<boolean>;
   loadLobby: (code: string) => Promise<void>;
@@ -121,6 +134,7 @@ async function fetchPlayers(careerId: string): Promise<OnlinePlayer[]> {
 export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
   lobby: null,
   myLobbies: [],
+  openLobbies: [],
   loading: false,
   error: null,
   subscription: null,
@@ -173,6 +187,32 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     set({ myLobbies: lobbies });
   },
 
+  loadOpenLobbies: async () => {
+    const { data } = await supabase
+      .from("online_careers")
+      .select("code, lobby_name, reroll_count, wissel_count, leagues, online_career_players(count)")
+      .eq("is_public", true)
+      .eq("status", "waiting")
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    if (!data) {
+      set({ openLobbies: [] });
+      return;
+    }
+
+    const lobbies: OpenLobbyInfo[] = (data as Record<string, unknown>[]).map((c) => ({
+      code: c.code as string,
+      lobby_name: (c.lobby_name as string | null) ?? null,
+      reroll_count: c.reroll_count as number,
+      wissel_count: c.wissel_count as number,
+      leagues: (c.leagues as string[]) ?? [],
+      player_count: ((c.online_career_players as { count: number }[] | undefined)?.[0]?.count) ?? 0,
+    })).filter((l) => l.player_count < 20);
+
+    set({ openLobbies: lobbies });
+  },
+
   createLobby: async (userId, username, teamName, lobbyName, settings) => {
     set({ loading: true, error: null });
     const code = generateCode();
@@ -189,6 +229,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         wissel_count: settings.wisselCount,
         leagues: settings.leagues,
         same_formation: settings.sameFormation,
+        is_public: settings.isPublic,
       })
       .select()
       .single();
@@ -220,6 +261,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         wissel_count: career.wissel_count,
         leagues: career.leagues ?? [],
         same_formation: career.same_formation,
+        is_public: career.is_public ?? false,
         players,
       },
       loading: false,
@@ -267,7 +309,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
       user_id: userId,
       username,
       team_name: teamName,
-      pending: true,
+      pending: !career.is_public,
     });
 
     if (error) {

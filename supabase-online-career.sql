@@ -12,6 +12,7 @@ CREATE TABLE online_careers (
   wissel_count int NOT NULL DEFAULT 2,
   leagues jsonb NOT NULL DEFAULT '[]'::jsonb, -- lege array = alle competities
   same_formation boolean NOT NULL DEFAULT false,
+  is_public boolean NOT NULL DEFAULT false, -- open lobby: zichtbaar in browser, direct joinen zonder goedkeuring
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -72,3 +73,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE online_career_players;
 -- ALTER TABLE online_careers ADD COLUMN leagues jsonb NOT NULL DEFAULT '[]'::jsonb;
 -- ALTER TABLE online_careers ADD COLUMN same_formation boolean NOT NULL DEFAULT false;
 -- ALTER TABLE online_career_players ADD COLUMN formation_key text;
+
+-- Open lobby's: publiek zichtbaar en direct joinbaar zonder code/goedkeuring
+-- ALTER TABLE online_careers ADD COLUMN is_public boolean NOT NULL DEFAULT false;
