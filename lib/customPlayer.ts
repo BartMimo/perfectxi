@@ -219,12 +219,12 @@ export function useEnsureCustomPlayerLoaded(userId: string | null): boolean {
   return !userId || loaded;
 }
 
-/** Status van de profielspeler t.o.v. de huidige opstelling-in-opbouw: nodig om te bepalen of hij verplicht eerst toegevoegd moet worden. */
-export function useCustomPlayerSlot() {
+/** Status van de profielspeler t.o.v. de huidige opstelling-in-opbouw: nodig om te bepalen of hij verplicht eerst toegevoegd moet worden. `enabled` staat lobby's toe de profielspeler helemaal uit te schakelen. */
+export function useCustomPlayerSlot(enabled: boolean = true) {
   const player = useCustomPlayer((s) => s.player);
   const slots = useGame((s) => s.slots);
 
-  if (!player) {
+  if (!enabled || !player) {
     return { player: null, drafted: null, alreadyAdded: false, blocking: false };
   }
   const drafted = customPlayerToDrafted(player);

@@ -490,7 +490,7 @@ function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePl
   const total = slots.length;
   const complete = total > 0 && filled === total;
   const customPlayerReady = useEnsureCustomPlayerLoaded(userId);
-  const { blocking: customPlayerBlocking } = useCustomPlayerSlot();
+  const { blocking: customPlayerBlocking } = useCustomPlayerSlot(lobby.allow_custom_player);
   const t = useT();
 
   return (

@@ -13,6 +13,7 @@ CREATE TABLE online_careers (
   leagues jsonb NOT NULL DEFAULT '[]'::jsonb, -- lege array = alle competities
   same_formation boolean NOT NULL DEFAULT false,
   is_public boolean NOT NULL DEFAULT false, -- open lobby: zichtbaar in browser, direct joinen zonder goedkeuring
+  allow_custom_player boolean NOT NULL DEFAULT true, -- of spelers hun Mijn Speler profielspeler mogen gebruiken in deze lobby
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -76,3 +77,6 @@ ALTER PUBLICATION supabase_realtime ADD TABLE online_career_players;
 
 -- Open lobby's: publiek zichtbaar en direct joinbaar zonder code/goedkeuring
 -- ALTER TABLE online_careers ADD COLUMN is_public boolean NOT NULL DEFAULT false;
+
+-- Eigen speler (Mijn Speler) aan/uit per lobby
+-- ALTER TABLE online_careers ADD COLUMN allow_custom_player boolean NOT NULL DEFAULT true;

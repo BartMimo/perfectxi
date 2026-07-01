@@ -35,6 +35,7 @@ export interface OnlineCareer {
   leagues: string[];
   same_formation: boolean;
   is_public: boolean;
+  allow_custom_player: boolean;
   players: OnlinePlayer[];
 }
 
@@ -44,6 +45,7 @@ export interface LobbySettings {
   leagues: string[];
   sameFormation: boolean;
   isPublic: boolean;
+  allowCustomPlayer: boolean;
 }
 
 export interface MyLobbyInfo {
@@ -230,6 +232,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         leagues: settings.leagues,
         same_formation: settings.sameFormation,
         is_public: settings.isPublic,
+        allow_custom_player: settings.allowCustomPlayer,
       })
       .select()
       .single();
@@ -262,6 +265,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         leagues: career.leagues ?? [],
         same_formation: career.same_formation,
         is_public: career.is_public ?? false,
+        allow_custom_player: career.allow_custom_player ?? true,
         players,
       },
       loading: false,

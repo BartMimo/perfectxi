@@ -39,6 +39,7 @@ export default function OnlineCarrierePage() {
   const [selectedLeagues, setSelectedLeagues] = useState<string[]>(LEAGUES.map((l) => l.code));
   const [sameFormation, setSameFormation] = useState(false);
   const [isPublic, setIsPublic] = useState(false);
+  const [allowCustomPlayer, setAllowCustomPlayer] = useState(true);
 
   useEffect(() => {
     if (userId) loadMyLobbies(userId);
@@ -66,6 +67,7 @@ export default function OnlineCarrierePage() {
       leagues: selectedLeagues.length === LEAGUES.length ? [] : selectedLeagues,
       sameFormation,
       isPublic,
+      allowCustomPlayer,
     });
     if (code) router.push(`/online-carriere/${code}`);
   };
@@ -274,6 +276,23 @@ export default function OnlineCarrierePage() {
                   isPublic ? "bg-cyan-500 text-white" : "bg-white text-slate-400 border border-slate-200"
                 }`}>
                   {isPublic ? t("onlineCarriere.open") : t("onlineCarriere.closed")}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setAllowCustomPlayer((v) => !v)}
+                className="mb-4 flex w-full items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition"
+              >
+                <span className="text-left">
+                  <span className="block text-sm font-bold text-slate-600">{t("onlineCarriere.allowCustomPlayer")}</span>
+                  <span className="block text-[11px] text-slate-400">
+                    {allowCustomPlayer ? t("onlineCarriere.allowCustomPlayerDesc") : t("onlineCarriere.disallowCustomPlayerDesc")}
+                  </span>
+                </span>
+                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
+                  allowCustomPlayer ? "bg-indigo-500 text-white" : "bg-white text-slate-400 border border-slate-200"
+                }`}>
+                  {allowCustomPlayer ? t("onlineCarriere.on") : t("onlineCarriere.off")}
                 </span>
               </button>
 
