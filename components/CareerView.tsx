@@ -4,93 +4,6 @@ import { useEffect } from "react";
 import { useCareer, divisionLabel } from "@/lib/career";
 import { useGame } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import CareerTimeline from "./CareerTimeline";
-
-export function CareerStartCard() {
-  const career = useCareer();
-  const startCareerSeason = useGame((s) => s.startCareerSeason);
-  const loaded = useGame((s) => s.index.length > 0);
-  const userId = useAuth((s) => s.userId);
-
-  useEffect(() => {
-    if (userId) career.loadCareer(userId);
-  }, [userId]);
-
-  if (career.loading) return null;
-
-  if (career.active) {
-    return (
-      <div className="card p-5 border-2 border-indigo-200/60 bg-gradient-to-br from-indigo-50/80 to-purple-50/50">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">🏟️</span>
-          <span className="text-xs font-black uppercase tracking-widest text-indigo-700">Carrière</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-sm mb-3">
-          <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-indigo-800">
-            {divisionLabel(career.currentDivision)}
-          </span>
-          <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-slate-700">
-            Seizoen {career.season}
-          </span>
-          <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-amber-700">
-            {career.championships}x kampioen
-          </span>
-        </div>
-        {career.history.length > 0 && (
-          <div className="mb-3">
-            <CareerTimeline history={career.history} currentDivision={career.currentDivision} currentSeason={career.season} />
-          </div>
-        )}
-        <div className="flex gap-2">
-          <button
-            disabled={!loaded}
-            onClick={() => startCareerSeason(career.currentDivision, career.squad.length > 0 ? career.squad : undefined)}
-            className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:transform-none"
-          >
-            {loaded ? `Speel seizoen ${career.season}` : "Laden…"}
-          </button>
-          <button onClick={() => userId && career.endCareer(userId)} className="btn-secondary !px-4 !py-3 !text-xs text-rose-500">
-            Stop
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!userId) {
-    return (
-      <div className="card p-5 border-2 border-indigo-200/40 bg-gradient-to-br from-indigo-50/40 to-purple-50/30">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-lg">🏟️</span>
-          <span className="text-xs font-black uppercase tracking-widest text-indigo-700">Carrièremodus</span>
-        </div>
-        <p className="text-sm text-slate-500">
-          Log in om een carrière te starten.
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="card p-5 border-2 border-indigo-200/40 bg-gradient-to-br from-indigo-50/40 to-purple-50/30">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">🏟️</span>
-        <span className="text-xs font-black uppercase tracking-widest text-indigo-700">Carrièremodus</span>
-      </div>
-      <p className="text-sm text-slate-500 mb-4">
-        Begin in Divisie 10 en werk je omhoog. Word kampioen om te promoveren,
-        eindig onderaan en je degradeert. Elk seizoen mag je 2 spelers vervangen.
-      </p>
-      <button
-        disabled={!loaded}
-        onClick={() => career.startCareer(userId)}
-        className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40 disabled:transform-none"
-      >
-        {loaded ? "Start carrière" : "Laden…"}
-      </button>
-    </div>
-  );
-}
 
 export function TransferWindow() {
   const career = useCareer();
@@ -108,7 +21,9 @@ export function TransferWindow() {
           <div className="text-2xl mb-2">🔄</div>
           <h2 className="text-lg font-black text-slate-800">Transferwindow</h2>
           <p className="text-sm text-slate-500 mt-1">
-            Kies maximaal 2 spelers om te vervangen. Je draft daarna nieuwe spelers.
+            {career.wisselCount === 0
+              ? "Deze carrière staat geen transfers toe."
+              : `Kies maximaal ${career.wisselCount} speler${career.wisselCount > 1 ? "s" : ""} om te vervangen. Je draft daarna nieuwe spelers.`}
           </p>
           <div className="mt-2 text-xs font-bold text-indigo-600">
             {divisionLabel(career.currentDivision)} · Seizoen {career.season}
@@ -149,7 +64,8 @@ export function TransferWindow() {
                 // Save remaining squad to DB before starting new season
                 career.setSquad(userId, remaining);
               }
-              startCareerSeason(career.currentDivision, remaining);
+              useGame.getState().setFormation(career.formationKey);
+              startCareerSeason(career.currentDivision, remaining, career.rerollCount, career.leagues);
             }}
             className="btn-primary flex-1"
           >

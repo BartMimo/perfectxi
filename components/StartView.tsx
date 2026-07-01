@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useGame } from "@/lib/store";
-import { useAuth } from "@/lib/auth";
 import { FORMATIONS } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
-import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
-import { supabase } from "@/lib/supabase";
-import { CareerStartCard } from "./CareerView";
 
 function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
@@ -73,30 +69,9 @@ export default function StartView() {
   const difficulty = useGame((s) => s.difficulty);
   const setDifficulty = useGame((s) => s.setDifficulty);
   const startGame = useGame((s) => s.startGame);
-  const startChallenge = useGame((s) => s.startChallenge);
   const loaded = useGame((s) => s.index.length > 0);
-  const userId = useAuth((s) => s.userId);
 
-  const challenge = getCurrentChallenge();
-  const [challengePlayed, setChallengePlayed] = useState<number | null>(null);
-  const [challengeChecked, setChallengeChecked] = useState(false);
   const [screen, setScreen] = useState<StartScreen>("home");
-
-  useEffect(() => {
-    if (!userId) { setChallengeChecked(true); return; }
-    const weekId = getChallengeDayId();
-    supabase
-      .from("results")
-      .select("points")
-      .eq("user_id", userId)
-      .eq("challenge_week", weekId)
-      .eq("is_challenge", true)
-      .limit(1)
-      .then(({ data }) => {
-        if (data && data.length > 0) setChallengePlayed(data[0].points);
-        setChallengeChecked(true);
-      });
-  }, [userId]);
 
   const ready = loaded && !!leagueCode;
 
@@ -118,14 +93,7 @@ export default function StartView() {
             icon="🏅"
             title="Challenge van de dag"
             desc="Dagelijkse challenge met vaste instellingen. Vergelijk je score!"
-            onClick={() => {
-              if (!loaded) return;
-              if (challengePlayed !== null) {
-                setScreen("home");
-                return;
-              }
-              startChallenge(challenge.leagueCode, challenge.formationKey, challenge.ratingMode, challenge.difficulty, challenge.day);
-            }}
+            onClick={() => { window.location.href = "/challenge"; }}
             accent="border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50"
           />
           <ModeCard
@@ -139,10 +107,7 @@ export default function StartView() {
             icon="🏆"
             title="Offline Carrière"
             desc="Begin in Divisie 10 en werk je omhoog naar Divisie 1!"
-            onClick={() => {
-              const el = document.getElementById("career-card");
-              if (el) el.scrollIntoView({ behavior: "smooth" });
-            }}
+            onClick={() => { window.location.href = "/offline-carriere"; }}
             accent="border-indigo-200/60 bg-gradient-to-br from-indigo-50/60 to-purple-50/40"
           />
           <ModeCard
@@ -152,26 +117,20 @@ export default function StartView() {
             onClick={() => { window.location.href = "/online-carriere"; }}
             accent="border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/40"
           />
-        </div>
-
-        {/* Challenge detail als al gespeeld */}
-        {challengeChecked && challengePlayed !== null && (
-          <div className="mt-6 card p-5 border-2 border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">🏅</span>
-              <span className="text-xs font-black uppercase tracking-widest text-amber-700">Challenge van de dag</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-amber-800">Al gespeeld!</span>
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">{challengePlayed} punten</span>
-              <a href="/ranglijst" className="text-xs font-bold text-amber-600 hover:text-amber-700 underline transition">Bekijk ranglijst</a>
-            </div>
-          </div>
-        )}
-
-        {/* Carrière card */}
-        <div className="mt-6" id="career-card">
-          <CareerStartCard />
+          <ModeCard
+            icon="📊"
+            title="Ranglijst"
+            desc="Bekijk records, accounts en de beste carrières."
+            onClick={() => { window.location.href = "/ranglijst"; }}
+            accent="border-slate-200/60 bg-gradient-to-br from-slate-50/80 to-slate-100/50"
+          />
+          <ModeCard
+            icon="⭐"
+            title="Mijn Speler"
+            desc="Maak je eigen speler aan en laat hem groeien in elke spelmodus."
+            onClick={() => { window.location.href = "/mijn-speler"; }}
+            accent="border-rose-200/60 bg-gradient-to-br from-rose-50/60 to-pink-50/40"
+          />
         </div>
       </div>
     );
