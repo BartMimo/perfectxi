@@ -11,10 +11,15 @@ import { POS_BAND } from "./positions";
 
 export const BASE_OVERALL = 60;
 export const MAX_OVERALL = 99;
-export const XP_PER_LEVEL = 10;
 export const EXTRA_POSITION_COST = 3;
 export const XP_PER_SEASON = 1;
 export const XP_PER_CHAMPIONSHIP = 2;
+
+/** XP nodig om van level N naar N+1 te gaan (index 0 = level 1 -> 2, enz.). Level 40 is het maximum. */
+export const LEVEL_XP_COSTS = [
+  1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8,
+  9, 9, 10, 12, 13, 14, 16, 17, 19, 21, 23, 26, 29, 32, 35, 39, 43, 48, 53,
+];
 
 export interface CustomPlayerData {
   id: string;
@@ -69,7 +74,26 @@ function fromRow(data: Record<string, unknown>): CustomPlayerData {
 }
 
 function levelForXp(xp: number): number {
-  return 1 + Math.floor(xp / XP_PER_LEVEL);
+  let level = 1;
+  let remaining = xp;
+  for (const cost of LEVEL_XP_COSTS) {
+    if (remaining < cost) break;
+    remaining -= cost;
+    level++;
+  }
+  return level;
+}
+
+/** Voortgang binnen het huidige level: xp verzameld sinds de laatste level-up en xp nodig voor de volgende. */
+export function xpProgress(xp: number): { level: number; current: number; needed: number } {
+  let level = 1;
+  let remaining = xp;
+  for (const cost of LEVEL_XP_COSTS) {
+    if (remaining < cost) return { level, current: remaining, needed: cost };
+    remaining -= cost;
+    level++;
+  }
+  return { level, current: 0, needed: 0 };
 }
 
 export const useCustomPlayer = create<CustomPlayerState>((set, get) => ({

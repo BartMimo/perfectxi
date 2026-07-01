@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { POS_KEYS, POS_LABEL, type PosKey } from "@/lib/positions";
-import { useCustomPlayer, BASE_OVERALL, MAX_OVERALL, XP_PER_LEVEL, EXTRA_POSITION_COST } from "@/lib/customPlayer";
+import { useCustomPlayer, xpProgress, BASE_OVERALL, MAX_OVERALL, EXTRA_POSITION_COST } from "@/lib/customPlayer";
 import { RatingBadge } from "@/components/ui";
 import { LoginPrompt } from "@/components/AuthGate";
 import Footer from "@/components/Footer";
@@ -120,7 +120,8 @@ function CustomPlayerCard({ userId }: { userId: string }) {
     );
   }
 
-  const xpInLevel = player.xp % XP_PER_LEVEL;
+  const progress = xpProgress(player.xp);
+  const isMaxLevel = progress.needed === 0;
   const remainingPositions = POS_KEYS.filter((p) => p !== player.position && !player.extraPositions.includes(p));
 
   return (
@@ -165,10 +166,13 @@ function CustomPlayerCard({ userId }: { userId: string }) {
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
           <span>XP</span>
-          <span>{xpInLevel} / {XP_PER_LEVEL}</span>
+          <span>{isMaxLevel ? "MAX" : `${progress.current} / ${progress.needed}`}</span>
         </div>
         <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-          <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500" style={{ width: `${(xpInLevel / XP_PER_LEVEL) * 100}%` }} />
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+            style={{ width: isMaxLevel ? "100%" : `${(progress.current / progress.needed) * 100}%` }}
+          />
         </div>
       </div>
 
