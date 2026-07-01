@@ -10,6 +10,7 @@ import { canPlayerPlay } from "@/lib/positions";
 import type { Band } from "@/lib/positions";
 import { isCustomPlayer } from "@/lib/customPlayer";
 import { ratingColor } from "./ui";
+import { useT } from "@/lib/i18n/core";
 
 function avgRating(squad: DraftedPlayer[]): number {
   if (squad.length === 0) return 0;
@@ -93,7 +94,12 @@ function PitchToken({ slot, player }: { slot: FormationSlot; player?: DraftedPla
 }
 
 const BAND_ORDER: Band[] = ["GK", "DEF", "MID", "ATT"];
-const BAND_LABELS: Record<Band, string> = { GK: "Keeper", DEF: "Verdediging", MID: "Middenveld", ATT: "Aanval" };
+const BAND_LABEL_KEYS: Record<Band, string> = {
+  GK: "draft.bandGoalkeeper",
+  DEF: "draft.bandDefense",
+  MID: "draft.bandMidfield",
+  ATT: "draft.bandAttack",
+};
 const BAND_COLORS: Record<Band, string> = {
   GK: "text-amber-600",
   DEF: "text-sky-600",
@@ -102,6 +108,7 @@ const BAND_COLORS: Record<Band, string> = {
 };
 
 function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: () => void }) {
+  const t = useT();
   const rating = avgRating(player.squad);
   const { formation, placed } = fitSquadToFormation(player.squad);
 
@@ -122,7 +129,7 @@ function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: 
         <div className="min-w-0">
           <div className="text-lg font-black text-slate-800 truncate">{player.team_name || player.username}</div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs font-bold text-slate-400">{divisionLabel(player.current_division)}</span>
+            <span className="text-xs font-bold text-slate-400">{divisionLabel(t, player.current_division)}</span>
             <span className="text-xs font-bold text-emerald-600">{rating} OVR</span>
             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-500">{formation.label}</span>
             {player.championships > 0 && (
@@ -180,6 +187,7 @@ function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: 
 }
 
 function PlayerList({ grouped }: { grouped: Map<Band, DraftedPlayer[]> }) {
+  const t = useT();
   return (
     <div className="flex flex-col gap-4">
       {BAND_ORDER.map((band) => {
@@ -188,7 +196,7 @@ function PlayerList({ grouped }: { grouped: Map<Band, DraftedPlayer[]> }) {
         return (
           <div key={band}>
             <div className={`text-[10px] font-black uppercase tracking-widest mb-2 ${BAND_COLORS[band]}`}>
-              {BAND_LABELS[band]}
+              {t(BAND_LABEL_KEYS[band])}
             </div>
             <div className="flex flex-col gap-1.5">
               {players

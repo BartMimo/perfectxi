@@ -1,6 +1,7 @@
 "use client";
 
 import type { CareerSeason } from "@/lib/career";
+import { useT } from "@/lib/i18n/core";
 
 export interface PlayerCareerSeries {
   id: string;
@@ -30,6 +31,7 @@ const PAD_RIGHT = 12;
 const INNER_H = CHART_H - PAD_TOP - PAD_BOT;
 
 export default function MultiCareerTimeline({ players, currentSeason }: Props) {
+  const t = useT();
   const withData = players.filter((p) => p.history.length > 0);
   if (withData.length === 0) return null;
 
@@ -49,9 +51,9 @@ export default function MultiCareerTimeline({ players, currentSeason }: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <DivisionChart players={drawOrder} seasons={seasons} currentSeason={currentSeason} />
-      {hasRatingData && <RatingChart players={drawOrder} seasons={seasons} />}
-      <Legend players={colored} className="lg:col-span-2" />
+      <DivisionChart players={drawOrder} seasons={seasons} currentSeason={currentSeason} t={t} />
+      {hasRatingData && <RatingChart players={drawOrder} seasons={seasons} t={t} />}
+      <Legend players={colored} className="lg:col-span-2" t={t} />
     </div>
   );
 }
@@ -64,7 +66,9 @@ function xScale(seasons: number[], viewW: number) {
   };
 }
 
-function DivisionChart({ players, seasons, currentSeason }: { players: ColoredSeries[]; seasons: number[]; currentSeason: number }) {
+type TFunc = ReturnType<typeof useT>;
+
+function DivisionChart({ players, seasons, currentSeason, t }: { players: ColoredSeries[]; seasons: number[]; currentSeason: number; t: TFunc }) {
   const divisions = players.flatMap((p) => [...p.history.map((h) => h.division), p.currentDivision]);
   const minDiv = Math.min(...divisions);
   const maxDiv = Math.max(...divisions);
@@ -79,7 +83,7 @@ function DivisionChart({ players, seasons, currentSeason }: { players: ColoredSe
 
   return (
     <div className="card p-4 overflow-hidden">
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Divisie per seizoen</div>
+      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">{t("career.divisionPerSeason")}</div>
       <div className="overflow-x-auto -mx-4 px-4">
         <svg viewBox={`0 0 ${viewW} ${CHART_H}`} width={viewW} height={CHART_H} className="min-w-full">
           {divLabels.map((d) => (
@@ -91,7 +95,7 @@ function DivisionChart({ players, seasons, currentSeason }: { players: ColoredSe
 
           {seasons.map((s) => (
             <text key={s} x={x(s)} y={CHART_H - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill={s === currentSeason ? ME_COLOR : "#94a3b8"}>
-              {s === currentSeason ? "nu" : `S${s}`}
+              {s === currentSeason ? t("career.now") : `S${s}`}
             </text>
           ))}
 
@@ -128,7 +132,7 @@ function DivisionChart({ players, seasons, currentSeason }: { players: ColoredSe
   );
 }
 
-function RatingChart({ players, seasons }: { players: ColoredSeries[]; seasons: number[] }) {
+function RatingChart({ players, seasons, t }: { players: ColoredSeries[]; seasons: number[]; t: TFunc }) {
   const ratings = players.flatMap((p) => p.history.map((h) => h.avgRating).filter((r): r is number => r != null));
   if (ratings.length === 0) return null;
   const minR = Math.min(...ratings) - 1;
@@ -145,7 +149,7 @@ function RatingChart({ players, seasons }: { players: ColoredSeries[]; seasons: 
 
   return (
     <div className="card p-4 overflow-hidden">
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">Team gemiddelde per seizoen</div>
+      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">{t("career.teamAverageBySeason")}</div>
       <div className="overflow-x-auto -mx-4 px-4">
         <svg viewBox={`0 0 ${viewW} ${CHART_H}`} width={viewW} height={CHART_H} className="min-w-full">
           {rLabels.map((r) => (
@@ -184,14 +188,14 @@ function RatingChart({ players, seasons }: { players: ColoredSeries[]; seasons: 
   );
 }
 
-function Legend({ players, className = "" }: { players: ColoredSeries[]; className?: string }) {
+function Legend({ players, className = "", t }: { players: ColoredSeries[]; className?: string; t: TFunc }) {
   return (
     <div className={`flex flex-wrap gap-x-3 gap-y-1.5 px-1 ${className}`}>
       {players.map((p) => (
         <div key={p.id} className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
           <span className={`text-[10px] font-bold truncate max-w-[120px] ${p.isMe ? "text-indigo-700" : "text-slate-500"}`}>
-            {p.name}{p.isMe ? " (jij)" : ""}
+            {p.name}{p.isMe ? ` ${t("career.youSuffix")}` : ""}
           </span>
         </div>
       ))}

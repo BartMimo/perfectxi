@@ -16,24 +16,27 @@ import { useAuth } from "@/lib/auth";
 import { useEnsureCustomPlayerLoaded, useCustomPlayerSlot } from "@/lib/customPlayer";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useT } from "@/lib/i18n/core";
 
 function CompleteCTA() {
+  const t = useT();
   const simulate = useGame((s) => s.simulate);
   const teamName = useAuth((s) => s.teamName);
   return (
     <div className="card flex flex-col items-center gap-4 p-6 text-center">
-      <div className="text-base font-extrabold text-emerald-700">Je XI is compleet!</div>
+      <div className="text-base font-extrabold text-emerald-700">{t("draft.squadComplete")}</div>
       <p className="text-sm leading-relaxed text-slate-500">
-        Tik op een speler in het veld om hem te verplaatsen, of simuleer je seizoen.
+        {t("draft.completeHint")}
       </p>
       <button onClick={() => simulate(teamName ?? undefined)} className="btn-primary w-full text-lg">
-        Simuleer het seizoen
+        {t("draft.simulateSeason")}
       </button>
     </div>
   );
 }
 
 function PlayView() {
+  const t = useT();
   const userId = useAuth((s) => s.userId);
   const slots = useGame((s) => s.slots);
   const filled = filledCount(slots);
@@ -46,15 +49,15 @@ function PlayView() {
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-start">
       <div className="min-w-0 lg:sticky lg:top-[74px]">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-600">Jouw opstelling</h2>
+          <h2 className="text-sm font-bold text-slate-600">{t("draft.yourLineup")}</h2>
           <div className="flex items-center gap-2">
             {filled > 0 && (
               <button onClick={useGame.getState().newGame} className="rounded-full bg-rose-50/80 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-100 transition">
-                Opnieuw
+                {t("draft.restart")}
               </button>
             )}
             <span className="rounded-full bg-emerald-100/80 px-3 py-1.5 text-xs font-bold text-emerald-700">
-              {complete ? "Compleet" : `${filled} / ${total}`}
+              {complete ? t("draft.complete") : t("draft.filledOfTotal", { filled, total })}
             </span>
           </div>
         </div>
@@ -65,7 +68,7 @@ function PlayView() {
         {complete ? (
           <CompleteCTA />
         ) : !customPlayerReady ? (
-          <div className="card p-6 text-center text-sm text-slate-400">Laden…</div>
+          <div className="card p-6 text-center text-sm text-slate-400">{t("common.loading")}</div>
         ) : customPlayerBlocking ? (
           <AddCustomPlayerCard />
         ) : (

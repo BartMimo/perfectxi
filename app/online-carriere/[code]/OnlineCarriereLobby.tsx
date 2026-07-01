@@ -20,6 +20,7 @@ import SquadPicker from "@/components/SquadPicker";
 import SimulationView from "@/components/SimulationView";
 import OnlineResultView from "@/components/OnlineResultView";
 import SquadViewModal from "@/components/SquadViewModal";
+import { useT } from "@/lib/i18n/core";
 
 const CURRENT_SEASON = "2025-2026";
 
@@ -68,6 +69,7 @@ function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject 
   onAccept?: (userId: string) => void;
   onReject?: (userId: string) => void;
 }) {
+  const t = useT();
   const rating = avgRating(p.squad);
   const lastSeason = p.history[p.history.length - 1];
 
@@ -81,7 +83,7 @@ function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject 
             </div>
             <div className="min-w-0">
               <span className="text-sm font-bold text-slate-800 truncate">{p.team_name || p.username}</span>
-              <div className="text-[10px] font-bold text-amber-600">Wacht op goedkeuring</div>
+              <div className="text-[10px] font-bold text-amber-600">{t("onlineCarriere.waitingForApproval")}</div>
             </div>
           </div>
           {isOwner && onAccept && onReject && (
@@ -131,11 +133,11 @@ function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject 
               <span className={`text-sm font-bold truncate ${p.is_bot ? "text-slate-400" : "text-slate-800"}`}>
                 {p.team_name || p.username}
               </span>
-              {isMe && <span className="text-[9px] font-bold text-indigo-400 uppercase">jij</span>}
+              {isMe && <span className="text-[9px] font-bold text-indigo-400 uppercase">{t("onlineCarriere.you")}</span>}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <span className="text-[10px] font-bold text-slate-400">
-                {divisionLabel(p.current_division)}
+                {divisionLabel(t, p.current_division)}
               </span>
               {rating > 0 && (
                 <span className="text-[10px] font-bold text-emerald-600">{rating} OVR</span>
@@ -153,14 +155,14 @@ function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject 
               lastSeason.position >= 18 ? "bg-rose-50 text-rose-600" :
               "bg-slate-50 text-slate-500"
             }`}>
-              {lastSeason.position}e
+              {t("onlineCarriere.positionOrdinal", { n: lastSeason.position })}
             </span>
           )}
           {onViewSquad && p.squad.length > 0 && (
             <button
               onClick={() => onViewSquad(p)}
               className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-xs text-indigo-500 hover:bg-indigo-100 transition"
-              title="Bekijk team"
+              title={t("onlineCarriere.viewTeam")}
             >
               👁
             </button>
@@ -174,7 +176,7 @@ function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject 
             <button
               onClick={() => onKick(p.user_id)}
               className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 border border-rose-200 text-xs text-rose-400 hover:bg-rose-100 hover:text-rose-500 transition"
-              title="Verwijder speler"
+              title={t("onlineCarriere.removePlayer")}
             >
               ✕
             </button>
@@ -203,13 +205,14 @@ function PlayerList({ players, currentUserId, ownerId, onKick, onViewSquad, onAc
   }
   const sortedDivs = [...divisions.entries()].sort((a, b) => a[0] - b[0]);
   const hasManyDivisions = sortedDivs.length > 1;
+  const t = useT();
 
   return (
     <div className="flex flex-col gap-3">
       {pending.length > 0 && isOwner && (
         <div>
           <div className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-1.5 px-1">
-            Aanmeldingen ({pending.length})
+            {t("onlineCarriere.applications", { n: pending.length })}
           </div>
           <div className="flex flex-col gap-1.5">
             {pending.map((p) => (
@@ -222,7 +225,7 @@ function PlayerList({ players, currentUserId, ownerId, onKick, onViewSquad, onAc
         <div key={div}>
           {hasManyDivisions && (
             <div className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-1.5 px-1">
-              {divisionLabel(div)}
+              {divisionLabel(t, div)}
             </div>
           )}
           <div className="flex flex-col gap-1.5">
@@ -274,6 +277,7 @@ function SettingChip({ label, value }: { label: string; value: string }) {
 }
 
 function WaitingRoom() {
+  const t = useT();
   const { lobby, startDraft, leaveLobby, archiveLobby, kickPlayer, acceptPlayer, rejectPlayer, updateLobbyName, confirmFormation } = useOnlineCareer();
   const userId = useAuth((s) => s.userId);
   const formationKey = useGame((s) => s.formationKey);
@@ -322,7 +326,7 @@ function WaitingRoom() {
               type="text"
               value={nameDraft}
               onChange={(e) => setNameDraft(e.target.value)}
-              placeholder="Lobby naam"
+              placeholder={t("onlineCarriere.lobbyNamePlaceholder")}
               maxLength={30}
               autoFocus
               className="rounded-xl border-2 border-indigo-300 px-3 py-2 text-center text-lg font-bold focus:border-indigo-500 focus:outline-none transition"
@@ -333,49 +337,49 @@ function WaitingRoom() {
         ) : (
           <div className="flex items-center justify-center gap-2">
             <h1 className="text-2xl font-black text-slate-800">
-              {lobby.lobby_name || "Online Carrière"}
+              {lobby.lobby_name || t("onlineCarriere.title")}
             </h1>
             {isOwner && (
               <button
                 onClick={() => { setNameDraft(lobby.lobby_name || ""); setEditingName(true); }}
                 className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition"
-                title="Naam wijzigen"
+                title={t("onlineCarriere.changeName")}
               >
                 ✏️
               </button>
             )}
           </div>
         )}
-        <p className="text-sm text-slate-500 mt-1">Seizoen {lobby.current_season} · {activePlayers.length} speler{activePlayers.length !== 1 ? "s" : ""}</p>
+        <p className="text-sm text-slate-500 mt-1">{t("onlineCarriere.seasonAndPlayers", { season: lobby.current_season, n: activePlayers.length })}</p>
       </div>
 
       {isPending && (
         <div className="rounded-2xl bg-amber-50 border-2 border-amber-200 px-4 py-3 mb-5 text-center">
-          <span className="text-sm font-bold text-amber-700">⏳ Wacht op goedkeuring van de eigenaar…</span>
+          <span className="text-sm font-bold text-amber-700">⏳ {t("onlineCarriere.waitingForOwnerApproval")}</span>
         </div>
       )}
 
       <div className="flex items-center justify-between rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 px-4 py-3 mb-5">
-        <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Code</div>
+        <div className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">{t("onlineCarriere.code")}</div>
         <button onClick={copyCode} className="text-xl font-black tracking-[0.3em] text-indigo-600 hover:text-indigo-700 transition">
           {lobby.code}
         </button>
         <span className="text-[10px] font-bold text-indigo-400">
-          {copied ? "✓ Gekopieerd" : "Kopieer"}
+          {copied ? `✓ ${t("onlineCarriere.copied")}` : t("onlineCarriere.copy")}
         </span>
       </div>
 
       <div className="mb-5 grid grid-cols-4 gap-1.5">
-        <SettingChip label="Rerolls" value={String(lobby.reroll_count)} />
-        <SettingChip label="Wissels" value={String(lobby.wissel_count)} />
-        <SettingChip label="Competities" value={lobby.leagues.length === 0 ? "Alle 7" : `${lobby.leagues.length}/7`} />
-        <SettingChip label="Formatie" value={lobby.same_formation ? "Gelijk" : "Vrij"} />
+        <SettingChip label={t("onlineCarriere.rerolls")} value={String(lobby.reroll_count)} />
+        <SettingChip label={t("onlineCarriere.wissels")} value={String(lobby.wissel_count)} />
+        <SettingChip label={t("onlineCarriere.competitions")} value={lobby.leagues.length === 0 ? t("onlineCarriere.all7") : `${lobby.leagues.length}/7`} />
+        <SettingChip label={t("onlineCarriere.formation")} value={lobby.same_formation ? t("onlineCarriere.equal") : t("onlineCarriere.free")} />
       </div>
 
       <div className="mb-5">
         <div className="flex items-center justify-between mb-2 px-1">
-          <span className="text-xs font-black uppercase tracking-widest text-slate-400">Spelers</span>
-          <span className="text-xs font-bold text-slate-400">{activePlayers.length}/20</span>
+          <span className="text-xs font-black uppercase tracking-widest text-slate-400">{t("onlineCarriere.players")}</span>
+          <span className="text-xs font-bold text-slate-400">{t("onlineCarriere.playerCountOf20", { n: activePlayers.length })}</span>
         </div>
         <PlayerList
           players={lobby.players.map((p) => (p.pending || p.is_bot ? p : { ...p, ready: p.formation_confirmed }))}
@@ -391,14 +395,14 @@ function WaitingRoom() {
         <div className="mb-5">
           <div className="flex items-center justify-between mb-2 px-1">
             <span className="text-xs font-black uppercase tracking-widest text-slate-400">
-              {lobby.same_formation && !isOwner ? "Formatie (bepaald door host)" : "Jouw formatie"}
+              {lobby.same_formation && !isOwner ? t("onlineCarriere.formationDeterminedByHost") : t("onlineCarriere.yourFormation")}
             </span>
             {isFormationConfirmed && (
               <button
                 onClick={() => userId && confirmFormation(userId, formationKey, false)}
                 className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition"
               >
-                Wijzig
+                {t("onlineCarriere.change")}
               </button>
             )}
           </div>
@@ -420,18 +424,18 @@ function WaitingRoom() {
           </div>
           {isFormationConfirmed ? (
             <div className="rounded-xl bg-emerald-50 border-2 border-emerald-200 px-4 py-2.5 text-center text-sm font-bold text-emerald-700">
-              ✓ Formatie bevestigd
+              ✓ {t("onlineCarriere.formationConfirmed")}
             </div>
           ) : lobby.same_formation && !isOwner && !lockedFormation ? (
             <div className="rounded-xl bg-slate-50 border-2 border-slate-200 px-4 py-2.5 text-center text-sm font-bold text-slate-400">
-              Wacht tot de host een formatie kiest…
+              {t("onlineCarriere.waitingForHostFormation")}
             </div>
           ) : (
             <button
               onClick={() => userId && confirmFormation(userId, formationKey, true)}
               className="w-full rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-600 transition"
             >
-              Bevestig formatie
+              {t("onlineCarriere.confirmFormation")}
             </button>
           )}
         </div>
@@ -446,31 +450,31 @@ function WaitingRoom() {
               className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
             >
               {activePlayers.length < 2
-                ? "Wacht op spelers…"
+                ? t("onlineCarriere.waitingForPlayers")
                 : !activePlayers.every((p) => p.formation_confirmed && (!lobby.same_formation || p.formation_key === ownerPlayer?.formation_key))
-                  ? "Wacht tot iedereen de formatie bevestigt…"
-                  : "Start het spel!"}
+                  ? t("onlineCarriere.waitingForFormationConfirm")
+                  : t("onlineCarriere.startGame")}
             </button>
           ) : (
             <div className="flex-1 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
-              Wacht tot de host start…
+              {t("onlineCarriere.waitingForHostStart")}
             </div>
           )}
           {isOwner ? (
             <button
               onClick={async () => {
-                if (confirm("Weet je zeker dat je deze lobby wilt archiveren? De gegevens blijven bewaard.")) {
+                if (confirm(t("onlineCarriere.confirmArchive"))) {
                   await archiveLobby();
                   router.push("/online-carriere");
                 }
               }}
               className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition"
             >
-              Archiveer
+              {t("onlineCarriere.archive")}
             </button>
           ) : (
             <button onClick={handleLeave} className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition">
-              Verlaat
+              {t("onlineCarriere.leave")}
             </button>
           )}
         </div>
@@ -487,19 +491,20 @@ function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePl
   const complete = total > 0 && filled === total;
   const customPlayerReady = useEnsureCustomPlayerLoaded(userId);
   const { blocking: customPlayerBlocking } = useCustomPlayerSlot();
+  const t = useT();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-5">
       <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
         <span className="rounded-full bg-indigo-100 px-3 py-1.5 font-bold text-indigo-800">
-          {divisionLabel(me.current_division)}
+          {divisionLabel(t, me.current_division)}
         </span>
         <span className="rounded-full bg-slate-100 px-3 py-1.5 font-bold text-slate-700">
-          Seizoen {lobby.current_season}
+          {t("onlineCarriere.season", { season: lobby.current_season })}
         </span>
         {me.championships > 0 && (
           <span className="rounded-full bg-amber-100 px-3 py-1.5 font-bold text-amber-700">
-            {me.championships}x kampioen
+            {t("onlineCarriere.timesChampion", { n: me.championships })}
           </span>
         )}
       </div>
@@ -507,9 +512,9 @@ function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePl
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-start">
         <div className="min-w-0 lg:sticky lg:top-[74px]">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-600">Jouw opstelling</h2>
+            <h2 className="text-sm font-bold text-slate-600">{t("onlineCarriere.yourLineup")}</h2>
             <span className="rounded-full bg-emerald-100/80 px-3 py-1.5 text-xs font-bold text-emerald-700">
-              {complete ? "Compleet" : `${filled} / ${total}`}
+              {complete ? t("onlineCarriere.complete") : `${filled} / ${total}`}
             </span>
           </div>
           <PitchView />
@@ -518,16 +523,16 @@ function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePl
         <div className="flex min-w-0 flex-col gap-4">
           {complete ? (
             <div className="card flex flex-col items-center gap-4 p-6 text-center">
-              <div className="text-base font-extrabold text-emerald-700">Je XI is compleet!</div>
+              <div className="text-base font-extrabold text-emerald-700">{t("onlineCarriere.xiComplete")}</div>
               <p className="text-sm text-slate-500">
-                Bevestig je opstelling. Het seizoen wordt gesimuleerd zodra iedereen klaar is.
+                {t("onlineCarriere.confirmLineupDesc")}
               </p>
               <button onClick={onSubmit} className="btn-primary w-full text-lg">
-                Bevestig opstelling
+                {t("onlineCarriere.confirmLineup")}
               </button>
             </div>
           ) : !customPlayerReady ? (
-            <div className="card p-6 text-center text-sm text-slate-400">Laden…</div>
+            <div className="card p-6 text-center text-sm text-slate-400">{t("common.loading")}</div>
           ) : customPlayerBlocking ? (
             <AddCustomPlayerCard />
           ) : (
@@ -551,6 +556,7 @@ function TransferWindow({ squad, division, season, disabled, maxReplace, onConfi
   onConfirm: (remaining: DraftedPlayer[]) => void;
 }) {
   const [toReplace, setToReplace] = useState<Set<string>>(new Set());
+  const t = useT();
 
   const toggle = (name: string) => {
     const next = new Set(toReplace);
@@ -564,12 +570,12 @@ function TransferWindow({ squad, division, season, disabled, maxReplace, onConfi
       <div className="card p-6">
         <div className="text-center mb-4">
           <div className="text-2xl mb-2">🔄</div>
-          <h2 className="text-lg font-black text-slate-800">Transferwindow</h2>
+          <h2 className="text-lg font-black text-slate-800">{t("onlineCarriere.transferWindow")}</h2>
           <p className="text-sm text-slate-500 mt-1">
-            {maxReplace === 0 ? "Deze lobby staat geen transfers toe." : `Kies maximaal ${maxReplace} speler${maxReplace > 1 ? "s" : ""} om te vervangen.`}
+            {maxReplace === 0 ? t("onlineCarriere.noTransfersAllowed") : t("onlineCarriere.chooseMaxToReplace", { n: maxReplace })}
           </p>
           <div className="mt-2 text-xs font-bold text-indigo-600">
-            {divisionLabel(division)} · Seizoen {season}
+            {divisionLabel(t, division)} · {t("onlineCarriere.season", { season })}
           </div>
         </div>
 
@@ -592,7 +598,7 @@ function TransferWindow({ squad, division, season, disabled, maxReplace, onConfi
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-black tabular-nums text-slate-600">{p.overall}</span>
-                  {selected && <span className="text-xs font-bold text-rose-500">Weg</span>}
+                  {selected && <span className="text-xs font-bold text-rose-500">{t("onlineCarriere.gone")}</span>}
                 </div>
               </button>
             );
@@ -605,8 +611,8 @@ function TransferWindow({ squad, division, season, disabled, maxReplace, onConfi
           className="btn-primary w-full disabled:opacity-40"
         >
           {toReplace.size === 0
-            ? "Ga door zonder transfers"
-            : `Vervang ${toReplace.size} speler${toReplace.size > 1 ? "s" : ""}`}
+            ? t("onlineCarriere.continueWithoutTransfers")
+            : t("onlineCarriere.replaceNPlayers", { n: toReplace.size })}
         </button>
       </div>
     </div>
@@ -614,6 +620,7 @@ function TransferWindow({ squad, division, season, disabled, maxReplace, onConfi
 }
 
 function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string; me: OnlinePlayer }) {
+  const t = useT();
   const startCareerSeason = useGame((s) => s.startCareerSeason);
   const slots = useGame((s) => s.slots);
   const loaded = useGame((s) => s.index.length > 0);
@@ -634,7 +641,7 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
   if (me.ready || submitting) {
     return (
       <div className="mx-auto max-w-lg px-4 py-8">
-        <WaitingForOthers lobby={lobby} userId={userId} title="Wacht tot iedereen klaar is…" />
+        <WaitingForOthers lobby={lobby} userId={userId} title={t("onlineCarriere.waitingForEveryoneReady")} />
       </div>
     );
   }
@@ -659,7 +666,7 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
   if (!loaded || slots.length === 0) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-slate-400 font-bold">Laden…</div>
+        <div className="text-slate-400 font-bold">{t("common.loading")}</div>
       </div>
     );
   }
@@ -675,6 +682,7 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
 }
 
 function LobbySettingsBar({ lobby }: { lobby: OnlineCareer }) {
+  const t = useT();
   const router = useRouter();
   const { archiveLobby, updateLobbyName } = useOnlineCareer();
   const [editing, setEditing] = useState(false);
@@ -692,35 +700,35 @@ function LobbySettingsBar({ lobby }: { lobby: OnlineCareer }) {
               type="text"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Lobby naam"
+              placeholder={t("onlineCarriere.lobbyNamePlaceholder")}
               maxLength={30}
               autoFocus
               className="rounded-lg border border-indigo-300 px-2.5 py-1.5 text-sm font-bold focus:border-indigo-500 focus:outline-none transition flex-1 max-w-[200px]"
             />
-            <button type="submit" className="rounded-lg bg-indigo-500 px-2.5 py-1.5 text-xs font-bold text-white">Opslaan</button>
-            <button type="button" onClick={() => setEditing(false)} className="text-xs font-bold text-slate-400">Annuleer</button>
+            <button type="submit" className="rounded-lg bg-indigo-500 px-2.5 py-1.5 text-xs font-bold text-white">{t("onlineCarriere.save")}</button>
+            <button type="button" onClick={() => setEditing(false)} className="text-xs font-bold text-slate-400">{t("onlineCarriere.cancel")}</button>
           </form>
         ) : (
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-bold text-slate-600 truncate">{lobby.lobby_name || "Geen naam"}</span>
+            <span className="text-sm font-bold text-slate-600 truncate">{lobby.lobby_name || t("onlineCarriere.noName")}</span>
             <button
               onClick={() => { setDraft(lobby.lobby_name || ""); setEditing(true); }}
               className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition shrink-0"
             >
-              Wijzig
+              {t("onlineCarriere.change")}
             </button>
           </div>
         )}
         <button
           onClick={async () => {
-            if (confirm("Lobby archiveren? Gegevens blijven bewaard.")) {
+            if (confirm(t("onlineCarriere.confirmArchive"))) {
               await archiveLobby();
               router.push("/online-carriere");
             }
           }}
           className="shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-[10px] font-bold text-rose-500 hover:bg-rose-100 transition"
         >
-          Archiveer
+          {t("onlineCarriere.archive")}
         </button>
       </div>
     </div>
@@ -728,6 +736,7 @@ function LobbySettingsBar({ lobby }: { lobby: OnlineCareer }) {
 }
 
 export default function OnlineCarriereLobby({ code }: { code: string }) {
+  const t = useT();
   const userId = useAuth((s) => s.userId);
   const username = useAuth((s) => s.username);
   const teamName = useAuth((s) => s.teamName);
@@ -826,7 +835,7 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/online-carriere" />
         <div className="flex items-center justify-center py-20">
-          <div className="text-slate-400 font-bold">Laden…</div>
+          <div className="text-slate-400 font-bold">{t("common.loading")}</div>
         </div>
         <Footer />
       </main>
@@ -839,9 +848,9 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
         <Header backHref="/online-carriere" />
         <div className="mx-auto max-w-lg px-4 py-20 text-center">
           <div className="text-4xl mb-4">😕</div>
-          <h1 className="text-xl font-black text-slate-800 mb-2">Lobby niet gevonden</h1>
-          <p className="text-sm text-slate-500 mb-4">{error || `Code "${code}" bestaat niet.`}</p>
-          <a href="/online-carriere" className="btn-primary inline-block">Terug</a>
+          <h1 className="text-xl font-black text-slate-800 mb-2">{t("onlineCarriere.lobbyNotFound")}</h1>
+          <p className="text-sm text-slate-500 mb-4">{error || t("onlineCarriere.codeDoesNotExist", { code })}</p>
+          <a href="/online-carriere" className="btn-primary inline-block">{t("onlineCarriere.back")}</a>
         </div>
         <Footer />
       </main>
@@ -853,7 +862,7 @@ export default function OnlineCarriereLobby({ code }: { code: string }) {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/online-carriere" />
         <div className="flex items-center justify-center py-20">
-          <div className="text-slate-400 font-bold">Joinen…</div>
+          <div className="text-slate-400 font-bold">{t("onlineCarriere.joining")}</div>
         </div>
         <Footer />
       </main>

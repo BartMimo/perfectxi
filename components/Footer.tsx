@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n/core";
 import { LoginPrompt } from "./AuthGate";
 
 export default function Footer() {
+  const t = useT();
   const username = useAuth((s) => s.username);
   const logout = useAuth((s) => s.logout);
   const restore = useAuth((s) => s.restore);
@@ -22,16 +24,16 @@ export default function Footer() {
                 {username}
               </a>
               <span className="text-slate-200">·</span>
-              <button onClick={logout} className="hover:text-slate-600 transition">Uitloggen</button>
+              <button onClick={logout} className="hover:text-slate-600 transition">{t("common.logout")}</button>
               <span className="text-slate-200">·</span>
             </>
           ) : (
             <>
-              <button onClick={() => setShowLogin(true)} className="font-semibold text-slate-600 hover:text-slate-800 transition">Inloggen</button>
+              <button onClick={() => setShowLogin(true)} className="font-semibold text-slate-600 hover:text-slate-800 transition">{t("common.login")}</button>
               <span className="text-slate-200">·</span>
             </>
           )}
-          <a href="/ranglijst" className="font-semibold text-emerald-600 hover:text-emerald-700 transition">Ranglijst</a>
+          <a href="/ranglijst" className="font-semibold text-emerald-600 hover:text-emerald-700 transition">{t("common.leaderboard")}</a>
         </div>
       </footer>
       {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}

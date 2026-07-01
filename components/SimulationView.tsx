@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/store";
 import type { MatchResult } from "@/lib/sim";
+import { useT } from "@/lib/i18n/core";
 
 function outcome(m: MatchResult): "W" | "D" | "L" {
   return m.gf > m.ga ? "W" : m.gf === m.ga ? "D" : "L";
@@ -10,6 +11,7 @@ function outcome(m: MatchResult): "W" | "D" | "L" {
 const dot = { W: "bg-emerald-400", D: "bg-amber-400", L: "bg-rose-400" } as const;
 
 export default function SimulationView() {
+  const t = useT();
   const result = useGame((s) => s.result);
   const finish = useGame((s) => s.finishSimulation);
 
@@ -47,10 +49,10 @@ export default function SimulationView() {
         <div className="card p-5">
           <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
             <span>
-              Speeldag {md.round} / {total}
+              {t("result.matchday", { round: md.round, total })}
             </span>
             <span className="text-slate-500">
-              {userRow.won}W {userRow.drawn}G {userRow.lost}V · {userRow.points} ptn
+              {t("result.formLine", { won: userRow.won, drawn: userRow.drawn, lost: userRow.lost, points: userRow.points })}
             </span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
@@ -71,10 +73,10 @@ export default function SimulationView() {
           >
             <div className="min-w-0">
               <div className="text-[10px] uppercase tracking-widest text-slate-400">
-                {m.home ? "Thuis" : "Uit"}
+                {m.home ? t("result.home") : t("result.away")}
               </div>
               <div className="truncate text-sm font-bold text-slate-800">
-                Jouw XI <span className="text-slate-300">vs</span> {m.opponent}
+                {t("result.yourXi")} <span className="text-slate-300">vs</span> {m.opponent}
               </div>
             </div>
             <div className="shrink-0 text-2xl font-black tabular-nums text-slate-800">
@@ -84,14 +86,14 @@ export default function SimulationView() {
 
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">Vorm</span>
+              <span className="text-[11px] text-slate-400">{t("result.form")}</span>
               {form.map((f, i) => (
                 <span key={i} className={`h-4 w-4 rounded-full shadow-sm ${dot[outcome(f)]}`} />
               ))}
             </div>
             <div className="text-sm font-bold">
-              <span className="text-slate-400">Positie </span>
-              <span className="tabular-nums text-emerald-600">{position}e</span>
+              <span className="text-slate-400">{t("result.position")} </span>
+              <span className="tabular-nums text-emerald-600">{t("result.positionValue", { position })}</span>
             </div>
           </div>
         </div>
@@ -103,7 +105,7 @@ export default function SimulationView() {
                 onClick={() => setPlaying((p) => !p)}
                 className="btn-secondary flex-1"
               >
-                {playing ? "⏸ Pauze" : "▶ Hervat"}
+                {playing ? `⏸ ${t("result.pause")}` : `▶ ${t("result.resume")}`}
               </button>
               <button
                 onClick={() => setSpeed((s) => (s === 1 ? 2 : s === 2 ? 4 : 1))}
@@ -118,12 +120,12 @@ export default function SimulationView() {
                 }}
                 className="btn-primary flex-1 text-sm"
               >
-                Naar einde
+                {t("result.toEnd")}
               </button>
             </>
           ) : (
             <button onClick={finish} className="btn-primary w-full text-lg">
-              Bekijk eindstand
+              {t("result.viewFinalStandings")}
             </button>
           )}
         </div>
@@ -134,10 +136,10 @@ export default function SimulationView() {
           <thead className="bg-slate-50/80 text-slate-400">
             <tr>
               <th className="px-3 py-2.5 text-left">#</th>
-              <th className="px-3 py-2.5 text-left">Team</th>
-              <th className="px-2 py-2.5 text-right">GS</th>
-              <th className="px-2 py-2.5 text-right">DS</th>
-              <th className="px-3 py-2.5 text-right">Ptn</th>
+              <th className="px-3 py-2.5 text-left">{t("result.team")}</th>
+              <th className="px-2 py-2.5 text-right">{t("result.playedAbbr")}</th>
+              <th className="px-2 py-2.5 text-right">{t("result.goalDiffAbbr")}</th>
+              <th className="px-3 py-2.5 text-right">{t("result.pointsAbbr")}</th>
             </tr>
           </thead>
           <tbody>

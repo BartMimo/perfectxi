@@ -6,6 +6,7 @@ import { getFormation } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
 import { QUALIFICATION_LABELS } from "@/lib/sim";
 import { ratingColor, shortSeason } from "./ui";
+import { useT } from "@/lib/i18n/core";
 
 /** Veldlijnen voor de kaart (zelfde coördinaten 75×100). */
 function CardPitchLines() {
@@ -33,6 +34,7 @@ function CardPitchLines() {
  * voor delen op socials.
  */
 const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
+  const t = useT();
   const result = useGame((s) => s.result);
   const slots = useGame((s) => s.slots);
   const leagueCode = useGame((s) => s.leagueCode);
@@ -46,7 +48,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
   const headline = invincible
     ? "THE INVINCIBLES"
     : position === 1
-      ? "LANDSKAMPIOEN"
+      ? t("result.nationalChampion").toUpperCase()
       : QUALIFICATION_LABELS[qualification].toUpperCase();
 
   return (
@@ -94,7 +96,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
       {/* Hero */}
       <div style={{ textAlign: "center", marginTop: 4 }}>
         <div style={{ fontSize: 22, letterSpacing: 6, color: "rgba(255,255,255,0.6)", fontWeight: 700 }}>
-          EINDSTAND
+          {t("result.finalStandings").toUpperCase()}
         </div>
         <div
           style={{
@@ -105,7 +107,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
             marginTop: 6,
           }}
         >
-          {invincible ? "🏆🛡️" : `${position}e`}
+          {invincible ? "🏆🛡️" : t("result.ordinalPosition", { position })}
         </div>
         <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: 1, marginTop: 2 }}>
           {headline} {invincible ? "" : position === 1 ? "🏆" : ""}
@@ -114,12 +116,12 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
 
       {/* Stat-chips */}
       <div style={{ display: "flex", gap: 14, justifyContent: "center" }}>
-        <Chip big label="PUNTEN" value={userRow.points} accent />
-        <Chip label="GEWONNEN" value={userRow.won} />
-        <Chip label="GELIJK" value={userRow.drawn} />
-        <Chip label="VERLOREN" value={userRow.lost} />
+        <Chip big label={t("result.points").toUpperCase()} value={userRow.points} accent />
+        <Chip label={t("result.won").toUpperCase()} value={userRow.won} />
+        <Chip label={t("result.drawn").toUpperCase()} value={userRow.drawn} />
+        <Chip label={t("result.lost").toUpperCase()} value={userRow.lost} />
         <Chip
-          label="SALDO"
+          label={t("result.goalDiff").toUpperCase()}
           value={`${userRow.gd >= 0 ? "+" : ""}${userRow.gd}`}
         />
       </div>
@@ -214,9 +216,9 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
 
       {/* Awards + footer */}
       <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 4 }}>
-        <AwardChip icon="⚽" label="Topscorer" value={awards.topScorer?.name ?? "—"} sub={awards.topScorer ? `${awards.topScorer.goals} goals` : ""} />
-        <AwardChip icon="🧤" label="Clean sheets" value={awards.goalkeeper?.name ?? "—"} sub={`${awards.cleanSheets}×`} />
-        <AwardChip icon="💥" label="Grootste zege" value={awards.biggestWin ? awards.biggestWin.opponent : "—"} sub={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
+        <AwardChip icon="⚽" label={t("result.topScorer")} value={awards.topScorer?.name ?? "—"} sub={awards.topScorer ? `${awards.topScorer.goals} goals` : ""} />
+        <AwardChip icon="🧤" label={t("result.cleanSheets")} value={awards.goalkeeper?.name ?? "—"} sub={`${awards.cleanSheets}×`} />
+        <AwardChip icon="💥" label={t("result.biggestWin")} value={awards.biggestWin ? awards.biggestWin.opponent : "—"} sub={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
       </div>
 
       <div
@@ -228,7 +230,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
           marginTop: "auto",
         }}
       >
-        Bouw jouw Elite Football · jaag op 38-0-0
+        {t("result.shareFooter")}
       </div>
     </div>
   );

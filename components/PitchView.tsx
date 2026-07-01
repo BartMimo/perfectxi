@@ -3,9 +3,10 @@
 import { useMemo } from "react";
 import { filledCount, useGame, validTargets, placementTargets, type Slot } from "@/lib/store";
 import { POS_BAND, type Band } from "@/lib/positions";
-import { POS_LABEL } from "@/lib/positions";
+import { posLabel } from "@/lib/positions";
 import { isCustomPlayer } from "@/lib/customPlayer";
 import { ratingColor, shortSeason } from "./ui";
+import { useT } from "@/lib/i18n/core";
 
 /** Crispe veldlijnen als SVG (coördinaten 75×100, matcht de 3:4 verhouding). */
 function PitchMarkings() {
@@ -58,11 +59,12 @@ function Token({
 }) {
   const p = slot.player;
   const custom = isCustomPlayer(p);
+  const t = useT();
 
   return (
     <button
       onClick={onClick}
-      title={POS_LABEL[slot.pos]}
+      title={posLabel(t, slot.pos)}
       style={{ left: `${slot.x}%`, top: `${100 - slot.y}%` }}
       className="absolute z-10 flex w-[64px] -translate-x-1/2 -translate-y-1/2 flex-col items-center outline-none"
     >
@@ -106,6 +108,7 @@ function Token({
 }
 
 export default function PitchView() {
+  const t = useT();
   const slots = useGame((s) => s.slots);
   const selectedSlotId = useGame((s) => s.selectedSlotId);
   const pendingPlayer = useGame((s) => s.pendingPlayer);
@@ -137,17 +140,17 @@ export default function PitchView() {
 
       {pendingPlayer && (
         <div className="mt-2 text-center text-[11px] font-semibold text-amber-600">
-          Kies een gemarkeerde positie voor {pendingPlayer.name} ·{" "}
+          {t("draft.choosePositionFor", { name: pendingPlayer.name })} ·{" "}
           <button onClick={cancelPick} className="underline">
-            annuleer
+            {t("draft.cancel")}
           </button>
         </div>
       )}
       {!pendingPlayer && selectedSlotId && (
         <div className="mt-2 text-center text-[11px] font-semibold text-amber-600">
-          Kies een gemarkeerde positie om te verplaatsen of te wisselen ·{" "}
+          {t("draft.choosePositionToMoveOrSwap")} ·{" "}
           <button onClick={() => onSlotClick(selectedSlotId)} className="underline">
-            annuleer
+            {t("draft.cancel")}
           </button>
         </div>
       )}
@@ -158,6 +161,7 @@ export default function PitchView() {
 }
 
 function LineRatings({ slots, hideRating }: { slots: Slot[]; hideRating: boolean }) {
+  const t = useT();
   const opponents = useGame((s) => s.opponents);
 
   const stats = useMemo(() => {
@@ -205,9 +209,9 @@ function LineRatings({ slots, hideRating }: { slots: Slot[]; hideRating: boolean
       )}
       {prediction && !hideRating && (
         <div className="flex items-center gap-1.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 px-3 py-1.5 backdrop-blur">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Verwacht</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">{t("draft.expected")}</span>
           <span className="text-xs font-black tabular-nums text-emerald-700">
-            ~{prediction}e
+            ~{t("draft.ordinalSuffix", { n: prediction })}
           </span>
         </div>
       )}

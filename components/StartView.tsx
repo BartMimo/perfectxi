@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useGame } from "@/lib/store";
 import { FORMATIONS } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useT } from "@/lib/i18n/core";
 
 function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
@@ -67,6 +69,7 @@ function ModeCard({ icon, title, desc, onClick, accent, badge, featured }: {
 }
 
 export default function StartView() {
+  const t = useT();
   const formationKey = useGame((s) => s.formationKey);
   const setFormation = useGame((s) => s.setFormation);
   const leagueCode = useGame((s) => s.leagueCode);
@@ -85,58 +88,61 @@ export default function StartView() {
   if (screen === "home") {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
+        <div className="flex justify-end">
+          <LanguageSwitcher />
+        </div>
         <div className="animate-fade-up text-center">
           <div className="text-4xl mb-2">⚽</div>
           <h1 className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
             Elite&nbsp;Football
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-500">
-            Draft je droomelftal en jaag op het perfecte seizoen: <span className="font-bold text-emerald-600">38-0-0</span>.
+            {t("start.tagline.prefix")} <span className="font-bold text-emerald-600">38-0-0</span>.
           </p>
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <ModeCard
             icon="🌐"
-            title="Online Carrière"
-            desc="Speel de carrièremodus met vrienden! Race samen naar Divisie 1."
+            title={t("start.mode.online.title")}
+            desc={t("start.mode.online.desc")}
             onClick={() => { window.location.href = "/online-carriere"; }}
             accent="border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/40"
-            badge="Speel met vrienden"
+            badge={t("start.mode.online.badge")}
             featured
           />
           <ModeCard
             icon="⭐"
-            title="Mijn Speler"
-            desc="Maak je eigen speler aan en laat hem groeien in elke spelmodus."
+            title={t("start.mode.myPlayer.title")}
+            desc={t("start.mode.myPlayer.desc")}
             onClick={() => { window.location.href = "/mijn-speler"; }}
             accent="border-rose-200/60 bg-gradient-to-br from-rose-50/60 to-pink-50/40"
           />
           <ModeCard
             icon="🏅"
-            title="Challenge van de dag"
-            desc="Dagelijkse challenge met vaste instellingen. Vergelijk je score!"
+            title={t("start.mode.dailyChallenge.title")}
+            desc={t("start.mode.dailyChallenge.desc")}
             onClick={() => { window.location.href = "/challenge"; }}
             accent="border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50"
           />
           <ModeCard
             icon="🏆"
-            title="Offline Carrière"
-            desc="Begin in Divisie 10 en werk je omhoog naar Divisie 1!"
+            title={t("start.mode.offlineCareer.title")}
+            desc={t("start.mode.offlineCareer.desc")}
             onClick={() => { window.location.href = "/offline-carriere"; }}
             accent="border-indigo-200/60 bg-gradient-to-br from-indigo-50/60 to-purple-50/40"
           />
           <ModeCard
             icon="⚽"
-            title="Single Season"
-            desc="Kies een competitie en formatie, draft je team en speel één seizoen."
+            title={t("start.mode.singleSeason.title")}
+            desc={t("start.mode.singleSeason.desc")}
             onClick={() => setScreen("single")}
             accent="border-emerald-200/60 bg-gradient-to-br from-emerald-50/60 to-teal-50/40"
           />
           <ModeCard
             icon="📊"
-            title="Ranglijst"
-            desc="Bekijk records, accounts en de beste carrières."
+            title={t("start.mode.leaderboard.title")}
+            desc={t("start.mode.leaderboard.desc")}
             onClick={() => { window.location.href = "/ranglijst"; }}
             accent="border-slate-200/60 bg-gradient-to-br from-slate-50/80 to-slate-100/50"
           />
@@ -150,19 +156,18 @@ export default function StartView() {
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="animate-fade-up text-center">
         <button onClick={() => setScreen("home")} className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-400 hover:text-slate-600 transition mb-4">
-          ← Terug
+          ← {t("start.back")}
         </button>
-        <h1 className="text-3xl font-black text-slate-800">Single Season</h1>
+        <h1 className="text-3xl font-black text-slate-800">{t("start.singleSeason.title")}</h1>
         <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-          Kies een formatie en competitie, draft je droomelftal en jaag op het
-          perfecte seizoen.
+          {t("start.singleSeason.desc")}
         </p>
       </div>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
         {/* Formatie */}
         <section className="card p-5 sm:col-span-2">
-          <SectionTitle n={1}>Kies je formatie</SectionTitle>
+          <SectionTitle n={1}>{t("start.section.formation")}</SectionTitle>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
             {FORMATIONS.map((fm) => (
               <button
@@ -182,7 +187,7 @@ export default function StartView() {
 
         {/* Competitie */}
         <section className="card p-5 sm:col-span-2">
-          <SectionTitle n={2}>Kies je competitie</SectionTitle>
+          <SectionTitle n={2}>{t("start.section.league")}</SectionTitle>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {LEAGUES.map((l) => (
               <button
@@ -203,45 +208,44 @@ export default function StartView() {
             ))}
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
-            Je draft uit clubs van deze competitie (2014-2026) en speelt tegen de
-            ploegen van dit seizoen.
+            {t("start.section.league.hint")}
           </p>
         </section>
 
         {/* Rating-modus */}
         <section className="card p-5">
-          <SectionTitle n={3}>Rating-modus</SectionTitle>
+          <SectionTitle n={3}>{t("start.section.ratingMode")}</SectionTitle>
           <div className="grid grid-cols-1 gap-2">
             <OptionCard
               active={ratingMode === "actual"}
               onClick={() => setRatingMode("actual")}
-              title="Actuele rating"
-              desc="Rating van de speler in dát seizoen"
+              title={t("start.ratingMode.actual.title")}
+              desc={t("start.ratingMode.actual.desc")}
             />
             <OptionCard
               active={ratingMode === "prime"}
               onClick={() => setRatingMode("prime")}
-              title="Prime rating"
-              desc="Beste rating ooit in de database"
+              title={t("start.ratingMode.prime.title")}
+              desc={t("start.ratingMode.prime.desc")}
             />
           </div>
         </section>
 
         {/* Niveau */}
         <section className="card p-5">
-          <SectionTitle n={4}>Niveau</SectionTitle>
+          <SectionTitle n={4}>{t("start.section.difficulty")}</SectionTitle>
           <div className="grid grid-cols-1 gap-2">
             <OptionCard
               active={difficulty === "normal"}
               onClick={() => setDifficulty("normal")}
-              title="Normaal"
-              desc="Ratings zichtbaar · 1 reroll"
+              title={t("start.difficulty.normal.title")}
+              desc={t("start.difficulty.normal.desc")}
             />
             <OptionCard
               active={difficulty === "hard"}
               onClick={() => setDifficulty("hard")}
-              title="Hard"
-              desc="Ratings verborgen · geen reroll"
+              title={t("start.difficulty.hard.title")}
+              desc={t("start.difficulty.hard.desc")}
             />
           </div>
         </section>
@@ -252,7 +256,7 @@ export default function StartView() {
         onClick={startGame}
         className="btn-primary mt-8 w-full text-lg"
       >
-        {!loaded ? "Laden…" : !leagueCode ? "Kies een competitie" : "Start het draft"}
+        {!loaded ? t("common.loading") : !leagueCode ? t("start.cta.chooseLeague") : t("start.cta.startDraft")}
       </button>
     </div>
   );

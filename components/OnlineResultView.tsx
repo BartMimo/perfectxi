@@ -10,8 +10,10 @@ import { saveResult } from "@/lib/saveResult";
 import { useCustomPlayer, isCustomPlayer } from "@/lib/customPlayer";
 import SquadViewModal from "@/components/SquadViewModal";
 import MultiCareerTimeline from "@/components/MultiCareerTimeline";
+import { useT } from "@/lib/i18n/core";
 
 export default function OnlineResultView() {
+  const t = useT();
   const result = useGame((s) => s.result);
   const slots = useGame((s) => s.slots);
   const formationKey = useGame((s) => s.formationKey);
@@ -101,7 +103,7 @@ export default function OnlineResultView() {
       {/* Season result */}
       <div className="card animate-pop p-6 text-center">
         <div className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-2">
-          {divisionLabel(me.current_division)} · Seizoen {lobby.current_season}
+          {t("result.divisionSeason", { division: divisionLabel(t, me.current_division), season: lobby.current_season })}
         </div>
 
         {invincible ? (
@@ -112,7 +114,7 @@ export default function OnlineResultView() {
         ) : (
           <>
             <div className="text-5xl font-black tabular-nums text-slate-800">
-              {position}<span className="text-2xl text-slate-300">{position === 1 ? "ste" : "e"}</span>
+              {position}<span className="text-2xl text-slate-300">{position === 1 ? t("result.ordinalSte") : t("result.ordinalE")}</span>
             </div>
             <div className="mt-2 text-base font-bold text-emerald-600">
               {QUALIFICATION_LABELS[qualification]}
@@ -122,25 +124,25 @@ export default function OnlineResultView() {
 
         {champion && promoted && (
           <div className="mt-2 text-lg font-black text-amber-700">
-            Kampioen! Promotie naar {divisionLabel(me.current_division - 1)}
+            {t("result.championPromotedTo", { division: divisionLabel(t, me.current_division - 1) })}
           </div>
         )}
         {!champion && position === 2 && me.current_division > 1 && (
           <div className="mt-2 text-lg font-black text-emerald-600">
-            Promotie naar {divisionLabel(me.current_division - 1)}!
+            {t("result.promotedTo", { division: divisionLabel(t, me.current_division - 1) })}
           </div>
         )}
         {relegated && (
           <div className="mt-2 text-lg font-black text-rose-600">
-            Degradatie naar {divisionLabel(me.current_division + 1)}
+            {t("result.relegatedTo", { division: divisionLabel(t, me.current_division + 1) })}
           </div>
         )}
 
         <div className="mx-auto mt-4 grid max-w-md grid-cols-4 gap-2 text-center">
-          <Stat label="Punten" value={userRow.points} accent />
-          <Stat label="W" value={userRow.won} />
-          <Stat label="G" value={userRow.drawn} />
-          <Stat label="V" value={userRow.lost} />
+          <Stat label={t("result.points")} value={userRow.points} accent />
+          <Stat label={t("result.wonAbbr")} value={userRow.won} />
+          <Stat label={t("result.drawnAbbr")} value={userRow.drawn} />
+          <Stat label={t("result.lostAbbr")} value={userRow.lost} />
         </div>
       </div>
 
@@ -163,10 +165,10 @@ export default function OnlineResultView() {
         <div className="card p-6 text-center border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
           <div className="text-4xl mb-2">🏆👑🏆</div>
           <div className="text-xl font-black text-amber-800">
-            {div1Winner.team_name || div1Winner.username} wint het spel!
+            {t("result.winsTheGame", { name: div1Winner.team_name || div1Winner.username })}
           </div>
           <p className="text-sm text-amber-600 mt-1">
-            Divisie 1 kampioen in seizoen {lobby.current_season}!
+            {t("result.division1ChampionInSeason", { season: lobby.current_season })}
           </p>
         </div>
       )}
@@ -174,7 +176,7 @@ export default function OnlineResultView() {
       {/* Other players status */}
       <div className="card p-5">
         <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
-          Overzicht spelers
+          {t("result.playerOverview")}
         </div>
         <div className="flex flex-col gap-1.5">
           {[...activePlayers]
@@ -209,10 +211,10 @@ export default function OnlineResultView() {
                     <div className="min-w-0">
                       <div className="text-sm font-bold text-slate-800 truncate">
                         {p.team_name || p.username}
-                        {isMe && <span className="ml-1 text-[9px] font-bold text-indigo-400">jij</span>}
+                        {isMe && <span className="ml-1 text-[9px] font-bold text-indigo-400">{t("result.you")}</span>}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-slate-400">{divisionLabel(p.current_division)}</span>
+                        <span className="text-[10px] font-bold text-slate-400">{divisionLabel(t, p.current_division)}</span>
                         {rating > 0 && <span className="text-[10px] font-bold text-emerald-600">{rating} OVR</span>}
                         {p.championships > 0 && <span className="text-[10px] font-bold text-amber-600">{p.championships}x🏆</span>}
                       </div>
@@ -225,14 +227,14 @@ export default function OnlineResultView() {
                         lastSeason.position >= 18 ? "bg-rose-50 text-rose-600" :
                         "bg-slate-50 text-slate-500"
                       }`}>
-                        {lastSeason.position}e
+                        {t("result.ordinalPosition", { position: lastSeason.position })}
                       </span>
                     )}
                     {p.squad.length > 0 && (
                       <button
                         onClick={() => setViewSquadPlayer(p)}
                         className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-xs text-indigo-500 hover:bg-indigo-100 transition"
-                        title="Bekijk team"
+                        title={t("result.viewTeam")}
                       >
                         👁
                       </button>
@@ -246,7 +248,7 @@ export default function OnlineResultView() {
                       <button
                         onClick={() => kickPlayer(p.user_id)}
                         className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 border border-rose-200 text-xs text-rose-400 hover:bg-rose-100 transition"
-                        title="Verwijder speler"
+                        title={t("result.removePlayer")}
                       >
                         ✕
                       </button>
@@ -265,7 +267,7 @@ export default function OnlineResultView() {
             onClick={handleAcknowledge}
             className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-emerald-200/50 transition hover:shadow-lg hover:-translate-y-0.5"
           >
-            Verder gaan
+            {t("result.continue")}
           </button>
         ) : isOwner ? (
           <button
@@ -274,19 +276,19 @@ export default function OnlineResultView() {
             className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
           >
             {allAcknowledged
-              ? `Start seizoen ${lobby.current_season + 1}`
-              : `Wacht tot iedereen op "Verder gaan" klikt…`}
+              ? t("result.startSeason", { season: lobby.current_season + 1 })
+              : t("result.waitForEveryone")}
           </button>
         ) : (
           <div className="rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
-            Wacht tot de host het volgende seizoen start…
+            {t("result.waitForHost")}
           </div>
         )
       )}
 
       {/* Standings table */}
       <button onClick={() => setShowTable((v) => !v)} className="btn-secondary w-full">
-        {showTable ? "Verberg ranglijst" : "Toon ranglijst"}
+        {showTable ? t("result.hideStandings") : t("result.showStandings")}
       </button>
 
       {showTable && (
@@ -295,10 +297,10 @@ export default function OnlineResultView() {
             <thead className="bg-slate-50/80 text-slate-400">
               <tr>
                 <th className="px-3 py-2.5 text-left">#</th>
-                <th className="px-3 py-2.5 text-left">Team</th>
-                <th className="px-2 py-2.5 text-right">GS</th>
-                <th className="px-2 py-2.5 text-right">DS</th>
-                <th className="px-3 py-2.5 text-right">Ptn</th>
+                <th className="px-3 py-2.5 text-left">{t("result.team")}</th>
+                <th className="px-2 py-2.5 text-right">{t("result.playedAbbr")}</th>
+                <th className="px-2 py-2.5 text-right">{t("result.goalDiffAbbr")}</th>
+                <th className="px-3 py-2.5 text-right">{t("result.pointsAbbr")}</th>
               </tr>
             </thead>
             <tbody>
@@ -334,15 +336,15 @@ export default function OnlineResultView() {
 
       {/* Player stats */}
       <div className="card overflow-hidden">
-        <div className="px-5 py-3 text-sm font-bold text-slate-700">Spelersstatistieken</div>
+        <div className="px-5 py-3 text-sm font-bold text-slate-700">{t("result.playerStats")}</div>
         <table className="w-full text-xs">
           <thead className="bg-slate-50/80 text-slate-400">
             <tr>
-              <th className="px-3 py-2 text-left">Speler</th>
-              <th className="px-2 py-2 text-left">Pos</th>
-              <th className="px-2 py-2 text-right">G</th>
-              <th className="px-2 py-2 text-right">A</th>
-              <th className="px-3 py-2 text-right">CS</th>
+              <th className="px-3 py-2 text-left">{t("result.player")}</th>
+              <th className="px-2 py-2 text-left">{t("result.pos")}</th>
+              <th className="px-2 py-2 text-right">{t("result.goalsAbbr")}</th>
+              <th className="px-2 py-2 text-right">{t("result.assistsAbbr")}</th>
+              <th className="px-3 py-2 text-right">{t("result.cleanSheetsAbbr")}</th>
             </tr>
           </thead>
           <tbody>

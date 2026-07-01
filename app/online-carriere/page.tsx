@@ -9,18 +9,23 @@ import { LEAGUES } from "@/lib/leagues";
 import { LoginPrompt } from "@/components/AuthGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useT } from "@/lib/i18n/core";
 
 const REROLL_OPTIONS = [0, 1, 2, 3];
 const WISSEL_OPTIONS = [0, 1, 2, 3, 4];
 
-const STATUS_LABELS: Record<string, string> = {
-  waiting: "Wachtkamer",
-  drafting: "Bezig",
-  simulating: "Simulatie",
-  finished: "Afgelopen",
-};
+function statusLabel(t: ReturnType<typeof useT>, status: string): string {
+  switch (status) {
+    case "waiting": return t("onlineCarriere.status.waiting");
+    case "drafting": return t("onlineCarriere.status.drafting");
+    case "simulating": return t("onlineCarriere.status.simulating");
+    case "finished": return t("onlineCarriere.status.finished");
+    default: return status;
+  }
+}
 
 export default function OnlineCarrierePage() {
+  const t = useT();
   const router = useRouter();
   const userId = useAuth((s) => s.userId);
   const username = useAuth((s) => s.username);
@@ -83,29 +88,28 @@ export default function OnlineCarrierePage() {
       <div className="mx-auto max-w-lg px-4 py-10">
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">🌐</div>
-          <h1 className="text-3xl font-black text-slate-800">Online Carrière</h1>
+          <h1 className="text-3xl font-black text-slate-800">{t("onlineCarriere.title")}</h1>
           <p className="mt-2 text-sm text-slate-500">
-            Speel de carrièremodus samen met vrienden. Begin allemaal in Divisie 10
-            en race naar het kampioenschap in Divisie 1!
+            {t("onlineCarriere.intro")}
           </p>
         </div>
 
         <div className="mb-6 card p-5">
-          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Hoe werkt het?</h3>
+          <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">{t("onlineCarriere.howItWorks.title")}</h3>
           <ol className="text-sm text-slate-600 space-y-2 list-decimal list-inside">
-            <li>Maak een lobby aan of join met een code</li>
-            <li>De eigenaar accepteert aanmeldingen en start het spel</li>
-            <li>Iedereen draft een team en simuleert het seizoen</li>
-            <li>Nr. 1 & 2 promoveren, laatste 3 degraderen</li>
-            <li>Vervang 2 spelers en speel het volgende seizoen</li>
-            <li>Eerste die Divisie 1 wint, wint het spel!</li>
+            <li>{t("onlineCarriere.howItWorks.step1")}</li>
+            <li>{t("onlineCarriere.howItWorks.step2")}</li>
+            <li>{t("onlineCarriere.howItWorks.step3")}</li>
+            <li>{t("onlineCarriere.howItWorks.step4")}</li>
+            <li>{t("onlineCarriere.howItWorks.step5")}</li>
+            <li>{t("onlineCarriere.howItWorks.step6")}</li>
           </ol>
         </div>
 
         {openLobbies.length > 0 && (
           <div className="mb-6 card p-5 border-2 border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/30">
             <div className="text-xs font-black uppercase tracking-widest text-cyan-700 mb-3">
-              🔓 Open lobby&apos;s — join direct mee
+              🔓 {t("onlineCarriere.openLobbies.title")}
             </div>
             <div className="flex flex-col gap-1.5">
               {openLobbies.map((l) => (
@@ -119,7 +123,7 @@ export default function OnlineCarrierePage() {
                     <span className="text-xs font-black tracking-wider text-cyan-600 shrink-0">{l.code}</span>
                     <span className="text-sm font-bold text-slate-800 truncate">{l.lobby_name || "—"}</span>
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400 shrink-0">{l.player_count}/20 spelers</span>
+                  <span className="text-[10px] font-bold text-slate-400 shrink-0">{t("onlineCarriere.playerCountOf20", { n: l.player_count })}</span>
                 </button>
               ))}
             </div>
@@ -128,9 +132,9 @@ export default function OnlineCarrierePage() {
 
         {!userId ? (
           <div className="card p-6 text-center">
-            <p className="text-sm text-slate-500 mb-4">Log in om mee te doen.</p>
+            <p className="text-sm text-slate-500 mb-4">{t("onlineCarriere.loginToJoin")}</p>
             <button onClick={() => setShowLogin(true)} className="btn-primary w-full">
-              Inloggen
+              {t("common.login")}
             </button>
           </div>
         ) : (
@@ -139,7 +143,7 @@ export default function OnlineCarrierePage() {
             {myLobbies.length > 0 && (
               <div className="card p-5 border-2 border-indigo-200/60 bg-gradient-to-br from-indigo-50/80 to-purple-50/50">
                 <div className="text-xs font-black uppercase tracking-widest text-indigo-700 mb-3">
-                  Jouw carrières
+                  {t("onlineCarriere.yourCareers")}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {myLobbies.map((l) => (
@@ -153,12 +157,12 @@ export default function OnlineCarrierePage() {
                         <span className="text-sm font-bold text-slate-800 truncate">{l.lobby_name || "—"}</span>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[10px] font-bold text-slate-400">{divisionLabel(l.current_division)}</span>
+                        <span className="text-[10px] font-bold text-slate-400">{divisionLabel(t, l.current_division)}</span>
                         <span className="text-[10px] font-bold text-slate-400">S{l.current_season}</span>
                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                           l.status === "waiting" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
                         }`}>
-                          {STATUS_LABELS[l.status] ?? l.status}
+                          {statusLabel(t, l.status)}
                         </span>
                       </div>
                     </button>
@@ -169,22 +173,22 @@ export default function OnlineCarrierePage() {
 
             <div className="card p-6">
               <h2 className="text-sm font-black uppercase tracking-widest text-indigo-700 mb-3">
-                Nieuw spel maken
+                {t("onlineCarriere.createNewGame")}
               </h2>
               <input
                 type="text"
                 value={lobbyName}
                 onChange={(e) => setLobbyName(e.target.value)}
-                placeholder="Geef je lobby een naam (optioneel)"
+                placeholder={t("onlineCarriere.lobbyNamePlaceholder")}
                 maxLength={30}
                 className="w-full rounded-xl border-2 border-slate-200 px-4 py-3 text-sm font-bold focus:border-indigo-400 focus:outline-none transition mb-3"
               />
               <p className="text-sm text-slate-500 mb-4">
-                Maak een lobby aan en deel de code met je vrienden (max 20 spelers).
+                {t("onlineCarriere.createLobbyDesc")}
               </p>
 
               <div className="mb-3.5">
-                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Rerolls per speler</div>
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("onlineCarriere.rerollsPerPlayer")}</div>
                 <div className="flex gap-1.5">
                   {REROLL_OPTIONS.map((n) => (
                     <button
@@ -203,7 +207,7 @@ export default function OnlineCarrierePage() {
               </div>
 
               <div className="mb-3.5">
-                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Wissels per ronde</div>
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("onlineCarriere.wisselsPerRound")}</div>
                 <div className="flex gap-1.5">
                   {WISSEL_OPTIONS.map((n) => (
                     <button
@@ -222,7 +226,7 @@ export default function OnlineCarrierePage() {
               </div>
 
               <div className="mb-3.5">
-                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Competities</div>
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("onlineCarriere.competitions")}</div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {LEAGUES.map((l) => {
                     const active = selectedLeagues.includes(l.code);
@@ -248,11 +252,11 @@ export default function OnlineCarrierePage() {
                 onClick={() => setSameFormation((v) => !v)}
                 className="mb-3 flex w-full items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition"
               >
-                <span className="text-sm font-bold text-slate-600">Iedereen dezelfde formatie</span>
+                <span className="text-sm font-bold text-slate-600">{t("onlineCarriere.sameFormationForAll")}</span>
                 <span className={`rounded-full px-3 py-1 text-xs font-black ${
                   sameFormation ? "bg-indigo-500 text-white" : "bg-white text-slate-400 border border-slate-200"
                 }`}>
-                  {sameFormation ? "Aan" : "Uit"}
+                  {sameFormation ? t("onlineCarriere.on") : t("onlineCarriere.off")}
                 </span>
               </button>
 
@@ -261,15 +265,15 @@ export default function OnlineCarrierePage() {
                 className="mb-4 flex w-full items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition"
               >
                 <span className="text-left">
-                  <span className="block text-sm font-bold text-slate-600">{isPublic ? "Open lobby" : "Gesloten lobby"}</span>
+                  <span className="block text-sm font-bold text-slate-600">{isPublic ? t("onlineCarriere.openLobby") : t("onlineCarriere.closedLobby")}</span>
                   <span className="block text-[11px] text-slate-400">
-                    {isPublic ? "Zichtbaar voor iedereen, direct joinen zonder code" : "Alleen via code, jij keurt aanmeldingen goed"}
+                    {isPublic ? t("onlineCarriere.openLobbyDesc") : t("onlineCarriere.closedLobbyDesc")}
                   </span>
                 </span>
                 <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-black ${
                   isPublic ? "bg-cyan-500 text-white" : "bg-white text-slate-400 border border-slate-200"
                 }`}>
-                  {isPublic ? "Open" : "Gesloten"}
+                  {isPublic ? t("onlineCarriere.open") : t("onlineCarriere.closed")}
                 </span>
               </button>
 
@@ -278,19 +282,19 @@ export default function OnlineCarrierePage() {
                 onClick={handleCreate}
                 className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
               >
-                {loading ? "Aanmaken…" : "Maak lobby aan"}
+                {loading ? t("onlineCarriere.creating") : t("onlineCarriere.createLobbyBtn")}
               </button>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="h-px flex-1 bg-slate-200" />
-              <span className="text-xs font-bold text-slate-400">OF</span>
+              <span className="text-xs font-bold text-slate-400">{t("onlineCarriere.or")}</span>
               <div className="h-px flex-1 bg-slate-200" />
             </div>
 
             <div className="card p-6">
               <h2 className="text-sm font-black uppercase tracking-widest text-indigo-700 mb-3">
-                Deelnemen met code
+                {t("onlineCarriere.joinWithCode")}
               </h2>
               <div className="flex gap-2">
                 <input
@@ -306,7 +310,7 @@ export default function OnlineCarrierePage() {
                   onClick={handleJoin}
                   className="rounded-xl bg-indigo-500 px-6 py-3 font-bold text-white transition hover:bg-indigo-600 disabled:opacity-40"
                 >
-                  Join
+                  {t("onlineCarriere.join")}
                 </button>
               </div>
             </div>

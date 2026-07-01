@@ -6,6 +6,7 @@ import { FORMATIONS } from "@/lib/formations";
 import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { useT } from "@/lib/i18n/core";
 
 type Tab = "records" | "accounts" | "challenge" | "career" | "dailywins";
 type RecordSort = "points" | "goals_for" | "goals_against" | "team_rating" | "team_value";
@@ -71,6 +72,7 @@ function UserLink({ username }: { username: string }) {
 }
 
 export default function RanglijstPage() {
+  const t = useT();
   const [tab, setTab] = useState<Tab>("records");
   const [gameRows, setGameRows] = useState<GameRow[]>([]);
   const [accountRows, setAccountRows] = useState<AccountRow[]>([]);
@@ -244,16 +246,16 @@ export default function RanglijstPage() {
   });
 
   const RECORD_SORTS: { key: RecordSort; label: string }[] = [
-    { key: "points", label: "Punten" },
-    { key: "goals_for", label: "Goals voor" },
-    { key: "goals_against", label: "Goals tegen" },
-    { key: "team_rating", label: "Rating" },
-    { key: "team_value", label: "Waarde" },
+    { key: "points", label: t("ranglijst.sort.points") },
+    { key: "goals_for", label: t("ranglijst.sort.goalsFor") },
+    { key: "goals_against", label: t("ranglijst.sort.goalsAgainst") },
+    { key: "team_rating", label: t("ranglijst.sort.rating") },
+    { key: "team_value", label: t("ranglijst.sort.value") },
   ];
 
   const ACCOUNT_SORTS: { key: AccountSort; label: string }[] = [
-    { key: "achievements", label: "Achievements" },
-    { key: "champions", label: "Kampioenschappen" },
+    { key: "achievements", label: t("ranglijst.sort.achievements") },
+    { key: "champions", label: t("ranglijst.sort.championships") },
   ];
 
   const TabButton = ({ id, label, accent }: { id: Tab; label: string; accent?: string }) => (
@@ -274,7 +276,7 @@ export default function RanglijstPage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl font-black text-slate-800">Ranglijst</h1>
+          <h1 className="text-3xl font-black text-slate-800">{t("ranglijst.title")}</h1>
         </div>
 
         {/* Tabs */}
@@ -285,7 +287,7 @@ export default function RanglijstPage() {
               tab === "records" ? "bg-white shadow-sm border border-slate-200/60 text-slate-800" : "text-slate-400 hover:text-slate-600"
             }`}
           >
-            Seizoenen
+            {t("ranglijst.tab.seasons")}
           </button>
           <button
             onClick={() => setTab("accounts")}
@@ -293,7 +295,7 @@ export default function RanglijstPage() {
               tab === "accounts" ? "bg-white shadow-sm border border-slate-200/60 text-slate-800" : "text-slate-400 hover:text-slate-600"
             }`}
           >
-            Spelers
+            {t("ranglijst.tab.players")}
           </button>
           <button
             onClick={() => setTab("challenge")}
@@ -301,7 +303,7 @@ export default function RanglijstPage() {
               tab === "challenge" ? "bg-amber-50 shadow-sm border border-amber-200/60 text-amber-800" : "text-amber-500 hover:text-amber-700"
             }`}
           >
-            🏅 Daily
+            {t("ranglijst.tab.daily")}
           </button>
           <button
             onClick={() => setTab("dailywins")}
@@ -309,7 +311,7 @@ export default function RanglijstPage() {
               tab === "dailywins" ? "bg-amber-50 shadow-sm border border-amber-200/60 text-amber-800" : "text-amber-500 hover:text-amber-700"
             }`}
           >
-            🏆 Daily Wins
+            {t("ranglijst.tab.dailyWins")}
           </button>
           <button
             onClick={() => setTab("career")}
@@ -317,7 +319,7 @@ export default function RanglijstPage() {
               tab === "career" ? "bg-indigo-50 shadow-sm border border-indigo-200/60 text-indigo-800" : "text-indigo-500 hover:text-indigo-700"
             }`}
           >
-            🏟️ Carrière
+            {t("ranglijst.tab.career")}
           </button>
         </div>
 
@@ -341,12 +343,12 @@ export default function RanglijstPage() {
         {/* Content */}
         <div className="card overflow-hidden">
           {loading ? (
-            <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+            <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
           ) : tab === "dailywins" ? (
             dailyWinRows.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-3xl mb-3">🏆</div>
-                <div className="text-sm text-slate-400">Nog geen daily challenge winnaars.</div>
+                <div className="text-sm text-slate-400">{t("ranglijst.empty.dailyWins")}</div>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -354,8 +356,8 @@ export default function RanglijstPage() {
                   <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
                     <tr>
                       <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">Speler</th>
-                      <th className="px-3 py-3 text-right">Daily wins</th>
+                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.dailyWins")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -374,7 +376,7 @@ export default function RanglijstPage() {
             careerRows.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-3xl mb-3">🏟️</div>
-                <div className="text-sm text-slate-400">Nog niemand heeft een carrière gestart.</div>
+                <div className="text-sm text-slate-400">{t("ranglijst.empty.career")}</div>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -382,11 +384,11 @@ export default function RanglijstPage() {
                   <thead className="bg-indigo-50/50 text-[10px] uppercase tracking-widest text-indigo-600">
                     <tr>
                       <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">Speler</th>
-                      <th className="px-3 py-3 text-right">Seizoenen</th>
-                      <th className="px-3 py-3 text-right">Titels</th>
-                      <th className="px-3 py-3 text-right">Beste divisie</th>
-                      <th className="px-3 py-3 text-right">Div 1 in</th>
+                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.seasons")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.titles")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.bestDivision")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.div1In")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -402,13 +404,13 @@ export default function RanglijstPage() {
                             r.bestDivision <= 6 ? "bg-emerald-100/80 text-emerald-700" :
                             "bg-slate-100/80 text-slate-500"
                           }`}>
-                            Div {r.bestDivision}
+                            {t("ranglijst.div", { n: r.bestDivision })}
                           </span>
                         </td>
                         <td className="px-3 py-3 text-right">
                           {r.seasonsToDiv1Champ !== null ? (
                             <span className="inline-flex items-center justify-center rounded-full bg-amber-100/80 px-2.5 py-1 text-[10px] font-black text-amber-700">
-                              {r.seasonsToDiv1Champ} szn
+                              {t("ranglijst.seasonsShort", { n: r.seasonsToDiv1Champ })}
                             </span>
                           ) : (
                             <span className="text-[10px] text-slate-300">—</span>
@@ -423,7 +425,7 @@ export default function RanglijstPage() {
           ) : tab === "challenge" ? (
             <>
               <div className="px-5 py-3 border-b border-slate-100/60 flex flex-wrap items-center gap-2">
-                <span className="text-sm font-bold text-amber-800">🏅 Daily Challenge</span>
+                <span className="text-sm font-bold text-amber-800">{t("ranglijst.dailyChallenge")}</span>
                 <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
                   {challenge.leagueFlag} {challenge.leagueName}
                 </span>
@@ -431,13 +433,13 @@ export default function RanglijstPage() {
                   {challenge.formationLabel}
                 </span>
                 <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
-                  {challenge.ratingMode === "prime" ? "Prime" : "Actueel"}
+                  {challenge.ratingMode === "prime" ? t("ranglijst.ratingMode.prime") : t("ranglijst.ratingMode.current")}
                 </span>
               </div>
               {challengeRows.length === 0 ? (
                 <div className="p-12 text-center">
                   <div className="text-3xl mb-3">🏅</div>
-                  <div className="text-sm text-slate-400">Nog niemand heeft de daily challenge gespeeld vandaag.</div>
+                  <div className="text-sm text-slate-400">{t("ranglijst.empty.challenge")}</div>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -445,13 +447,13 @@ export default function RanglijstPage() {
                     <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
                       <tr>
                         <th className="px-4 py-3 text-left">#</th>
-                        <th className="px-3 py-3 text-left">Speler</th>
-                        <th className="px-3 py-3 text-right">Ptn</th>
-                        <th className="px-3 py-3 text-right">GV</th>
-                        <th className="px-3 py-3 text-right">GT</th>
-                        <th className="px-3 py-3 text-right">DS</th>
-                        <th className="px-3 py-3 text-right">Rating</th>
-                        <th className="px-3 py-3 text-left">Pos</th>
+                        <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
+                        <th className="px-3 py-3 text-right">{t("ranglijst.col.pts")}</th>
+                        <th className="px-3 py-3 text-right">{t("ranglijst.col.gf")}</th>
+                        <th className="px-3 py-3 text-right">{t("ranglijst.col.ga")}</th>
+                        <th className="px-3 py-3 text-right">{t("ranglijst.col.gd")}</th>
+                        <th className="px-3 py-3 text-right">{t("ranglijst.col.rating")}</th>
+                        <th className="px-3 py-3 text-left">{t("ranglijst.col.pos")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -482,23 +484,23 @@ export default function RanglijstPage() {
             </>
           ) : tab === "records" ? (
             sortedGames.length === 0 ? (
-              <EmptyState />
+              <EmptyState text={t("ranglijst.empty.default")} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-slate-50/80 text-[10px] uppercase tracking-widest text-slate-400">
                     <tr>
                       <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">Speler</th>
-                      <th className="px-3 py-3 text-left">Competitie</th>
-                      <th className="px-3 py-3 text-left">Formatie</th>
-                      <th className="px-3 py-3 text-right">Ptn</th>
-                      <th className="px-3 py-3 text-center">Record</th>
-                      <th className="px-3 py-3 text-right">GV</th>
-                      <th className="px-3 py-3 text-right">GT</th>
-                      <th className="px-3 py-3 text-right">Rating</th>
-                      <th className="px-3 py-3 text-right">Waarde</th>
-                      <th className="px-3 py-3 text-left">Pos</th>
+                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
+                      <th className="px-3 py-3 text-left">{t("ranglijst.col.competition")}</th>
+                      <th className="px-3 py-3 text-left">{t("ranglijst.col.formation")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.pts")}</th>
+                      <th className="px-3 py-3 text-center">{t("ranglijst.col.record")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.gf")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.ga")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.rating")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.value")}</th>
+                      <th className="px-3 py-3 text-left">{t("ranglijst.col.pos")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -538,17 +540,17 @@ export default function RanglijstPage() {
             )
           ) : (
             sortedAccounts.length === 0 ? (
-              <EmptyState />
+              <EmptyState text={t("ranglijst.empty.default")} />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead className="bg-slate-50/80 text-[10px] uppercase tracking-widest text-slate-400">
                     <tr>
                       <th className="px-4 py-3 text-left">#</th>
-                      <th className="px-3 py-3 text-left">Speler</th>
-                      <th className="px-3 py-3 text-right">Gespeeld</th>
-                      <th className="px-3 py-3 text-right">Titels</th>
-                      <th className="px-3 py-3 text-right">Achievements</th>
+                      <th className="px-3 py-3 text-left">{t("ranglijst.col.player")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.played")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.titles")}</th>
+                      <th className="px-3 py-3 text-right">{t("ranglijst.col.achievements")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -563,7 +565,7 @@ export default function RanglijstPage() {
                           {r.champions}
                         </td>
                         <td className={`px-3 py-3 text-right tabular-nums font-semibold ${accountSort === "achievements" ? "font-black text-emerald-600" : ""}`}>
-                          {r.unique_achievements.length} / 17
+                          {t("ranglijst.achievementsOutOf", { n: r.unique_achievements.length })}
                         </td>
                       </tr>
                     ))}
@@ -592,11 +594,11 @@ function RankBadge({ rank }: { rank: number }) {
   return <span className="pl-1.5 font-bold text-slate-400">{rank}</span>;
 }
 
-function EmptyState() {
+function EmptyState({ text }: { text: string }) {
   return (
     <div className="p-12 text-center">
       <div className="text-3xl mb-3">🏟️</div>
-      <div className="text-sm text-slate-400">Nog geen resultaten. Speel een potje!</div>
+      <div className="text-sm text-slate-400">{text}</div>
     </div>
   );
 }

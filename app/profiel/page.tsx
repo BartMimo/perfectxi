@@ -7,6 +7,7 @@ import { ALL_ACHIEVEMENTS } from "@/lib/achievements";
 import { LEAGUES } from "@/lib/leagues";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { useT } from "@/lib/i18n/core";
 
 interface Stats {
   games: number;
@@ -23,6 +24,7 @@ interface Stats {
 }
 
 export default function ProfielPage() {
+  const t = useT();
   const userId = useAuth((s) => s.userId);
   const username = useAuth((s) => s.username);
   const restore = useAuth((s) => s.restore);
@@ -150,8 +152,8 @@ export default function ProfielPage() {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-          <p className="text-slate-500">Je bent niet ingelogd.</p>
-          <a href="/" className="btn-primary mt-4 inline-block">Ga naar home</a>
+          <p className="text-slate-500">{t("profiel.notLoggedIn")}</p>
+          <a href="/" className="btn-primary mt-4 inline-block">{t("profiel.goHome")}</a>
         </div>
         <Footer />
       </main>
@@ -164,38 +166,38 @@ export default function ProfielPage() {
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8">
           <h1 className="text-3xl font-black text-slate-800">{username}</h1>
-          <p className="text-sm text-slate-400 mt-1">Jouw profiel en statistieken</p>
+          <p className="text-sm text-slate-400 mt-1">{t("profiel.subtitle")}</p>
         </div>
 
         <TeamNameEditor />
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+          <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
         ) : !stats ? (
           <div className="card p-12 text-center">
             <div className="text-3xl mb-3">🏟️</div>
-            <div className="text-sm text-slate-400">Nog geen seizoenen gespeeld.</div>
+            <div className="text-sm text-slate-400">{t("profiel.noSeasons")}</div>
           </div>
         ) : (
           <>
             <div className="card p-5 mb-4">
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Statistieken</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{t("profiel.stats")}</div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatBox label="Gespeeld" value={stats.games} />
-                <StatBox label="Kampioen" value={`${stats.champions}x`} accent />
-                <StatBox label="Meeste punten" value={stats.bestPoints} />
-                <StatBox label="Meeste goals" value={stats.bestGf} />
-                <StatBox label="Minste tegen" value={stats.leastGa === 9999 ? "—" : stats.leastGa} />
-                <StatBox label="Beste rating" value={stats.bestRating.toFixed(1)} />
-                <StatBox label="Beste waarde" value={fmtValue(stats.bestValue)} />
-                <StatBox label="Daily wins" value={stats.dailyWins} accent />
+                <StatBox label={t("profiel.stat.played")} value={stats.games} />
+                <StatBox label={t("profiel.stat.champion")} value={t("profiel.stat.champion.value", { n: stats.champions })} accent />
+                <StatBox label={t("profiel.stat.mostPoints")} value={stats.bestPoints} />
+                <StatBox label={t("profiel.stat.mostGoals")} value={stats.bestGf} />
+                <StatBox label={t("profiel.stat.leastConceded")} value={stats.leastGa === 9999 ? "—" : stats.leastGa} />
+                <StatBox label={t("profiel.stat.bestRating")} value={stats.bestRating.toFixed(1)} />
+                <StatBox label={t("profiel.stat.bestValue")} value={fmtValue(stats.bestValue)} />
+                <StatBox label={t("profiel.stat.dailyWins")} value={stats.dailyWins} accent />
               </div>
             </div>
 
             <div className="card p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Achievements</div>
-                <span className="text-xs font-bold text-emerald-600">{stats.unlockedAchievements.size} / {ALL_ACHIEVEMENTS.length}</span>
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("profiel.achievements")}</div>
+                <span className="text-xs font-bold text-emerald-600">{t("profiel.achievementsCount", { unlocked: stats.unlockedAchievements.size, total: ALL_ACHIEVEMENTS.length })}</span>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ALL_ACHIEVEMENTS.map((a) => {
@@ -224,14 +226,14 @@ export default function ProfielPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className={`text-sm font-bold ${unlocked ? "text-amber-800" : isChampion && stats.champLeagues.size > 0 ? "text-amber-700" : "text-slate-400"}`}>
-                            {a.label}
+                            {t(`achievement.${a.id}.label`)}
                             {isChampion && <span className="ml-1 text-[10px] font-bold text-amber-500">{stats.champLeagues.size}/{LEAGUES.length}</span>}
                           </span>
-                          <span className="shrink-0 text-[10px] font-bold text-slate-400">{pct}% heeft dit</span>
+                          <span className="shrink-0 text-[10px] font-bold text-slate-400">{t("profiel.hasThis", { pct })}</span>
                         </div>
                         {expanded && (
                           <>
-                            <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{a.description}</div>
+                            <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{t(`achievement.${a.id}.description`)}</div>
                             {isChampion && (
                               <div className="mt-2 flex flex-wrap gap-1.5">
                                 {LEAGUES.map((l) => {
@@ -274,6 +276,7 @@ function StatBox({ label, value, accent }: { label: string; value: number | stri
 }
 
 function TeamNameEditor() {
+  const t = useT();
   const teamName = useAuth((s) => s.teamName);
   const setTeamName = useAuth((s) => s.setTeamName);
   const [editing, setEditing] = useState(false);
@@ -282,19 +285,19 @@ function TeamNameEditor() {
   if (editing) {
     return (
       <div className="card p-5 mb-4">
-        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Teamnaam</div>
+        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("profiel.teamName")}</div>
         <form onSubmit={(e) => { e.preventDefault(); setTeamName(draft); setEditing(false); }} className="flex gap-2">
           <input
             type="text"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Bijv. FC Bart"
+            placeholder={t("profiel.teamName.placeholder")}
             maxLength={24}
             className="glass-input flex-1 !py-2.5 !text-sm"
             autoFocus
           />
-          <button type="submit" className="btn-primary !px-4 !py-2.5 !text-sm">Opslaan</button>
-          <button type="button" onClick={() => setEditing(false)} className="btn-secondary !px-4 !py-2.5 !text-sm">Annuleer</button>
+          <button type="submit" className="btn-primary !px-4 !py-2.5 !text-sm">{t("profiel.save")}</button>
+          <button type="button" onClick={() => setEditing(false)} className="btn-secondary !px-4 !py-2.5 !text-sm">{t("profiel.cancel")}</button>
         </form>
       </div>
     );
@@ -302,11 +305,11 @@ function TeamNameEditor() {
 
   return (
     <div className="card p-5 mb-4">
-      <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Teamnaam</div>
+      <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("profiel.teamName")}</div>
       <div className="flex items-center justify-between">
-        <span className="text-lg font-black text-slate-800">{teamName || "Jouw XI"}</span>
+        <span className="text-lg font-black text-slate-800">{teamName || t("profiel.teamName.default")}</span>
         <button onClick={() => { setDraft(teamName ?? ""); setEditing(true); }} className="btn-secondary !px-3 !py-1.5 !text-xs">
-          Wijzig
+          {t("profiel.edit")}
         </button>
       </div>
     </div>

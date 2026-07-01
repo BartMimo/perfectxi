@@ -228,6 +228,6 @@ export function getAdjustedDivisionRange(
   return [minR + shift, maxR + shift];
 }
 
-export function divisionLabel(div: number): string {
-  return `Divisie ${div}`;
+export function divisionLabel(t: (key: string, vars?: Record<string, string | number>) => string, div: number): string {
+  return t("common.division", { div });
 }

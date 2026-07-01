@@ -2,6 +2,7 @@
 
 import type { CareerSeason } from "@/lib/career";
 import { divisionLabel } from "@/lib/career";
+import { useT } from "@/lib/i18n/core";
 
 interface Props {
   history: CareerSeason[];
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function CareerTimeline({ history, currentDivision, currentSeason }: Props) {
+  const t = useT();
   if (history.length === 0) return null;
 
   const minDiv = Math.min(...history.map((h) => h.division), currentDivision);
@@ -55,7 +57,7 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
   return (
     <div className="card p-4 overflow-hidden">
       <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
-        Carrière overzicht
+        {t("career.overview")}
       </div>
       <div className="overflow-x-auto -mx-4 px-4">
         <svg viewBox={`0 0 ${viewW} ${chartH}`} width={viewW} height={chartH} className="min-w-full">
@@ -103,7 +105,7 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
                 {/* Position */}
                 <text x={cx} y={cy + (p.champion ? 17 : 15)} textAnchor="middle" fontSize="8" fontWeight="700"
                   fill={p.position <= 2 ? "#10b981" : p.position >= 18 ? "#ef4444" : "#64748b"}>
-                  {p.position}e · {p.points}p
+                  {t("career.positionPoints", { pos: p.position, pts: p.points })}
                 </text>
               </g>
             );
@@ -117,7 +119,7 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
             S{currentSeason}
           </text>
           <text x={x(points.length, viewW)} y={y(currentDivision) + 15} textAnchor="middle" fontSize="8" fontWeight="700" fill="#6366f1">
-            nu
+            {t("career.now")}
           </text>
         </svg>
       </div>

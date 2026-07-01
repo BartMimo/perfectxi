@@ -9,6 +9,7 @@ import type { ClubSeasonLite } from "@/lib/types";
 import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useT } from "@/lib/i18n/core";
 
 interface ChallengeRow {
   id: string;
@@ -39,6 +40,7 @@ function RankBadge({ rank }: { rank: number }) {
 }
 
 export default function ChallengePage() {
+  const t = useT();
   const router = useRouter();
   const userId = useAuth((s) => s.userId);
   const startChallenge = useGame((s) => s.startChallenge);
@@ -141,8 +143,8 @@ export default function ChallengePage() {
       <div className="mx-auto max-w-3xl px-4 py-10">
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">🏅</div>
-          <h1 className="text-2xl font-black text-slate-800">Challenge van de dag</h1>
-          <p className="mt-2 text-sm text-slate-500">Iedereen speelt dezelfde competitie en formatie. Vergelijk je score!</p>
+          <h1 className="text-2xl font-black text-slate-800">{t("challenge.title")}</h1>
+          <p className="mt-2 text-sm text-slate-500">{t("challenge.subtitle")}</p>
         </div>
 
         <div className="card p-6 mb-6 border-2 border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50">
@@ -154,18 +156,18 @@ export default function ChallengePage() {
               {challenge.formationLabel}
             </span>
             <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-amber-800">
-              {challenge.ratingMode === "prime" ? "Prime rating" : "Actuele rating"}
+              {challenge.ratingMode === "prime" ? t("challenge.primeRating") : t("challenge.currentRating")}
             </span>
           </div>
 
           {!checked ? (
-            <div className="text-sm text-slate-400">Laden…</div>
+            <div className="text-sm text-slate-400">{t("common.loading")}</div>
           ) : !userId ? (
-            <p className="text-sm text-amber-700">Log in om de challenge te spelen.</p>
+            <p className="text-sm text-amber-700">{t("challenge.loginToPlay")}</p>
           ) : challengePlayed !== null ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-amber-800">Al gespeeld vandaag!</span>
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">{challengePlayed} punten</span>
+              <span className="text-sm font-bold text-amber-800">{t("challenge.alreadyPlayedToday")}</span>
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">{t("challenge.pointsValue", { points: challengePlayed })}</span>
             </div>
           ) : (
             <button
@@ -173,19 +175,19 @@ export default function ChallengePage() {
               onClick={handlePlay}
               className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-amber-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
             >
-              {loaded ? "Speel de challenge" : "Laden…"}
+              {loaded ? t("challenge.playChallenge") : t("common.loading")}
             </button>
           )}
         </div>
 
         <div className="card overflow-hidden mb-4">
-          <div className="px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">🏅 Ranglijst van vandaag</div>
+          <div className="px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">🏅 {t("challenge.todayLeaderboard")}</div>
           {loading ? (
-            <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+            <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
           ) : todayRows.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-3xl mb-3">🏅</div>
-              <div className="text-sm text-slate-400">Nog niemand heeft de challenge vandaag gespeeld.</div>
+              <div className="text-sm text-slate-400">{t("challenge.noOneYetToday")}</div>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -193,12 +195,12 @@ export default function ChallengePage() {
                 <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
                   <tr>
                     <th className="px-4 py-3 text-left">#</th>
-                    <th className="px-3 py-3 text-left">Speler</th>
-                    <th className="px-3 py-3 text-right">Ptn</th>
-                    <th className="px-3 py-3 text-right">GV</th>
-                    <th className="px-3 py-3 text-right">GT</th>
-                    <th className="px-3 py-3 text-right">DS</th>
-                    <th className="px-3 py-3 text-left">Pos</th>
+                    <th className="px-3 py-3 text-left">{t("challenge.colPlayer")}</th>
+                    <th className="px-3 py-3 text-right">{t("challenge.colPoints")}</th>
+                    <th className="px-3 py-3 text-right">{t("challenge.colGoalsFor")}</th>
+                    <th className="px-3 py-3 text-right">{t("challenge.colGoalsAgainst")}</th>
+                    <th className="px-3 py-3 text-right">{t("challenge.colGoalDiff")}</th>
+                    <th className="px-3 py-3 text-left">{t("challenge.colPos")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -214,7 +216,7 @@ export default function ChallengePage() {
                         <span className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[10px] font-bold ${
                           r.position === 1 ? "bg-amber-100/80 text-amber-700" : r.position <= 4 ? "bg-emerald-100/80 text-emerald-700" : "bg-slate-100/80 text-slate-500"
                         }`}>
-                          {r.position}e
+                          {t("challenge.ordinalSuffix", { n: r.position })}
                         </span>
                       </td>
                     </tr>
@@ -226,13 +228,13 @@ export default function ChallengePage() {
         </div>
 
         <div className="card overflow-hidden">
-          <div className="px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">🏆 Meeste dagoverwinningen (aller tijden)</div>
+          <div className="px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">🏆 {t("challenge.allTimeWins")}</div>
           {loading ? (
-            <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+            <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
           ) : dailyWinRows.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-3xl mb-3">🏆</div>
-              <div className="text-sm text-slate-400">Nog geen daily challenge winnaars.</div>
+              <div className="text-sm text-slate-400">{t("challenge.noWinnersYet")}</div>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -240,8 +242,8 @@ export default function ChallengePage() {
                 <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
                   <tr>
                     <th className="px-4 py-3 text-left">#</th>
-                    <th className="px-3 py-3 text-left">Speler</th>
-                    <th className="px-3 py-3 text-right">Overwinningen</th>
+                    <th className="px-3 py-3 text-left">{t("challenge.colPlayer")}</th>
+                    <th className="px-3 py-3 text-right">{t("challenge.colWins")}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -5,8 +5,10 @@ import { effectiveStats, useGame } from "@/lib/store";
 import { canPlayerPlay, eligibleSlots } from "@/lib/positions";
 import type { Player } from "@/lib/types";
 import { RatingBadge, fmtMv } from "./ui";
+import { useT } from "@/lib/i18n/core";
 
 export default function SquadPicker() {
+  const t = useT();
   const squad = useGame((s) => s.squad);
   const slots = useGame((s) => s.slots);
   const loadingSquad = useGame((s) => s.loadingSquad);
@@ -49,13 +51,13 @@ export default function SquadPicker() {
     return (
       <div className="rounded-2xl border-2 border-amber-300/60 bg-amber-50/80 px-5 py-4 text-center backdrop-blur">
         <div className="text-sm font-bold text-amber-800">
-          Plaats <span className="font-extrabold">{pendingPlayer.name}</span>
+          {t("draft.placePlayerPrefix")} <span className="font-extrabold">{pendingPlayer.name}</span>
         </div>
         <div className="mt-1 text-xs leading-relaxed text-amber-700/70">
-          Tik op een gemarkeerde positie in het veld.
+          {t("draft.tapHighlightedSpot")}
         </div>
         <button onClick={cancelPick} className="btn-secondary mt-3 text-xs">
-          Annuleer
+          {t("draft.cancel")}
         </button>
       </div>
     );
@@ -76,19 +78,19 @@ export default function SquadPicker() {
         </div>
         {rerollsLeft > 0 && (
           <button onClick={reroll} className="btn-secondary shrink-0 text-xs">
-            ↻ Opnieuw ({rerollsLeft})
+            ↻ {t("draft.rerollWithCount", { count: rerollsLeft })}
           </button>
         )}
       </div>
 
-      {loadingSquad && <div className="py-6 text-center text-sm text-slate-400">Squad laden…</div>}
+      {loadingSquad && <div className="py-6 text-center text-sm text-slate-400">{t("draft.squadLoading")}</div>}
       {error && <div className="text-center text-sm text-rose-500">{error}</div>}
 
       {squad && !anyFits && (
         <div className="flex flex-col items-center gap-3 rounded-2xl bg-slate-50/80 px-5 py-5 text-center">
-          <div className="text-sm text-slate-500">Geen enkele speler past op een vrije positie.</div>
+          <div className="text-sm text-slate-500">{t("draft.noPlayerFits")}</div>
           <button onClick={requestSpin} className="btn-primary text-sm">
-            Draai opnieuw
+            {t("draft.spinAgain")}
           </button>
         </div>
       )}
@@ -96,7 +98,7 @@ export default function SquadPicker() {
       {squad && anyFits && (
         <>
           <div className="text-xs text-slate-400">
-            Kies één speler. Uitgegrijsd = past niet op een vrije positie.
+            {t("draft.pickOnePlayerHint")}
           </div>
           <ul className="flex max-h-[55vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100dvh_-_320px)]">
             {players.map((p, i) => {

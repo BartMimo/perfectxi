@@ -6,8 +6,11 @@ import { getFormation } from "@/lib/formations";
 import { useCareer, divisionLabel } from "@/lib/career";
 import { useOnlineCareer } from "@/lib/onlineCareer";
 import { useAuth } from "@/lib/auth";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
+import { useT } from "@/lib/i18n/core";
 
 export default function Header({ showMeta = false, backHref }: { showMeta?: boolean; backHref?: string }) {
+  const t = useT();
   const newGame = useGame((s) => s.newGame);
   const leagueCode = useGame((s) => s.leagueCode);
   const gameMode = useGame((s) => s.gameMode);
@@ -35,26 +38,29 @@ export default function Header({ showMeta = false, backHref }: { showMeta?: bool
             </span>
           </a>
         </div>
-        {showMeta && (
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-            {isOnlineCareer && onlineMe ? (
-              <span className="truncate rounded-full border border-indigo-200/60 bg-indigo-50/60 px-3 py-1.5 text-indigo-700 backdrop-blur">
-                {divisionLabel(onlineMe.current_division)} · S{lobby.current_season}
+        <div className="flex items-center gap-2">
+          {showMeta && (
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+              {isOnlineCareer && onlineMe ? (
+                <span className="truncate rounded-full border border-indigo-200/60 bg-indigo-50/60 px-3 py-1.5 text-indigo-700 backdrop-blur">
+                  {divisionLabel(t, onlineMe.current_division)} · S{lobby.current_season}
+                </span>
+              ) : gameMode === "career" ? (
+                <span className="truncate rounded-full border border-indigo-200/60 bg-indigo-50/60 px-3 py-1.5 text-indigo-700 backdrop-blur">
+                  {divisionLabel(t, career.currentDivision)} · S{career.season}
+                </span>
+              ) : leagueCode ? (
+                <span className="truncate rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
+                  {leagueName(leagueCode)}
+                </span>
+              ) : null}
+              <span className="rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
+                {formation.label}
               </span>
-            ) : gameMode === "career" ? (
-              <span className="truncate rounded-full border border-indigo-200/60 bg-indigo-50/60 px-3 py-1.5 text-indigo-700 backdrop-blur">
-                {divisionLabel(career.currentDivision)} · S{career.season}
-              </span>
-            ) : leagueCode ? (
-              <span className="truncate rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
-                {leagueName(leagueCode)}
-              </span>
-            ) : null}
-            <span className="rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
-              {formation.label}
-            </span>
-          </div>
-        )}
+            </div>
+          )}
+          <LanguageSwitcher />
+        </div>
       </div>
     </header>
   );

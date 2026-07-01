@@ -9,12 +9,14 @@ import { saveResult } from "@/lib/saveResult";
 import { leagueName } from "@/lib/leagues";
 import { computeAchievements, type Achievement } from "@/lib/achievements";
 import { useCustomPlayer, isCustomPlayer } from "@/lib/customPlayer";
+import { useT } from "@/lib/i18n/core";
 import ShareCard from "./ShareCard";
 import { LoginPrompt } from "./AuthGate";
 import { CareerResultBanner, TransferWindow } from "./CareerView";
 import { useCareer } from "@/lib/career";
 
 export default function ResultView() {
+  const t = useT();
   const result = useGame((s) => s.result);
   const newGame = useGame((s) => s.newGame);
   const slots = useGame((s) => s.slots);
@@ -82,7 +84,7 @@ export default function ResultView() {
     try {
       const node = cardRef.current;
       if (!node) {
-        alert("Deelkaart kon niet geladen worden.");
+        alert(t("result.shareCardLoadFailed"));
         return;
       }
       const dataUrl = await toPng(node, {
@@ -97,7 +99,7 @@ export default function ResultView() {
       try {
         const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
         if (nav.canShare?.({ files: [file] })) {
-          await nav.share({ files: [file], title: "Elite Football", text: "Mijn Elite Football seizoen! Speel jij het beter?" });
+          await nav.share({ files: [file], title: "Elite Football", text: t("result.shareText") });
           shared = true;
         }
       } catch {
@@ -120,7 +122,7 @@ export default function ResultView() {
     } catch (err: unknown) {
       const e = err instanceof Error ? err : new Error(String(err));
       console.error("Share failed:", e);
-      alert("Delen mislukt: " + e.message);
+      alert(t("result.shareFailed", { message: e.message }));
     } finally {
       setSharing(false);
     }
@@ -139,16 +141,16 @@ export default function ResultView() {
             <div className="text-5xl">🏆🛡️</div>
             <div className="mt-3 bg-gradient-to-r from-amber-500 to-yellow-400 bg-clip-text text-2xl font-black text-transparent">THE INVINCIBLES</div>
             <div className="mt-1 text-sm text-slate-500">
-              38 gespeeld, 38 gewonnen. Een perfect seizoen: <b>38-0-0</b>.
+              {t("result.invincibleDesc")} <b>38-0-0</b>.
             </div>
           </>
         ) : (
           <>
-            <div className="text-xs uppercase tracking-widest text-slate-400">Eindstand</div>
+            <div className="text-xs uppercase tracking-widest text-slate-400">{t("result.finalStandings")}</div>
             <div className="mt-2 text-5xl font-black tabular-nums text-slate-800">
               {position}
               <span className="text-2xl text-slate-300">
-                {position === 1 ? "ste" : position === 2 ? "de" : "e"}
+                {position === 1 ? t("result.ordinalSte") : position === 2 ? t("result.ordinalDe") : t("result.ordinalE")}
               </span>
             </div>
             <div className="mt-2 text-base font-bold text-emerald-600">
@@ -158,34 +160,34 @@ export default function ResultView() {
         )}
 
         <div className="mx-auto mt-5 grid max-w-md grid-cols-4 gap-2 text-center">
-          <Stat label="Punten" value={userRow.points} accent />
-          <Stat label="W" value={userRow.won} />
-          <Stat label="G" value={userRow.drawn} />
-          <Stat label="V" value={userRow.lost} />
+          <Stat label={t("result.points")} value={userRow.points} accent />
+          <Stat label={t("result.wonAbbr")} value={userRow.won} />
+          <Stat label={t("result.drawnAbbr")} value={userRow.drawn} />
+          <Stat label={t("result.lostAbbr")} value={userRow.lost} />
         </div>
         <div className="mx-auto mt-2 grid max-w-md grid-cols-3 gap-2 text-center">
-          <Stat label="Voor" value={userRow.gf} />
-          <Stat label="Tegen" value={userRow.ga} />
-          <Stat label="Saldo" value={(userRow.gd >= 0 ? "+" : "") + userRow.gd} />
+          <Stat label={t("result.goalsFor")} value={userRow.gf} />
+          <Stat label={t("result.goalsAgainst")} value={userRow.ga} />
+          <Stat label={t("result.goalDiff")} value={(userRow.gd >= 0 ? "+" : "") + userRow.gd} />
         </div>
       </div>
 
       {/* Awards */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Award icon="⚽" title="Topscorer" name={awards.topScorer?.name ?? "—"} value={awards.topScorer ? `${awards.topScorer.goals} goals` : ""} />
-        <Award icon="🎯" title="Meeste assists" name={awards.topAssister?.name ?? "—"} value={awards.topAssister ? `${awards.topAssister.assists} assists` : ""} />
-        <Award icon="🧤" title="Golden Glove" name={awards.goalkeeper?.name ?? "—"} value={`${awards.cleanSheets} clean sheets`} />
-        <Award icon="💥" title="Grootste zege" name={awards.biggestWin ? `vs ${awards.biggestWin.opponent}` : "—"} value={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
+        <Award icon="⚽" title={t("result.topScorer")} name={awards.topScorer?.name ?? "—"} value={awards.topScorer ? t("result.goalsCount", { count: awards.topScorer.goals }) : ""} />
+        <Award icon="🎯" title={t("result.topAssister")} name={awards.topAssister?.name ?? "—"} value={awards.topAssister ? t("result.assistsCount", { count: awards.topAssister.assists }) : ""} />
+        <Award icon="🧤" title={t("result.goldenGlove")} name={awards.goalkeeper?.name ?? "—"} value={t("result.cleanSheetsCount", { count: awards.cleanSheets })} />
+        <Award icon="💥" title={t("result.biggestWin")} name={awards.biggestWin ? `vs ${awards.biggestWin.opponent}` : "—"} value={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
       </div>
 
       {/* Achievements */}
       {achievements.length > 0 && (
         <div className="card animate-fade-up p-5">
-          <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Achievements</div>
+          <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("result.achievements")}</div>
           <div className="flex flex-wrap gap-2">
             {achievements.map((a) => (
               <span key={a.id} className="inline-flex items-center gap-1.5 rounded-full bg-amber-50/80 border border-amber-200/60 px-3.5 py-1.5 text-xs font-bold text-amber-800 shadow-sm">
-                {a.icon} {a.label}
+                {a.icon} {t(`achievement.${a.id}.label`)}
               </span>
             ))}
           </div>
@@ -197,11 +199,11 @@ export default function ResultView() {
 
       {!userId && !saved && (
         <button onClick={() => setShowLogin(true)} className="btn-primary w-full text-base">
-          Log in om resultaat op te slaan
+          {t("result.loginToSave")}
         </button>
       )}
       {saved && (
-        <div className="text-center text-xs font-bold text-emerald-600">Resultaat opgeslagen!</div>
+        <div className="text-center text-xs font-bold text-emerald-600">{t("result.resultSaved")}</div>
       )}
 
       <button
@@ -209,15 +211,15 @@ export default function ResultView() {
         disabled={sharing}
         className={`${userId || saved ? "btn-primary" : "btn-secondary"} w-full text-base`}
       >
-        {sharing ? "Kaart maken…" : "Deel je resultaat"}
+        {sharing ? t("result.creatingCard") : t("result.shareYourResult")}
       </button>
 
       <div className="flex gap-2">
         <button onClick={() => setShowTable((v) => !v)} className="btn-secondary flex-1">
-          {showTable ? "Verberg ranglijst" : "Toon ranglijst"}
+          {showTable ? t("result.hideStandings") : t("result.showStandings")}
         </button>
         <button onClick={newGame} className="btn-primary flex-1 text-sm">
-          Speel opnieuw
+          {t("result.playAgain")}
         </button>
       </div>
 
@@ -233,10 +235,10 @@ export default function ResultView() {
               <thead className="bg-slate-50/80 text-slate-400">
                 <tr>
                   <th className="px-3 py-2.5 text-left">#</th>
-                  <th className="px-3 py-2.5 text-left">Team</th>
-                  <th className="px-2 py-2.5 text-right">GS</th>
-                  <th className="px-2 py-2.5 text-right">DS</th>
-                  <th className="px-3 py-2.5 text-right">Ptn</th>
+                  <th className="px-3 py-2.5 text-left">{t("result.team")}</th>
+                  <th className="px-2 py-2.5 text-right">{t("result.playedAbbr")}</th>
+                  <th className="px-2 py-2.5 text-right">{t("result.goalDiffAbbr")}</th>
+                  <th className="px-3 py-2.5 text-right">{t("result.pointsAbbr")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -266,15 +268,15 @@ export default function ResultView() {
         )}
 
         <div className="card overflow-hidden">
-          <div className="px-5 py-3 text-sm font-bold text-slate-700">Spelersstatistieken</div>
+          <div className="px-5 py-3 text-sm font-bold text-slate-700">{t("result.playerStats")}</div>
           <table className="w-full text-xs">
             <thead className="bg-slate-50/80 text-slate-400">
               <tr>
-                <th className="px-3 py-2 text-left">Speler</th>
-                <th className="px-2 py-2 text-left">Pos</th>
-                <th className="px-2 py-2 text-right">G</th>
-                <th className="px-2 py-2 text-right">A</th>
-                <th className="px-3 py-2 text-right">CS</th>
+                <th className="px-3 py-2 text-left">{t("result.player")}</th>
+                <th className="px-2 py-2 text-left">{t("result.pos")}</th>
+                <th className="px-2 py-2 text-right">{t("result.goalsAbbr")}</th>
+                <th className="px-2 py-2 text-right">{t("result.assistsAbbr")}</th>
+                <th className="px-3 py-2 text-right">{t("result.cleanSheetsAbbr")}</th>
               </tr>
             </thead>
             <tbody>
@@ -295,7 +297,7 @@ export default function ResultView() {
       {/* Alle uitslagen */}
       <details className="card">
         <summary className="cursor-pointer px-5 py-3.5 text-sm font-bold text-slate-700">
-          Alle 38 uitslagen
+          {t("result.allResults", { count: 38 })}
         </summary>
         <div className="grid grid-cols-2 gap-1.5 px-4 pb-4 text-[11px] sm:grid-cols-3">
           {matches.map((m, i) => {

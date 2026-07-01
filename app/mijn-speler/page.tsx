@@ -3,14 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { POS_KEYS, POS_LABEL, type PosKey } from "@/lib/positions";
+import { POS_KEYS, posLabel, type PosKey } from "@/lib/positions";
 import { useCustomPlayer, xpProgress, BASE_OVERALL, MAX_OVERALL, EXTRA_POSITION_COST } from "@/lib/customPlayer";
 import { RatingBadge } from "@/components/ui";
 import { LoginPrompt } from "@/components/AuthGate";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { useT } from "@/lib/i18n/core";
 
 export default function MijnSpelerPage() {
+  const t = useT();
   const userId = useAuth((s) => s.userId);
   const authLoading = useAuth((s) => s.loading);
   const [showLogin, setShowLogin] = useState(false);
@@ -20,7 +22,7 @@ export default function MijnSpelerPage() {
     return (
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
-        <div className="flex items-center justify-center py-20 text-sm text-slate-400 font-bold">Laden…</div>
+        <div className="flex items-center justify-center py-20 text-sm text-slate-400 font-bold">{t("common.loading")}</div>
         <Footer />
       </main>
     );
@@ -32,8 +34,8 @@ export default function MijnSpelerPage() {
         <Header backHref="/" />
         <div className="mx-auto max-w-lg px-4 py-20 text-center">
           <div className="text-4xl mb-2">⭐</div>
-          <p className="text-sm text-slate-500 mb-4">Log in om je eigen speler aan te maken.</p>
-          <button onClick={() => setShowLogin(true)} className="btn-primary">Inloggen</button>
+          <p className="text-sm text-slate-500 mb-4">{t("mijnSpeler.loginPrompt")}</p>
+          <button onClick={() => setShowLogin(true)} className="btn-primary">{t("common.login")}</button>
         </div>
         {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}
         <Footer />
@@ -47,24 +49,24 @@ export default function MijnSpelerPage() {
       <div className="mx-auto max-w-lg px-4 py-10">
         <div className="mb-8 text-center">
           <div className="text-4xl mb-2">⭐</div>
-          <h1 className="text-2xl font-black text-slate-800">Mijn Speler</h1>
+          <h1 className="text-2xl font-black text-slate-800">{t("mijnSpeler.title")}</h1>
           <p className="mt-2 text-sm text-slate-500">
-            Jouw eigen profielspeler. Voeg hem als eerste toe aan je opstelling in elke spelmodus en verdien XP door seizoenen te spelen.
+            {t("mijnSpeler.intro")}
           </p>
           <button
             onClick={() => setShowUitleg((v) => !v)}
             className="mt-2 text-xs font-bold text-indigo-500 hover:text-indigo-700 transition"
           >
-            {showUitleg ? "Verberg uitleg ▲" : "Hoe werkt dit? ▼"}
+            {showUitleg ? t("mijnSpeler.hideExplainer") : t("mijnSpeler.showExplainer")}
           </button>
         </div>
         {showUitleg && (
           <div className="mb-6 rounded-2xl bg-indigo-50/80 border border-indigo-100 px-4 py-3 text-sm text-slate-600">
             <ul className="list-disc pl-4 space-y-1.5">
-              <li>Speel seizoenen in elke spelmodus met je speler in de opstelling om XP te verdienen: 1 XP per seizoen, 2 XP als je kampioen wordt.</li>
-              <li>Elke keer dat je een level opgaat, krijg je 1 skillpoint.</li>
-              <li>Besteed skillpoints aan <strong>+1 Overall</strong> (1 punt, tot max {MAX_OVERALL}) of een <strong>extra positie</strong> ({EXTRA_POSITION_COST} punten).</li>
-              <li>Goals, assists en clean sheets die je speler maakt tellen mee in zijn persoonlijke statistieken hieronder.</li>
+              <li>{t("mijnSpeler.explainer1")}</li>
+              <li>{t("mijnSpeler.explainer2")}</li>
+              <li>{t("mijnSpeler.explainer3", { max: MAX_OVERALL, cost: EXTRA_POSITION_COST })}</li>
+              <li>{t("mijnSpeler.explainer4")}</li>
             </ul>
           </div>
         )}
@@ -90,6 +92,7 @@ interface TopSpelerRow {
 }
 
 function TopSpelersRanglijst() {
+  const t = useT();
   const [rows, setRows] = useState<TopSpelerRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -122,25 +125,25 @@ function TopSpelersRanglijst() {
   return (
     <div className="card mt-6 overflow-hidden">
       <div className="px-5 py-3 border-b border-slate-100/60">
-        <span className="text-sm font-bold text-slate-700">⭐ Ranglijst eigen spelers</span>
+        <span className="text-sm font-bold text-slate-700">⭐ {t("mijnSpeler.leaderboardTitle")}</span>
       </div>
       {loading ? (
-        <div className="p-8 text-center text-sm text-slate-400">Laden…</div>
+        <div className="p-8 text-center text-sm text-slate-400">{t("common.loading")}</div>
       ) : rows.length === 0 ? (
-        <div className="p-8 text-center text-sm text-slate-400">Nog geen eigen spelers.</div>
+        <div className="p-8 text-center text-sm text-slate-400">{t("mijnSpeler.noPlayersYet")}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="bg-slate-50/80 text-[10px] uppercase tracking-widest text-slate-400">
               <tr>
                 <th className="px-4 py-3 text-left">#</th>
-                <th className="px-3 py-3 text-left">Account</th>
-                <th className="px-3 py-3 text-left">Speler</th>
-                <th className="px-3 py-3 text-left">Positie</th>
-                <th className="px-3 py-3 text-right">Overall</th>
-                <th className="px-3 py-3 text-right">Seizoenen</th>
-                <th className="px-3 py-3 text-right">Goals</th>
-                <th className="px-3 py-3 text-right">Assists</th>
+                <th className="px-3 py-3 text-left">{t("mijnSpeler.colAccount")}</th>
+                <th className="px-3 py-3 text-left">{t("mijnSpeler.colPlayer")}</th>
+                <th className="px-3 py-3 text-left">{t("mijnSpeler.colPosition")}</th>
+                <th className="px-3 py-3 text-right">{t("mijnSpeler.colOverall")}</th>
+                <th className="px-3 py-3 text-right">{t("mijnSpeler.colSeasons")}</th>
+                <th className="px-3 py-3 text-right">{t("mijnSpeler.colGoals")}</th>
+                <th className="px-3 py-3 text-right">{t("mijnSpeler.colAssists")}</th>
               </tr>
             </thead>
             <tbody>
@@ -154,7 +157,7 @@ function TopSpelersRanglijst() {
                   </td>
                   <td className="px-3 py-3 font-semibold">{r.name}</td>
                   <td className="px-3 py-3 text-slate-500">
-                    {[r.position, ...r.extraPositions].map((p) => POS_LABEL[p]).join(", ")}
+                    {[r.position, ...r.extraPositions].map((p) => posLabel(t, p)).join(", ")}
                   </td>
                   <td className="px-3 py-3 text-right font-black text-indigo-600 tabular-nums">{r.overall}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{r.seasonsPlayed}</td>
@@ -171,6 +174,7 @@ function TopSpelersRanglijst() {
 }
 
 function CustomPlayerCard({ userId }: { userId: string }) {
+  const t = useT();
   const { player, loaded, loading, load, create, rename, spendOnOverall, spendOnPosition } = useCustomPlayer();
   const [name, setName] = useState("");
   const [position, setPosition] = useState<PosKey | null>(null);
@@ -183,22 +187,21 @@ function CustomPlayerCard({ userId }: { userId: string }) {
   }, [userId, loaded, loading, load]);
 
   if (loading || !loaded) {
-    return <div className="p-12 text-center text-sm text-slate-400">Laden…</div>;
+    return <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>;
   }
 
   if (!player) {
     return (
       <div className="card p-5">
-        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Nieuwe speler</div>
+        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("mijnSpeler.newPlayerTitle")}</div>
         <p className="text-sm text-slate-500 mb-3">
-          Maak je eigen speler aan. Hij begint op {BASE_OVERALL} overall en je kunt hem in elke spelmodus als eerste
-          aan je opstelling toevoegen. Speel seizoenen om XP en levels te verdienen.
+          {t("mijnSpeler.newPlayerDesc", { base: BASE_OVERALL })}
         </p>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Naam van je speler"
+          placeholder={t("mijnSpeler.namePlaceholder")}
           maxLength={20}
           className="glass-input w-full !py-2.5 !text-sm mb-3"
         />
@@ -227,7 +230,7 @@ function CustomPlayerCard({ userId }: { userId: string }) {
           }}
           className="btn-primary w-full disabled:opacity-40"
         >
-          {creating ? "Bezig…" : "Maak speler aan"}
+          {creating ? t("common.busy") : t("mijnSpeler.createPlayerBtn")}
         </button>
       </div>
     );
@@ -264,14 +267,14 @@ function CustomPlayerCard({ userId }: { userId: string }) {
               <button
                 onClick={() => { setNameDraft(player.name); setEditingName(true); }}
                 className="shrink-0 text-xs text-slate-400 hover:text-slate-600 transition"
-                title="Naam wijzigen"
+                title={t("mijnSpeler.renameTitle")}
               >
                 ✏️
               </button>
             </div>
           )}
           <div className="text-xs font-bold text-slate-400">
-            Level {player.level} · {[player.position, ...player.extraPositions].map((p) => POS_LABEL[p]).join(", ")}
+            {t("mijnSpeler.levelLine", { level: player.level, positions: [player.position, ...player.extraPositions].map((p) => posLabel(t, p)).join(", ") })}
           </div>
         </div>
       </div>
@@ -279,7 +282,7 @@ function CustomPlayerCard({ userId }: { userId: string }) {
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
           <span>XP</span>
-          <span>{isMaxLevel ? "MAX" : `${progress.current} / ${progress.needed}`}</span>
+          <span>{isMaxLevel ? t("mijnSpeler.maxLevel") : `${progress.current} / ${progress.needed}`}</span>
         </div>
         <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
           <div
@@ -290,15 +293,15 @@ function CustomPlayerCard({ userId }: { userId: string }) {
       </div>
 
       <div className="grid grid-cols-4 gap-1.5 mb-3">
-        <PlayerStatBox label="Seizoenen" value={player.seasonsPlayed} />
-        <PlayerStatBox label="Goals" value={player.totalGoals} />
-        <PlayerStatBox label="Assists" value={player.totalAssists} />
-        <PlayerStatBox label="Clean sheets" value={player.totalCleanSheets} />
+        <PlayerStatBox label={t("mijnSpeler.statSeasons")} value={player.seasonsPlayed} />
+        <PlayerStatBox label={t("mijnSpeler.statGoals")} value={player.totalGoals} />
+        <PlayerStatBox label={t("mijnSpeler.statAssists")} value={player.totalAssists} />
+        <PlayerStatBox label={t("mijnSpeler.statCleanSheets")} value={player.totalCleanSheets} />
       </div>
 
       <div className="rounded-2xl bg-indigo-50/80 border border-indigo-100 px-4 py-3 mb-3">
         <div className="text-sm font-bold text-indigo-700">
-          {player.skillPoints} punt{player.skillPoints !== 1 ? "en" : ""} te besteden
+          {t("mijnSpeler.skillPointsAvailable", { n: player.skillPoints })}
         </div>
       </div>
 
@@ -309,14 +312,14 @@ function CustomPlayerCard({ userId }: { userId: string }) {
           className="flex items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition disabled:opacity-40 disabled:hover:bg-slate-50"
         >
           <span className="text-sm font-bold text-slate-700">
-            {player.overall >= MAX_OVERALL ? "Overall (max bereikt)" : "+1 Overall"}
+            {player.overall >= MAX_OVERALL ? t("mijnSpeler.overallMaxed") : t("mijnSpeler.plusOneOverall")}
           </span>
-          <span className="text-xs font-black text-indigo-600">1 punt</span>
+          <span className="text-xs font-black text-indigo-600">{t("mijnSpeler.onePoint")}</span>
         </button>
 
         {remainingPositions.length > 0 && (
           <div>
-            <div className="text-xs font-bold text-slate-500 mb-1.5 px-1">Extra positie (3 punten)</div>
+            <div className="text-xs font-bold text-slate-500 mb-1.5 px-1">{t("mijnSpeler.extraPositionCost", { cost: EXTRA_POSITION_COST })}</div>
             <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
               {remainingPositions.map((pos) => (
                 <button

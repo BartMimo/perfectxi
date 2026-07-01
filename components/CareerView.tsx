@@ -4,8 +4,10 @@ import { useEffect } from "react";
 import { useCareer, divisionLabel } from "@/lib/career";
 import { useGame } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
+import { useT } from "@/lib/i18n/core";
 
 export function TransferWindow() {
+  const t = useT();
   const career = useCareer();
   const startCareerSeason = useGame((s) => s.startCareerSeason);
   const userId = useAuth((s) => s.userId);
@@ -19,14 +21,16 @@ export function TransferWindow() {
       <div className="animate-pop w-full max-w-md card p-6">
         <div className="text-center mb-4">
           <div className="text-2xl mb-2">🔄</div>
-          <h2 className="text-lg font-black text-slate-800">Transferwindow</h2>
+          <h2 className="text-lg font-black text-slate-800">{t("career.transferWindow")}</h2>
           <p className="text-sm text-slate-500 mt-1">
             {career.wisselCount === 0
-              ? "Deze carrière staat geen transfers toe."
-              : `Kies maximaal ${career.wisselCount} speler${career.wisselCount > 1 ? "s" : ""} om te vervangen. Je draft daarna nieuwe spelers.`}
+              ? t("career.noTransfersAllowed")
+              : career.wisselCount > 1
+                ? t("career.chooseMaxPlayersPlural", { n: career.wisselCount })
+                : t("career.chooseMaxPlayersSingular", { n: career.wisselCount })}
           </p>
           <div className="mt-2 text-xs font-bold text-indigo-600">
-            {divisionLabel(career.currentDivision)} · Seizoen {career.season}
+            {divisionLabel(t, career.currentDivision)} · {t("career.seasonN", { n: career.season })}
           </div>
         </div>
 
@@ -49,7 +53,7 @@ export function TransferWindow() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-black tabular-nums text-slate-600">{p.overall}</span>
-                  {selected && <span className="text-xs font-bold text-rose-500">Weg</span>}
+                  {selected && <span className="text-xs font-bold text-rose-500">{t("career.gone")}</span>}
                 </div>
               </button>
             );
@@ -69,7 +73,11 @@ export function TransferWindow() {
             }}
             className="btn-primary flex-1"
           >
-            {selectedCount === 0 ? "Ga door zonder transfers" : `Vervang ${selectedCount} speler${selectedCount > 1 ? "s" : ""}`}
+            {selectedCount === 0
+              ? t("career.continueWithoutTransfers")
+              : selectedCount > 1
+                ? t("career.replacePlayersPlural", { n: selectedCount })
+                : t("career.replacePlayersSingular", { n: selectedCount })}
           </button>
         </div>
       </div>
@@ -78,6 +86,7 @@ export function TransferWindow() {
 }
 
 export function CareerResultBanner() {
+  const t = useT();
   const career = useCareer();
   const result = useGame((s) => s.result);
   const slots = useGame((s) => s.slots);
@@ -108,25 +117,25 @@ export function CareerResultBanner() {
   return (
     <div className="card p-5 text-center border-2 border-indigo-200/60">
       <div className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-2">
-        {divisionLabel(career.currentDivision)} · Seizoen {career.season}
+        {divisionLabel(t, career.currentDivision)} · {t("career.seasonN", { n: career.season })}
       </div>
       {champion && (
         <div className="text-lg font-black text-amber-700 mb-1">
-          Kampioen! {promoted ? `Promotie naar ${divisionLabel(career.currentDivision - 1)}` : ""}
+          {t("career.championExclaim")} {promoted ? t("career.promotedTo", { division: divisionLabel(t, career.currentDivision - 1) }) : ""}
         </div>
       )}
       {relegated && (
         <div className="text-lg font-black text-rose-600 mb-1">
-          Degradatie naar {divisionLabel(career.currentDivision + 1)}
+          {t("career.relegatedTo", { division: divisionLabel(t, career.currentDivision + 1) })}
         </div>
       )}
       {!champion && !relegated && (
         <div className="text-sm text-slate-500 mb-1">
-          {position}e plaats — je blijft in {divisionLabel(career.currentDivision)}
+          {t("career.finishedPosition", { pos: position, division: divisionLabel(t, career.currentDivision) })}
         </div>
       )}
       <button onClick={handleContinue} className="btn-primary mt-3 w-full text-base">
-        Volgend seizoen
+        {t("career.nextSeason")}
       </button>
     </div>
   );

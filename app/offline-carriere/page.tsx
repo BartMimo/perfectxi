@@ -12,6 +12,7 @@ import { LoginPrompt } from "@/components/AuthGate";
 import CareerTimeline from "@/components/CareerTimeline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useT } from "@/lib/i18n/core";
 
 const REROLL_OPTIONS = [0, 1, 2, 3];
 const WISSEL_OPTIONS = [0, 1, 2, 3, 4];
@@ -26,6 +27,7 @@ function SettingChip({ label, value }: { label: string; value: string }) {
 }
 
 export default function OfflineCarrierePage() {
+  const t = useT();
   const router = useRouter();
   const userId = useAuth((s) => s.userId);
   const authLoading = useAuth((s) => s.loading);
@@ -82,7 +84,7 @@ export default function OfflineCarrierePage() {
     return (
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
-        <div className="flex items-center justify-center py-20 text-sm text-slate-400 font-bold">Laden…</div>
+        <div className="flex items-center justify-center py-20 text-sm text-slate-400 font-bold">{t("common.loading")}</div>
         <Footer />
       </main>
     );
@@ -94,8 +96,8 @@ export default function OfflineCarrierePage() {
         <Header backHref="/" />
         <div className="mx-auto max-w-lg px-4 py-20 text-center">
           <div className="text-4xl mb-2">🏟️</div>
-          <p className="text-sm text-slate-500 mb-4">Log in om een carrière te starten.</p>
-          <button onClick={() => setShowLogin(true)} className="btn-primary">Inloggen</button>
+          <p className="text-sm text-slate-500 mb-4">{t("career.loginToStart")}</p>
+          <button onClick={() => setShowLogin(true)} className="btn-primary">{t("common.login")}</button>
         </div>
         {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}
         <Footer />
@@ -110,19 +112,19 @@ export default function OfflineCarrierePage() {
         <div className="mx-auto max-w-lg px-4 py-10">
           <div className="text-center mb-6">
             <div className="text-4xl mb-2">🏟️</div>
-            <h1 className="text-2xl font-black text-slate-800">Offline Carrière</h1>
+            <h1 className="text-2xl font-black text-slate-800">{t("career.offlineTitle")}</h1>
           </div>
 
           <div className="card p-5 border-2 border-indigo-200/60 bg-gradient-to-br from-indigo-50/80 to-purple-50/50 mb-4">
             <div className="flex flex-wrap items-center gap-2 text-sm mb-3">
               <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-indigo-800">
-                {divisionLabel(career.currentDivision)}
+                {divisionLabel(t, career.currentDivision)}
               </span>
               <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-slate-700">
-                Seizoen {career.season}
+                {t("career.seasonN", { n: career.season })}
               </span>
               <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-amber-700">
-                {career.championships}x kampioen
+                {t("career.timesChampion", { n: career.championships })}
               </span>
             </div>
 
@@ -133,10 +135,10 @@ export default function OfflineCarrierePage() {
             )}
 
             <div className="grid grid-cols-4 gap-1.5">
-              <SettingChip label="Formatie" value={FORMATIONS.find((f) => f.key === career.formationKey)?.label ?? career.formationKey} />
-              <SettingChip label="Rerolls" value={String(career.rerollCount)} />
-              <SettingChip label="Wissels" value={String(career.wisselCount)} />
-              <SettingChip label="Competities" value={career.leagues.length === 0 ? "Alle 7" : `${career.leagues.length}/7`} />
+              <SettingChip label={t("career.formation")} value={FORMATIONS.find((f) => f.key === career.formationKey)?.label ?? career.formationKey} />
+              <SettingChip label={t("career.rerolls")} value={String(career.rerollCount)} />
+              <SettingChip label={t("career.substitutions")} value={String(career.wisselCount)} />
+              <SettingChip label={t("career.competitions")} value={career.leagues.length === 0 ? t("career.allSeven") : `${career.leagues.length}/7`} />
             </div>
           </div>
 
@@ -146,13 +148,13 @@ export default function OfflineCarrierePage() {
               onClick={playSeason}
               className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
             >
-              {loaded ? `Speel seizoen ${career.season}` : "Laden…"}
+              {loaded ? t("career.playSeasonN", { n: career.season }) : t("common.loading")}
             </button>
             <button
               onClick={() => userId && career.endCareer(userId)}
               className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition"
             >
-              Stop
+              {t("career.stop")}
             </button>
           </div>
         </div>
@@ -167,15 +169,15 @@ export default function OfflineCarrierePage() {
       <div className="mx-auto max-w-lg px-4 py-10">
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">🏟️</div>
-          <h1 className="text-2xl font-black text-slate-800">Offline Carrière</h1>
+          <h1 className="text-2xl font-black text-slate-800">{t("career.offlineTitle")}</h1>
           <p className="mt-2 text-sm text-slate-500">
-            Begin in Divisie 10 en werk je omhoog naar Divisie 1. Word kampioen om te promoveren, eindig onderaan en je degradeert.
+            {t("career.offlineIntro")}
           </p>
         </div>
 
         <div className="card p-6">
           <div className="mb-3.5">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Formatie</div>
+            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.formation")}</div>
             <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
               {FORMATIONS.map((fm) => (
                 <button
@@ -194,7 +196,7 @@ export default function OfflineCarrierePage() {
           </div>
 
           <div className="mb-3.5">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Rerolls per seizoen</div>
+            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.rerollsPerSeason")}</div>
             <div className="flex gap-1.5">
               {REROLL_OPTIONS.map((n) => (
                 <button
@@ -213,7 +215,7 @@ export default function OfflineCarrierePage() {
           </div>
 
           <div className="mb-3.5">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Wissels per seizoen</div>
+            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.substitutionsPerSeason")}</div>
             <div className="flex gap-1.5">
               {WISSEL_OPTIONS.map((n) => (
                 <button
@@ -232,7 +234,7 @@ export default function OfflineCarrierePage() {
           </div>
 
           <div className="mb-4">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Competities</div>
+            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.competitions")}</div>
             <div className="grid grid-cols-2 gap-1.5">
               {LEAGUES.map((l) => {
                 const active = selectedLeagues.includes(l.code);
@@ -259,7 +261,7 @@ export default function OfflineCarrierePage() {
             onClick={handleStart}
             className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
           >
-            {loaded ? "Start carrière" : "Laden…"}
+            {loaded ? t("career.startCareer") : t("common.loading")}
           </button>
         </div>
       </div>

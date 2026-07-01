@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "@/lib/store";
 import type { ClubSeasonLite } from "@/lib/types";
 import { shortSeason } from "./ui";
+import { useT } from "@/lib/i18n/core";
 
 const STRIDE = 140;
 const STRIP_LEN = 44;
 const WINNER_INDEX = 37;
 
 export default function ReelView() {
+  const t = useT();
   const index = useGame((s) => s.index);
   const leagueCode = useGame((s) => s.leagueCode);
   const spinning = useGame((s) => s.spinning);
@@ -115,7 +117,7 @@ export default function ReelView() {
               </div>
               <div className="text-[11px] text-slate-400">{c.season}</div>
               {!ratingsHidden && (
-                <div className="text-[9px] text-slate-400/70">rating {c.teamRating}</div>
+                <div className="text-[9px] text-slate-400/70">{t("result.ratingValue", { rating: c.teamRating })}</div>
               )}
             </div>
           ))}
@@ -128,7 +130,7 @@ export default function ReelView() {
           onClick={doSpin}
           className="btn-primary w-full text-lg"
         >
-          {spinning ? "Draaien…" : "Draai het rad"}
+          {spinning ? t("result.spinning") : t("result.spinTheWheel")}
         </button>
       )}
     </div>

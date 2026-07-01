@@ -7,6 +7,7 @@ import { ALL_ACHIEVEMENTS } from "@/lib/achievements";
 import { LEAGUES } from "@/lib/leagues";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
+import { useT } from "@/lib/i18n/core";
 
 interface Stats {
   games: number;
@@ -23,6 +24,7 @@ interface Stats {
 }
 
 export default function PublicProfilePage() {
+  const t = useT();
   const params = useParams();
   const profileUsername = params.username as string;
   const decoded = decodeURIComponent(profileUsername);
@@ -138,8 +140,8 @@ export default function PublicProfilePage() {
         <Header backHref="/ranglijst" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
           <div className="text-4xl mb-4">😕</div>
-          <h1 className="text-xl font-black text-slate-800 mb-2">Speler niet gevonden</h1>
-          <p className="text-sm text-slate-500">Gebruiker &quot;{decoded}&quot; bestaat niet.</p>
+          <h1 className="text-xl font-black text-slate-800 mb-2">{t("profiel.playerNotFound")}</h1>
+          <p className="text-sm text-slate-500">{t("profiel.userDoesNotExist", { username: decoded })}</p>
         </div>
         <Footer />
       </main>
@@ -156,31 +158,31 @@ export default function PublicProfilePage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-slate-400">Laden…</div>
+          <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
         ) : !stats ? (
           <div className="card p-12 text-center">
             <div className="text-3xl mb-3">🏟️</div>
-            <div className="text-sm text-slate-400">Nog geen seizoenen gespeeld.</div>
+            <div className="text-sm text-slate-400">{t("profiel.noSeasons")}</div>
           </div>
         ) : (
           <>
             <div className="card p-5 mb-4">
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Statistieken</div>
+              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{t("profiel.stats")}</div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatBox label="Gespeeld" value={stats.games} />
-                <StatBox label="Kampioen" value={`${stats.champions}x`} accent />
-                <StatBox label="Meeste punten" value={stats.bestPoints} />
-                <StatBox label="Meeste goals" value={stats.bestGf} />
-                <StatBox label="Minste tegen" value={stats.leastGa === 9999 ? "—" : stats.leastGa} />
-                <StatBox label="Beste rating" value={stats.bestRating.toFixed(1)} />
-                <StatBox label="Daily wins" value={stats.dailyWins} accent />
+                <StatBox label={t("profiel.stat.played")} value={stats.games} />
+                <StatBox label={t("profiel.stat.champion")} value={t("profiel.stat.champion.value", { n: stats.champions })} accent />
+                <StatBox label={t("profiel.stat.mostPoints")} value={stats.bestPoints} />
+                <StatBox label={t("profiel.stat.mostGoals")} value={stats.bestGf} />
+                <StatBox label={t("profiel.stat.leastConceded")} value={stats.leastGa === 9999 ? "—" : stats.leastGa} />
+                <StatBox label={t("profiel.stat.bestRating")} value={stats.bestRating.toFixed(1)} />
+                <StatBox label={t("profiel.stat.dailyWins")} value={stats.dailyWins} accent />
               </div>
             </div>
 
             <div className="card p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">Achievements</div>
-                <span className="text-xs font-bold text-emerald-600">{stats.unlockedAchievements.size} / {ALL_ACHIEVEMENTS.length}</span>
+                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("profiel.achievements")}</div>
+                <span className="text-xs font-bold text-emerald-600">{t("profiel.achievementsCount", { unlocked: stats.unlockedAchievements.size, total: ALL_ACHIEVEMENTS.length })}</span>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ALL_ACHIEVEMENTS.map((a) => {
@@ -203,9 +205,9 @@ export default function PublicProfilePage() {
                       <span className="text-xl">{a.icon}</span>
                       <div className="min-w-0">
                         <span className={`text-sm font-bold ${unlocked ? "text-amber-800" : "text-slate-400"}`}>
-                          {a.label}
+                          {t(`achievement.${a.id}.label`)}
                         </span>
-                        <div className="text-[11px] text-slate-500">{a.description}</div>
+                        <div className="text-[11px] text-slate-500">{t(`achievement.${a.id}.description`)}</div>
                       </div>
                     </div>
                   );

@@ -40,22 +40,9 @@ export const POS_BAND: Record<PosKey, Band> = {
   ST: "ATT",
 };
 
-export const POS_LABEL: Record<PosKey, string> = {
-  GK: "Keeper",
-  LB: "Linksback",
-  CB: "Centrale verdediger",
-  RB: "Rechtsback",
-  LWB: "Linker wingback",
-  RWB: "Rechter wingback",
-  CDM: "Verdedigende mid",
-  CM: "Centrale mid",
-  LM: "Linkshalf",
-  RM: "Rechtshalf",
-  CAM: "Aanvallende mid",
-  LW: "Linksbuiten",
-  RW: "Rechtsbuiten",
-  ST: "Spits",
-};
+export function posLabel(t: (key: string) => string, pos: PosKey): string {
+  return t(`position.${pos}`);
+}
 
 /**
  * Welke posities kan een speler spelen op basis van zijn gedetailleerde
@@ -100,9 +87,6 @@ export function canPlayerPlay(p: Pick<Player, "pos" | "sub" | "customPositions">
   return eligibleSlots(p).includes(pos);
 }
 
-export const BAND_LABEL: Record<Band, string> = {
-  GK: "Keeper",
-  DEF: "Verdediging",
-  MID: "Middenveld",
-  ATT: "Aanval",
-};
+export function bandLabel(t: (key: string) => string, band: Band): string {
+  return t(`position.band.${band}`);
+}
