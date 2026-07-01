@@ -22,11 +22,13 @@ export default function ReelView() {
   const ratingsHidden = difficulty === "hard";
 
   const gameMode = useGame((s) => s.gameMode);
+  const allowedLeagues = useGame((s) => s.allowedLeagues);
 
-  const pool = useMemo(
-    () => gameMode === "career" ? index : index.filter((c) => c.leagueCode === leagueCode),
-    [index, leagueCode, gameMode],
-  );
+  const pool = useMemo(() => {
+    if (gameMode !== "career") return index.filter((c) => c.leagueCode === leagueCode);
+    if (allowedLeagues.length === 0) return index;
+    return index.filter((c) => allowedLeagues.includes(c.leagueCode));
+  }, [index, leagueCode, gameMode, allowedLeagues]);
 
   const trackRef = useRef<HTMLDivElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);

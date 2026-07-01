@@ -8,6 +8,10 @@ CREATE TABLE online_careers (
   status text NOT NULL DEFAULT 'waiting', -- waiting, drafting, simulating, finished
   current_season int NOT NULL DEFAULT 1,
   max_players int NOT NULL DEFAULT 20,
+  reroll_count int NOT NULL DEFAULT 1,
+  wissel_count int NOT NULL DEFAULT 2,
+  leagues jsonb NOT NULL DEFAULT '[]'::jsonb, -- lege array = alle competities
+  same_formation boolean NOT NULL DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
@@ -24,6 +28,7 @@ CREATE TABLE online_career_players (
   championships int NOT NULL DEFAULT 0,
   ready boolean NOT NULL DEFAULT false,
   is_bot boolean NOT NULL DEFAULT false,
+  formation_key text,
   joined_at timestamptz DEFAULT now(),
   UNIQUE(career_id, user_id)
 );
@@ -57,3 +62,13 @@ ALTER PUBLICATION supabase_realtime ADD TABLE online_career_players;
 -- ALTER TABLE online_career_players ADD COLUMN acknowledged boolean NOT NULL DEFAULT false;
 -- ALTER TABLE online_career_players ADD COLUMN pending boolean NOT NULL DEFAULT false;
 -- CREATE POLICY "Anyone can delete online careers" ON online_careers FOR DELETE USING (true);
+
+-- Formatie moet bevestigd worden voordat de lobby kan starten
+-- ALTER TABLE online_career_players ADD COLUMN formation_confirmed boolean NOT NULL DEFAULT false;
+
+-- Lobby-instellingen: rerolls, wissels, competities, gedeelde formatie
+-- ALTER TABLE online_careers ADD COLUMN reroll_count int NOT NULL DEFAULT 1;
+-- ALTER TABLE online_careers ADD COLUMN wissel_count int NOT NULL DEFAULT 2;
+-- ALTER TABLE online_careers ADD COLUMN leagues jsonb NOT NULL DEFAULT '[]'::jsonb;
+-- ALTER TABLE online_careers ADD COLUMN same_formation boolean NOT NULL DEFAULT false;
+-- ALTER TABLE online_career_players ADD COLUMN formation_key text;

@@ -153,7 +153,7 @@ function PlayerCard({ p, isMe, isOwner, onKick, onViewSquad, onAccept, onReject 
               {lastSeason.position}e
             </span>
           )}
-          {onViewSquad && p.squad.length > 0 && !isMe && (
+          {onViewSquad && p.squad.length > 0 && (
             <button
               onClick={() => onViewSquad(p)}
               className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-xs text-indigo-500 hover:bg-indigo-100 transition"
@@ -261,8 +261,17 @@ function WaitingForOthers({ lobby, userId, title }: { lobby: OnlineCareer; userI
   );
 }
 
+function SettingChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-center">
+      <div className="text-sm font-black text-slate-700">{value}</div>
+      <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{label}</div>
+    </div>
+  );
+}
+
 function WaitingRoom() {
-  const { lobby, startDraft, leaveLobby, archiveLobby, kickPlayer, acceptPlayer, rejectPlayer, updateLobbyName } = useOnlineCareer();
+  const { lobby, startDraft, leaveLobby, archiveLobby, kickPlayer, acceptPlayer, rejectPlayer, updateLobbyName, confirmFormation } = useOnlineCareer();
   const userId = useAuth((s) => s.userId);
   const formationKey = useGame((s) => s.formationKey);
   const setFormation = useGame((s) => s.setFormation);
@@ -271,10 +280,18 @@ function WaitingRoom() {
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
 
+  const isOwner = lobby?.owner_id === userId;
+  const ownerPlayer = lobby?.players.find((p) => p.user_id === lobby.owner_id);
+  const lockedFormation = lobby?.same_formation && !isOwner ? ownerPlayer?.formation_key ?? null : null;
+
+  useEffect(() => {
+    if (lockedFormation && formationKey !== lockedFormation) setFormation(lockedFormation);
+  }, [lockedFormation]);
+
   if (!lobby) return null;
-  const isOwner = lobby.owner_id === userId;
   const me = lobby.players.find((p) => p.user_id === userId);
   const isPending = me?.pending;
+  const isFormationConfirmed = me?.formation_confirmed ?? false;
 
   const copyCode = () => {
     navigator.clipboard.writeText(lobby.code);
@@ -345,13 +362,20 @@ function WaitingRoom() {
         </span>
       </div>
 
+      <div className="mb-5 grid grid-cols-4 gap-1.5">
+        <SettingChip label="Rerolls" value={String(lobby.reroll_count)} />
+        <SettingChip label="Wissels" value={String(lobby.wissel_count)} />
+        <SettingChip label="Competities" value={lobby.leagues.length === 0 ? "Alle 7" : `${lobby.leagues.length}/7`} />
+        <SettingChip label="Formatie" value={lobby.same_formation ? "Gelijk" : "Vrij"} />
+      </div>
+
       <div className="mb-5">
         <div className="flex items-center justify-between mb-2 px-1">
           <span className="text-xs font-black uppercase tracking-widest text-slate-400">Spelers</span>
           <span className="text-xs font-bold text-slate-400">{activePlayers.length}/20</span>
         </div>
         <PlayerList
-          players={lobby.players}
+          players={lobby.players.map((p) => (p.pending || p.is_bot ? p : { ...p, ready: p.formation_confirmed }))}
           currentUserId={userId}
           ownerId={lobby.owner_id}
           onKick={kickPlayer}
@@ -362,13 +386,26 @@ function WaitingRoom() {
 
       {!isPending && (
         <div className="mb-5">
-          <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-2 px-1">Jouw formatie</div>
-          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-black uppercase tracking-widest text-slate-400">
+              {lobby.same_formation && !isOwner ? "Formatie (bepaald door host)" : "Jouw formatie"}
+            </span>
+            {isFormationConfirmed && (
+              <button
+                onClick={() => userId && confirmFormation(userId, formationKey, false)}
+                className="text-[10px] font-bold text-indigo-500 hover:text-indigo-700 transition"
+              >
+                Wijzig
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6 mb-2.5">
             {FORMATIONS.map((fm) => (
               <button
                 key={fm.key}
+                disabled={isFormationConfirmed || (lobby.same_formation && !isOwner)}
                 onClick={() => setFormation(fm.key)}
-                className={`rounded-xl border-2 px-1.5 py-2 text-xs font-bold transition-all ${
+                className={`rounded-xl border-2 px-1.5 py-2 text-xs font-bold transition-all disabled:opacity-50 ${
                   formationKey === fm.key
                     ? "border-indigo-400 bg-indigo-50 text-indigo-700 shadow-sm"
                     : "border-transparent bg-white/60 text-slate-500 hover:bg-white/80"
@@ -378,6 +415,22 @@ function WaitingRoom() {
               </button>
             ))}
           </div>
+          {isFormationConfirmed ? (
+            <div className="rounded-xl bg-emerald-50 border-2 border-emerald-200 px-4 py-2.5 text-center text-sm font-bold text-emerald-700">
+              ✓ Formatie bevestigd
+            </div>
+          ) : lobby.same_formation && !isOwner && !lockedFormation ? (
+            <div className="rounded-xl bg-slate-50 border-2 border-slate-200 px-4 py-2.5 text-center text-sm font-bold text-slate-400">
+              Wacht tot de host een formatie kiest…
+            </div>
+          ) : (
+            <button
+              onClick={() => userId && confirmFormation(userId, formationKey, true)}
+              className="w-full rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-indigo-600 transition"
+            >
+              Bevestig formatie
+            </button>
+          )}
         </div>
       )}
 
@@ -385,11 +438,15 @@ function WaitingRoom() {
         <div className="flex gap-2">
           {isOwner ? (
             <button
-              disabled={activePlayers.length < 2}
+              disabled={activePlayers.length < 2 || !activePlayers.every((p) => p.formation_confirmed && (!lobby.same_formation || p.formation_key === ownerPlayer?.formation_key))}
               onClick={startDraft}
               className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
             >
-              {activePlayers.length < 2 ? "Wacht op spelers…" : "Start het spel!"}
+              {activePlayers.length < 2
+                ? "Wacht op spelers…"
+                : !activePlayers.every((p) => p.formation_confirmed && (!lobby.same_formation || p.formation_key === ownerPlayer?.formation_key))
+                  ? "Wacht tot iedereen de formatie bevestigt…"
+                  : "Start het spel!"}
             </button>
           ) : (
             <div className="flex-1 rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
@@ -475,11 +532,12 @@ function DraftBoard({ lobby, me, onSubmit }: { lobby: OnlineCareer; me: OnlinePl
   );
 }
 
-function TransferWindow({ squad, division, season, disabled, onConfirm }: {
+function TransferWindow({ squad, division, season, disabled, maxReplace, onConfirm }: {
   squad: DraftedPlayer[];
   division: number;
   season: number;
   disabled: boolean;
+  maxReplace: number;
   onConfirm: (remaining: DraftedPlayer[]) => void;
 }) {
   const [toReplace, setToReplace] = useState<Set<string>>(new Set());
@@ -487,7 +545,7 @@ function TransferWindow({ squad, division, season, disabled, onConfirm }: {
   const toggle = (name: string) => {
     const next = new Set(toReplace);
     if (next.has(name)) next.delete(name);
-    else if (next.size < 2) next.add(name);
+    else if (next.size < maxReplace) next.add(name);
     setToReplace(next);
   };
 
@@ -497,7 +555,9 @@ function TransferWindow({ squad, division, season, disabled, onConfirm }: {
         <div className="text-center mb-4">
           <div className="text-2xl mb-2">🔄</div>
           <h2 className="text-lg font-black text-slate-800">Transferwindow</h2>
-          <p className="text-sm text-slate-500 mt-1">Kies maximaal 2 spelers om te vervangen.</p>
+          <p className="text-sm text-slate-500 mt-1">
+            {maxReplace === 0 ? "Deze lobby staat geen transfers toe." : `Kies maximaal ${maxReplace} speler${maxReplace > 1 ? "s" : ""} om te vervangen.`}
+          </p>
           <div className="mt-2 text-xs font-bold text-indigo-600">
             {divisionLabel(division)} · Seizoen {season}
           </div>
@@ -557,7 +617,7 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
   useEffect(() => {
     if (step === "draft" && !initRef.current && loaded) {
       initRef.current = true;
-      startCareerSeason(me.current_division, me.squad.length > 0 ? me.squad : undefined);
+      startCareerSeason(me.current_division, me.squad.length > 0 ? me.squad : undefined, lobby.reroll_count, lobby.leagues);
     }
   }, [step, loaded]);
 
@@ -576,9 +636,10 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
         division={me.current_division}
         season={lobby.current_season}
         disabled={!loaded}
+        maxReplace={lobby.wissel_count}
         onConfirm={(remaining) => {
           initRef.current = true;
-          startCareerSeason(me.current_division, remaining);
+          startCareerSeason(me.current_division, remaining, lobby.reroll_count, lobby.leagues);
           setStep("draft");
         }}
       />

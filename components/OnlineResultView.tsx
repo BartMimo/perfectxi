@@ -8,6 +8,7 @@ import { divisionLabel } from "@/lib/career";
 import { QUALIFICATION_LABELS } from "@/lib/sim";
 import { saveResult } from "@/lib/saveResult";
 import SquadViewModal from "@/components/SquadViewModal";
+import CareerTimeline from "@/components/CareerTimeline";
 
 export default function OnlineResultView() {
   const result = useGame((s) => s.result);
@@ -123,6 +124,11 @@ export default function OnlineResultView() {
         </div>
       </div>
 
+      {/* Career timeline */}
+      {me.history.length > 0 && (
+        <CareerTimeline history={me.history} currentDivision={me.current_division} currentSeason={lobby.current_season + 1} />
+      )}
+
       {/* Game winner */}
       {div1Winner && (
         <div className="card p-6 text-center border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
@@ -193,7 +199,7 @@ export default function OnlineResultView() {
                         {lastSeason.position}e
                       </span>
                     )}
-                    {p.squad.length > 0 && !isMe && (
+                    {p.squad.length > 0 && (
                       <button
                         onClick={() => setViewSquadPlayer(p)}
                         className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-xs text-indigo-500 hover:bg-indigo-100 transition"

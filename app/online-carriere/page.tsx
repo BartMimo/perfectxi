@@ -5,9 +5,13 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useOnlineCareer } from "@/lib/onlineCareer";
 import { divisionLabel } from "@/lib/career";
+import { LEAGUES } from "@/lib/leagues";
 import { LoginPrompt } from "@/components/AuthGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+
+const REROLL_OPTIONS = [0, 1, 2, 3];
+const WISSEL_OPTIONS = [0, 1, 2, 3, 4];
 
 const STATUS_LABELS: Record<string, string> = {
   waiting: "Wachtkamer",
@@ -25,14 +29,33 @@ export default function OnlineCarrierePage() {
   const [joinCode, setJoinCode] = useState("");
   const [lobbyName, setLobbyName] = useState("");
   const [showLogin, setShowLogin] = useState(false);
+  const [rerollCount, setRerollCount] = useState(1);
+  const [wisselCount, setWisselCount] = useState(2);
+  const [selectedLeagues, setSelectedLeagues] = useState<string[]>(LEAGUES.map((l) => l.code));
+  const [sameFormation, setSameFormation] = useState(false);
 
   useEffect(() => {
     if (userId) loadMyLobbies(userId);
   }, [userId]);
 
+  const toggleLeague = (code: string) => {
+    setSelectedLeagues((prev) => {
+      if (prev.includes(code)) {
+        if (prev.length === 1) return prev; // minstens 1 competitie
+        return prev.filter((c) => c !== code);
+      }
+      return [...prev, code];
+    });
+  };
+
   const handleCreate = async () => {
     if (!userId || !username) return;
-    const code = await createLobby(userId, username, teamName, lobbyName);
+    const code = await createLobby(userId, username, teamName, lobbyName, {
+      rerollCount,
+      wisselCount,
+      leagues: selectedLeagues.length === LEAGUES.length ? [] : selectedLeagues,
+      sameFormation,
+    });
     if (code) router.push(`/online-carriere/${code}`);
   };
 
@@ -111,6 +134,80 @@ export default function OnlineCarrierePage() {
               <p className="text-sm text-slate-500 mb-4">
                 Maak een lobby aan en deel de code met je vrienden (max 20 spelers).
               </p>
+
+              <div className="mb-3.5">
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Rerolls per speler</div>
+                <div className="flex gap-1.5">
+                  {REROLL_OPTIONS.map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setRerollCount(n)}
+                      className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold transition-all ${
+                        rerollCount === n
+                          ? "border-indigo-400 bg-indigo-50 text-indigo-700"
+                          : "border-transparent bg-slate-50 text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-3.5">
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Wissels per ronde</div>
+                <div className="flex gap-1.5">
+                  {WISSEL_OPTIONS.map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setWisselCount(n)}
+                      className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold transition-all ${
+                        wisselCount === n
+                          ? "border-indigo-400 bg-indigo-50 text-indigo-700"
+                          : "border-transparent bg-slate-50 text-slate-500 hover:bg-slate-100"
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-3.5">
+                <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">Competities</div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {LEAGUES.map((l) => {
+                    const active = selectedLeagues.includes(l.code);
+                    return (
+                      <button
+                        key={l.code}
+                        onClick={() => toggleLeague(l.code)}
+                        className={`flex items-center gap-1.5 rounded-xl border-2 px-2.5 py-2 text-xs font-bold transition-all ${
+                          active
+                            ? "border-indigo-400 bg-indigo-50 text-indigo-700"
+                            : "border-transparent bg-slate-50 text-slate-400 hover:bg-slate-100"
+                        }`}
+                      >
+                        <span>{l.flag}</span>
+                        <span className="truncate">{l.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setSameFormation((v) => !v)}
+                className="mb-4 flex w-full items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition"
+              >
+                <span className="text-sm font-bold text-slate-600">Iedereen dezelfde formatie</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-black ${
+                  sameFormation ? "bg-indigo-500 text-white" : "bg-white text-slate-400 border border-slate-200"
+                }`}>
+                  {sameFormation ? "Aan" : "Uit"}
+                </span>
+              </button>
+
               <button
                 disabled={loading}
                 onClick={handleCreate}

@@ -166,6 +166,7 @@ interface GameState {
   selectedSlotId: string | null;
   pendingPlayer: Player | null; // gekozen speler die nog op een positie geplaatst moet worden
   rerollsLeft: number;
+  allowedLeagues: string[]; // leeg = alle competities toegestaan
 
   result: SimResult | null;
   gameMode: GameMode;
@@ -178,7 +179,7 @@ interface GameState {
   setRatingMode: (mode: RatingMode) => void;
   setDifficulty: (d: Difficulty) => void;
   startGame: () => void;
-  startCareerSeason: (division: number, existingSquad?: DraftedPlayer[]) => void;
+  startCareerSeason: (division: number, existingSquad?: DraftedPlayer[], rerolls?: number, allowedLeagues?: string[]) => void;
   startChallenge: (leagueCode: string, formationKey: string, ratingMode: RatingMode, difficulty: Difficulty, week: string) => void;
   beginSpin: () => void;
   prefetchSquad: (id: string) => void;
@@ -215,6 +216,7 @@ export const useGame = create<GameState>((set, get) => ({
   selectedSlotId: null,
   pendingPlayer: null,
   rerollsLeft: 1,
+  allowedLeagues: [],
   result: null,
   clResult: null,
   gameMode: "league" as GameMode,
@@ -247,7 +249,7 @@ export const useGame = create<GameState>((set, get) => ({
     });
   },
 
-  startCareerSeason: (division: number, existingSquad?: DraftedPlayer[]) => {
+  startCareerSeason: (division: number, existingSquad?: DraftedPlayer[], rerolls = 1, allowedLeagues = []) => {
     const { formationKey, index } = get();
     const newSlots = buildSlots(formationKey);
 
@@ -278,7 +280,8 @@ export const useGame = create<GameState>((set, get) => ({
       result: null,
       selectedSlotId: null,
       pendingPlayer: null,
-      rerollsLeft: 1,
+      rerollsLeft: rerolls,
+      allowedLeagues,
       isChallenge: false,
       challengeWeek: null,
       error: null,

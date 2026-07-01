@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useCareer, divisionLabel } from "@/lib/career";
 import { useGame } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
+import CareerTimeline from "./CareerTimeline";
 
 export function CareerStartCard() {
   const career = useCareer();
@@ -36,16 +37,8 @@ export function CareerStartCard() {
           </span>
         </div>
         {career.history.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-1.5">
-            {career.history.slice(-5).map((h, i) => (
-              <span key={i} className={`rounded-lg px-2 py-1 text-[10px] font-bold ${
-                h.position === 1 ? "bg-amber-100 text-amber-800" :
-                h.position >= 18 ? "bg-rose-100 text-rose-700" :
-                "bg-slate-100 text-slate-600"
-              }`}>
-                D{h.division}: {h.position}e ({h.points}p)
-              </span>
-            ))}
+          <div className="mb-3">
+            <CareerTimeline history={career.history} currentDivision={career.currentDivision} currentSeason={career.season} />
           </div>
         )}
         <div className="flex gap-2">

@@ -18,6 +18,8 @@ export interface OnlinePlayer {
   is_bot: boolean;
   acknowledged: boolean;
   pending: boolean;
+  formation_confirmed: boolean;
+  formation_key: string | null;
 }
 
 export interface OnlineCareer {
@@ -28,7 +30,18 @@ export interface OnlineCareer {
   status: "waiting" | "drafting" | "simulating" | "finished";
   current_season: number;
   max_players: number;
+  reroll_count: number;
+  wissel_count: number;
+  leagues: string[];
+  same_formation: boolean;
   players: OnlinePlayer[];
+}
+
+export interface LobbySettings {
+  rerollCount: number;
+  wisselCount: number;
+  leagues: string[];
+  sameFormation: boolean;
 }
 
 export interface MyLobbyInfo {
@@ -49,7 +62,7 @@ interface OnlineCareerState {
   pollInterval: ReturnType<typeof setInterval> | null;
 
   loadMyLobbies: (userId: string) => Promise<void>;
-  createLobby: (userId: string, username: string, teamName: string | null, lobbyName?: string) => Promise<string | null>;
+  createLobby: (userId: string, username: string, teamName: string | null, lobbyName: string | undefined, settings: LobbySettings) => Promise<string | null>;
   joinLobby: (code: string, userId: string, username: string, teamName: string | null) => Promise<boolean>;
   loadLobby: (code: string) => Promise<void>;
   leaveLobby: (userId: string) => Promise<void>;
@@ -62,6 +75,7 @@ interface OnlineCareerState {
   kickPlayer: (userId: string) => Promise<void>;
   acceptPlayer: (userId: string) => Promise<void>;
   rejectPlayer: (userId: string) => Promise<void>;
+  confirmFormation: (userId: string, formationKey: string, confirmed: boolean) => Promise<void>;
   startDraft: () => Promise<void>;
   setReady: (userId: string, ready: boolean) => Promise<void>;
   saveSquad: (userId: string, squad: DraftedPlayer[]) => Promise<void>;
@@ -99,6 +113,8 @@ async function fetchPlayers(careerId: string): Promise<OnlinePlayer[]> {
     is_bot: p.is_bot as boolean,
     acknowledged: (p.acknowledged as boolean) ?? false,
     pending: (p.pending as boolean) ?? false,
+    formation_confirmed: (p.formation_confirmed as boolean) ?? false,
+    formation_key: (p.formation_key as string | null) ?? null,
   }));
 }
 
@@ -157,7 +173,7 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     set({ myLobbies: lobbies });
   },
 
-  createLobby: async (userId, username, teamName, lobbyName) => {
+  createLobby: async (userId, username, teamName, lobbyName, settings) => {
     set({ loading: true, error: null });
     const code = generateCode();
 
@@ -169,6 +185,10 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         status: "waiting",
         current_season: 1,
         lobby_name: lobbyName?.trim() || null,
+        reroll_count: settings.rerollCount,
+        wissel_count: settings.wisselCount,
+        leagues: settings.leagues,
+        same_formation: settings.sameFormation,
       })
       .select()
       .single();
@@ -196,6 +216,10 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
         status: career.status,
         current_season: career.current_season,
         max_players: career.max_players,
+        reroll_count: career.reroll_count,
+        wissel_count: career.wissel_count,
+        leagues: career.leagues ?? [],
+        same_formation: career.same_formation,
         players,
       },
       loading: false,
@@ -411,6 +435,16 @@ export const useOnlineCareer = create<OnlineCareerState>((set, get) => ({
     await supabase
       .from("online_career_players")
       .delete()
+      .eq("career_id", lobby.id)
+      .eq("user_id", userId);
+  },
+
+  confirmFormation: async (userId, formationKey, confirmed) => {
+    const { lobby } = get();
+    if (!lobby) return;
+    await supabase
+      .from("online_career_players")
+      .update({ formation_key: formationKey, formation_confirmed: confirmed })
       .eq("career_id", lobby.id)
       .eq("user_id", userId);
   },
