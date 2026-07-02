@@ -447,7 +447,7 @@ function WaitingRoom() {
             <button
               disabled={activePlayers.length < 2 || !activePlayers.every((p) => p.formation_confirmed && (!lobby.same_formation || p.formation_key === ownerPlayer?.formation_key))}
               onClick={startDraft}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+              className="flex-1 rounded-full bg-indigo-500 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
             >
               {activePlayers.length < 2
                 ? t("onlineCarriere.waitingForPlayers")

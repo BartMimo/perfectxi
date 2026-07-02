@@ -61,11 +61,17 @@ export interface TableRow {
   points: number;
 }
 
+export interface GoalEvent {
+  name: string;
+  minute: number;
+}
+
 export interface MatchResult {
   opponent: string;
   home: boolean;
   gf: number;
   ga: number;
+  goals?: GoalEvent[]; // doelpuntenmakers van de user (alleen bij user-wedstrijden)
 }
 
 export interface MatchdayResult {
@@ -288,10 +294,14 @@ export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResu
   const scorerWeight = (e: LineupEntry) => GOAL_WEIGHT[e.pos] * (e.player.attack / 75);
   const assistWeight = (e: LineupEntry) => ASSIST_WEIGHT[e.pos];
 
-  function distribute(goalsFor: number, goalsAgainst: number) {
+  function distribute(goalsFor: number, goalsAgainst: number): string[] {
+    const scorers: string[] = [];
     for (let g = 0; g < goalsFor; g++) {
       const scorer = weightedPick(lineup, scorerWeight, rng);
-      if (scorer) stats.get(scorer.player.name)!.goals++;
+      if (scorer) {
+        stats.get(scorer.player.name)!.goals++;
+        scorers.push(scorer.player.name);
+      }
       if (rng() < 0.72) {
         const assister = weightedPick(lineup, assistWeight, rng, scorer?.player.name);
         if (assister) stats.get(assister.player.name)!.assists++;
@@ -303,6 +313,15 @@ export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResu
         if (band === "GK" || band === "DEF") stats.get(e.player.name)!.cleanSheets++;
       }
     }
+    return scorers;
+  }
+
+  // Aparte rng-stroom voor minuten: puur presentatie, mag de hoofd-rng
+  // (en dus seed-gebaseerde uitslagen zoals de daily challenge) niet verschuiven.
+  const minuteRng = mulberry32(seed ^ 0x5f3759df);
+  function makeGoals(scorers: string[]): GoalEvent[] {
+    const minutes = scorers.map(() => 1 + Math.floor(minuteRng() * 93)).sort((a, b) => a - b);
+    return scorers.map((name, i) => ({ name, minute: minutes[i] }));
   }
 
   const schedule = buildSchedule(n); // 2*(n-1) speeldagen
@@ -316,11 +335,9 @@ export function simulateSeason(lineup: LineupEntry[], opts: SimOptions): SimResu
       applyResult(rows[hi], hg, ag);
       applyResult(rows[ai], ag, hg);
       if (teams[hi].isUser) {
-        userMatch = { opponent: teams[ai].name, home: true, gf: hg, ga: ag };
-        distribute(hg, ag);
+        userMatch = { opponent: teams[ai].name, home: true, gf: hg, ga: ag, goals: makeGoals(distribute(hg, ag)) };
       } else if (teams[ai].isUser) {
-        userMatch = { opponent: teams[hi].name, home: false, gf: ag, ga: hg };
-        distribute(ag, hg);
+        userMatch = { opponent: teams[hi].name, home: false, gf: ag, ga: hg, goals: makeGoals(distribute(ag, hg)) };
       }
     }
     userMatches.push(userMatch!);

@@ -10,6 +10,7 @@ import { LoginPrompt } from "@/components/AuthGate";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { useT } from "@/lib/i18n/core";
+import { IconPencil, IconStar } from "@/components/icons";
 
 export default function MijnSpelerPage() {
   const t = useT();
@@ -33,7 +34,7 @@ export default function MijnSpelerPage() {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-          <div className="text-4xl mb-2">⭐</div>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-rose-500"><IconStar className="h-7 w-7" /></div>
           <p className="text-sm text-slate-500 mb-4">{t("mijnSpeler.loginPrompt")}</p>
           <button onClick={() => setShowLogin(true)} className="btn-primary">{t("common.login")}</button>
         </div>
@@ -48,7 +49,7 @@ export default function MijnSpelerPage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8 text-center">
-          <div className="text-4xl mb-2">⭐</div>
+          <div className="animate-floaty mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-rose-400 text-white shadow-[0_3px_0_#be2f52]"><IconStar className="h-7 w-7" /></div>
           <h1 className="text-2xl font-black text-slate-800">{t("mijnSpeler.title")}</h1>
           <p className="mt-2 text-sm text-slate-500">
             {t("mijnSpeler.intro")}
@@ -125,7 +126,10 @@ function TopSpelersRanglijst() {
   return (
     <div className="card mt-6 overflow-hidden">
       <div className="px-5 py-3 border-b border-slate-100/60">
-        <span className="text-sm font-bold text-slate-700">⭐ {t("mijnSpeler.leaderboardTitle")}</span>
+        <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-100 text-rose-500"><IconStar className="h-3.5 w-3.5" /></span>
+          {t("mijnSpeler.leaderboardTitle")}
+        </span>
       </div>
       {loading ? (
         <div className="p-8 text-center text-sm text-slate-400">{t("common.loading")}</div>
@@ -269,7 +273,7 @@ function CustomPlayerCard({ userId }: { userId: string }) {
                 className="shrink-0 text-xs text-slate-400 hover:text-slate-600 transition"
                 title={t("mijnSpeler.renameTitle")}
               >
-                ✏️
+                <IconPencil className="h-3.5 w-3.5" />
               </button>
             </div>
           )}

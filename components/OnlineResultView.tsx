@@ -11,6 +11,7 @@ import { useCustomPlayer, isCustomPlayer } from "@/lib/customPlayer";
 import SquadViewModal from "@/components/SquadViewModal";
 import MultiCareerTimeline from "@/components/MultiCareerTimeline";
 import { useT } from "@/lib/i18n/core";
+import { IconStar, IconTrophy } from "@/components/icons";
 
 export default function OnlineResultView() {
   const t = useT();
@@ -108,8 +109,10 @@ export default function OnlineResultView() {
 
         {invincible ? (
           <>
-            <div className="text-5xl">🏆🛡️</div>
-            <div className="mt-3 bg-gradient-to-r from-amber-500 to-yellow-400 bg-clip-text text-2xl font-black text-transparent">THE INVINCIBLES</div>
+            <div className="mx-auto flex h-16 w-16 animate-floaty items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_4px_0_#c98a10]">
+              <IconStar className="h-9 w-9" />
+            </div>
+            <div className="mt-3 text-2xl font-black text-amber-500">THE INVINCIBLES</div>
           </>
         ) : (
           <>
@@ -162,8 +165,8 @@ export default function OnlineResultView() {
 
       {/* Game winner */}
       {div1Winner && (
-        <div className="card p-6 text-center border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
-          <div className="text-4xl mb-2">🏆👑🏆</div>
+        <div className="card p-6 text-center border-2 border-amber-300 bg-amber-50">
+          <div className="animate-floaty mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_3px_0_#c98a10]"><IconTrophy className="h-7 w-7" /></div>
           <div className="text-xl font-black text-amber-800">
             {t("result.winsTheGame", { name: div1Winner.team_name || div1Winner.username })}
           </div>
@@ -216,7 +219,11 @@ export default function OnlineResultView() {
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] font-bold text-slate-400">{divisionLabel(t, p.current_division)}</span>
                         {rating > 0 && <span className="text-[10px] font-bold text-emerald-600">{rating} OVR</span>}
-                        {p.championships > 0 && <span className="text-[10px] font-bold text-amber-600">{p.championships}x🏆</span>}
+                        {p.championships > 0 && (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-600">
+                            {p.championships}x <IconTrophy className="h-3 w-3" />
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -265,7 +272,7 @@ export default function OnlineResultView() {
         !iAcknowledged ? (
           <button
             onClick={handleAcknowledge}
-            className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-emerald-200/50 transition hover:shadow-lg hover:-translate-y-0.5"
+            className="w-full rounded-full bg-emerald-500 px-5 py-4 text-lg font-extrabold text-white shadow-[0_4px_0_#0a8f66] transition hover:brightness-105 active:translate-y-1 active:shadow-none"
           >
             {t("result.continue")}
           </button>
@@ -273,7 +280,7 @@ export default function OnlineResultView() {
           <button
             disabled={!allAcknowledged}
             onClick={handleNextSeason}
-            className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-4 text-lg font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+            className="w-full rounded-full bg-indigo-500 px-5 py-4 text-lg font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
           >
             {allAcknowledged
               ? t("result.startSeason", { season: lobby.current_season + 1 })

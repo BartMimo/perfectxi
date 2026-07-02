@@ -14,6 +14,25 @@ import ShareCard from "./ShareCard";
 import { LoginPrompt } from "./AuthGate";
 import { CareerResultBanner, TransferWindow } from "./CareerView";
 import { useCareer } from "@/lib/career";
+import { computeSeasonXp, useXp, xpProgress } from "@/lib/xp";
+import Confetti from "./Confetti";
+import { IconBall, IconBolt, IconChart, IconStar } from "@/components/icons";
+
+function useCountUp(target: number, duration = 900): number {
+  const [value, setValue] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const step = (now: number) => {
+      const p = Math.min((now - start) / duration, 1);
+      setValue(Math.round(target * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return value;
+}
 
 export default function ResultView() {
   const t = useT();
@@ -36,6 +55,13 @@ export default function ResultView() {
   const [xpAwarded, setXpAwarded] = useState(false);
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [showLogin, setShowLogin] = useState(false);
+  const [xpGained, setXpGained] = useState(0);
+  const [newLevel, setNewLevel] = useState<number | null>(null);
+  const [confetti, setConfetti] = useState(false);
+  const seasonXpDone = useRef(false);
+  const addXp = useXp((s) => s.addXp);
+  const loadXp = useXp((s) => s.load);
+  const authLoading = useAuth((s) => s.loading);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -43,6 +69,21 @@ export default function ResultView() {
     const achv = computeAchievements(result);
     setAchievements(achv);
   }, [result, leagueCode]);
+
+  useEffect(() => {
+    if (!result || authLoading || seasonXpDone.current) return;
+    seasonXpDone.current = true;
+    loadXp(userId);
+    const gained = computeSeasonXp(result);
+    const { before, after } = addXp(gained, userId);
+    setXpGained(gained);
+    if (xpProgress(after).level > xpProgress(before).level) setNewLevel(xpProgress(after).level);
+    if (result.position === 1 || result.invincible) {
+      setConfetti(true);
+      const id = setTimeout(() => setConfetti(false), 6500);
+      return () => clearTimeout(id);
+    }
+  }, [result, authLoading, userId, addXp, loadXp]);
 
   useEffect(() => {
     if (!result || !userId || saved) return;
@@ -128,18 +169,23 @@ export default function ResultView() {
     }
   }
 
+  const pointsAnimated = useCountUp(result?.userRow.points ?? 0);
+
   if (!result) return null;
   const { userRow, position, invincible, qualification, table, matches, awards, squadStats } =
     result;
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
+      {confetti && <Confetti />}
       {/* Reveal-kop */}
       <div className="card animate-pop p-6 text-center">
         {invincible ? (
           <>
-            <div className="text-5xl">🏆🛡️</div>
-            <div className="mt-3 bg-gradient-to-r from-amber-500 to-yellow-400 bg-clip-text text-2xl font-black text-transparent">THE INVINCIBLES</div>
+            <div className="mx-auto flex h-16 w-16 animate-floaty items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_4px_0_#c98a10]">
+              <IconStar className="h-9 w-9" />
+            </div>
+            <div className="mt-3 text-2xl font-black text-amber-500">THE INVINCIBLES</div>
             <div className="mt-1 text-sm text-slate-500">
               {t("result.invincibleDesc")} <b>38-0-0</b>.
             </div>
@@ -159,8 +205,22 @@ export default function ResultView() {
           </>
         )}
 
+        {xpGained > 0 && (
+          <div className="mt-4 flex flex-col items-center gap-1.5">
+            <span className="animate-pop inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-4 py-1.5 text-sm font-black text-violet-700" style={{ animationDelay: "400ms" }}>
+              <IconBolt className="h-4 w-4" />
+              {t("result.xpEarned", { xp: xpGained })}
+            </span>
+            {newLevel !== null && (
+              <span className="animate-pop inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-4 py-1.5 text-sm font-black text-white shadow-[0_3px_0_#5b21b6]" style={{ animationDelay: "900ms" }}>
+                {t("result.levelUp", { level: newLevel })}
+              </span>
+            )}
+          </div>
+        )}
+
         <div className="mx-auto mt-5 grid max-w-md grid-cols-4 gap-2 text-center">
-          <Stat label={t("result.points")} value={userRow.points} accent />
+          <Stat label={t("result.points")} value={pointsAnimated} accent />
           <Stat label={t("result.wonAbbr")} value={userRow.won} />
           <Stat label={t("result.drawnAbbr")} value={userRow.drawn} />
           <Stat label={t("result.lostAbbr")} value={userRow.lost} />
@@ -174,10 +234,10 @@ export default function ResultView() {
 
       {/* Awards */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Award icon="⚽" title={t("result.topScorer")} name={awards.topScorer?.name ?? "—"} value={awards.topScorer ? t("result.goalsCount", { count: awards.topScorer.goals }) : ""} />
-        <Award icon="🎯" title={t("result.topAssister")} name={awards.topAssister?.name ?? "—"} value={awards.topAssister ? t("result.assistsCount", { count: awards.topAssister.assists }) : ""} />
-        <Award icon="🧤" title={t("result.goldenGlove")} name={awards.goalkeeper?.name ?? "—"} value={t("result.cleanSheetsCount", { count: awards.cleanSheets })} />
-        <Award icon="💥" title={t("result.biggestWin")} name={awards.biggestWin ? `vs ${awards.biggestWin.opponent}` : "—"} value={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
+        <Award icon={<IconBall className="h-4 w-4" />} chip="bg-emerald-100 text-emerald-600" title={t("result.topScorer")} name={awards.topScorer?.name ?? "—"} value={awards.topScorer ? t("result.goalsCount", { count: awards.topScorer.goals }) : ""} />
+        <Award icon={<IconStar className="h-4 w-4" />} chip="bg-sky-100 text-sky-600" title={t("result.topAssister")} name={awards.topAssister?.name ?? "—"} value={awards.topAssister ? t("result.assistsCount", { count: awards.topAssister.assists }) : ""} />
+        <Award icon={<IconChart className="h-4 w-4" />} chip="bg-violet-100 text-violet-600" title={t("result.goldenGlove")} name={awards.goalkeeper?.name ?? "—"} value={t("result.cleanSheetsCount", { count: awards.cleanSheets })} />
+        <Award icon={<IconBolt className="h-4 w-4" />} chip="bg-amber-100 text-amber-600" title={t("result.biggestWin")} name={awards.biggestWin ? `vs ${awards.biggestWin.opponent}` : "—"} value={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
       </div>
 
       {/* Achievements */}
@@ -245,9 +305,10 @@ export default function ResultView() {
                 {table.map((r, i) => (
                   <tr
                     key={r.name}
-                    className={`border-t border-slate-100/60 ${
+                    className={`animate-fade-up border-t border-slate-100/60 ${
                       r.isUser ? "bg-emerald-50/60 font-bold text-emerald-800" : "text-slate-600"
                     }`}
+                    style={{ animationDelay: `${i * 45}ms` }}
                   >
                     <td className="px-3 py-2">
                       <span className={i < 4 ? "text-emerald-500" : i >= 17 ? "text-rose-400" : ""}>
@@ -328,13 +389,14 @@ export default function ResultView() {
   );
 }
 
-function Award({ icon, title, name, value }: { icon: string; title: string; name: string; value: string }) {
+function Award({ icon, chip, title, name, value }: { icon: React.ReactNode; chip: string; title: string; name: string; value: string }) {
   return (
     <div className="card p-3.5">
-      <div className="text-[10px] uppercase tracking-widest text-slate-400">
-        {icon} {title}
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-slate-400">
+        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${chip}`}>{icon}</span>
+        <span className="truncate">{title}</span>
       </div>
-      <div className="mt-1 truncate text-sm font-bold text-slate-800">{name}</div>
+      <div className="mt-1.5 truncate text-sm font-bold text-slate-800">{name}</div>
       <div className="truncate text-[11px] text-emerald-600">{value}</div>
     </div>
   );

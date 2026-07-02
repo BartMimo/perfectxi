@@ -15,7 +15,7 @@ export default function AddCustomPlayerCard() {
   if (!player || !drafted) return null;
 
   return (
-    <div className="card flex flex-col items-center gap-3 border-2 border-amber-300 bg-gradient-to-br from-amber-50/80 to-orange-50/50 p-6 text-center">
+    <div className="card flex flex-col items-center gap-3 border-2 border-amber-300 bg-amber-50/70 p-6 text-center">
       <div className="text-xs font-black uppercase tracking-widest text-amber-600">{t("mijnSpeler.addFirstBanner")}</div>
       <RatingBadge value={player.overall} className="!h-12 !w-12 !text-lg" />
       <div>
@@ -24,7 +24,7 @@ export default function AddCustomPlayerCard() {
       </div>
       <button
         onClick={() => addCustomPlayer(drafted)}
-        className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-amber-200/50 transition hover:shadow-lg hover:-translate-y-0.5"
+        className="w-full rounded-full bg-amber-400 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#c98a10] transition hover:brightness-105 active:translate-y-1 active:shadow-none"
       >
         {t("mijnSpeler.addToLineupBtn", { name: player.name })}
       </button>

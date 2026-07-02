@@ -10,6 +10,7 @@ import { getCurrentChallenge, getChallengeDayId } from "@/lib/challenge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useT } from "@/lib/i18n/core";
+import { IconBolt, IconTrophy } from "@/components/icons";
 
 interface ChallengeRow {
   id: string;
@@ -142,12 +143,14 @@ export default function ChallengePage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-3xl px-4 py-10">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🏅</div>
+          <div className="animate-wiggle mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_3px_0_#c98a10]">
+            <IconBolt className="h-7 w-7" />
+          </div>
           <h1 className="text-2xl font-black text-slate-800">{t("challenge.title")}</h1>
           <p className="mt-2 text-sm text-slate-500">{t("challenge.subtitle")}</p>
         </div>
 
-        <div className="card p-6 mb-6 border-2 border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50">
+        <div className="card p-6 mb-6 border-2 border-amber-200/60 bg-amber-50/70">
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-amber-800">
               {challenge.leagueFlag} {challenge.leagueName}
@@ -173,7 +176,7 @@ export default function ChallengePage() {
             <button
               disabled={!loaded}
               onClick={handlePlay}
-              className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-amber-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+              className="w-full rounded-full bg-amber-400 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#c98a10] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
             >
               {loaded ? t("challenge.playChallenge") : t("common.loading")}
             </button>
@@ -181,12 +184,15 @@ export default function ChallengePage() {
         </div>
 
         <div className="card overflow-hidden mb-4">
-          <div className="px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">🏅 {t("challenge.todayLeaderboard")}</div>
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600"><IconBolt className="h-3.5 w-3.5" /></span>
+            {t("challenge.todayLeaderboard")}
+          </div>
           {loading ? (
             <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
           ) : todayRows.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="text-3xl mb-3">🏅</div>
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-500"><IconBolt className="h-6 w-6" /></div>
               <div className="text-sm text-slate-400">{t("challenge.noOneYetToday")}</div>
             </div>
           ) : (
@@ -228,12 +234,15 @@ export default function ChallengePage() {
         </div>
 
         <div className="card overflow-hidden">
-          <div className="px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">🏆 {t("challenge.allTimeWins")}</div>
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600"><IconTrophy className="h-3.5 w-3.5" /></span>
+            {t("challenge.allTimeWins")}
+          </div>
           {loading ? (
             <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
           ) : dailyWinRows.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="text-3xl mb-3">🏆</div>
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-500"><IconTrophy className="h-6 w-6" /></div>
               <div className="text-sm text-slate-400">{t("challenge.noWinnersYet")}</div>
             </div>
           ) : (

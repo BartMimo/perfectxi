@@ -10,6 +10,7 @@ import { LoginPrompt } from "@/components/AuthGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useT } from "@/lib/i18n/core";
+import { IconGlobe } from "@/components/icons";
 
 const REROLL_OPTIONS = [0, 1, 2, 3];
 const WISSEL_OPTIONS = [0, 1, 2, 3, 4];
@@ -89,7 +90,7 @@ export default function OnlineCarrierePage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🌐</div>
+          <div className="animate-floaty mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100 text-sky-600"><IconGlobe className="h-7 w-7" /></div>
           <h1 className="text-3xl font-black text-slate-800">{t("onlineCarriere.title")}</h1>
           <p className="mt-2 text-sm text-slate-500">
             {t("onlineCarriere.intro")}
@@ -109,7 +110,7 @@ export default function OnlineCarrierePage() {
         </div>
 
         {openLobbies.length > 0 && (
-          <div className="mb-6 card p-5 border-2 border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/30">
+          <div className="mb-6 card p-5 border-2 border-sky-200/60 bg-sky-50/60">
             <div className="text-xs font-black uppercase tracking-widest text-cyan-700 mb-3">
               🔓 {t("onlineCarriere.openLobbies.title")}
             </div>
@@ -143,7 +144,7 @@ export default function OnlineCarrierePage() {
           <div className="flex flex-col gap-4">
             {/* Actieve carrières */}
             {myLobbies.length > 0 && (
-              <div className="card p-5 border-2 border-indigo-200/60 bg-gradient-to-br from-indigo-50/80 to-purple-50/50">
+              <div className="card p-5 border-2 border-indigo-200/60 bg-indigo-50/60">
                 <div className="text-xs font-black uppercase tracking-widest text-indigo-700 mb-3">
                   {t("onlineCarriere.yourCareers")}
                 </div>
@@ -299,7 +300,7 @@ export default function OnlineCarrierePage() {
               <button
                 disabled={loading}
                 onClick={handleCreate}
-                className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+                className="w-full rounded-full bg-indigo-500 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
               >
                 {loading ? t("onlineCarriere.creating") : t("onlineCarriere.createLobbyBtn")}
               </button>

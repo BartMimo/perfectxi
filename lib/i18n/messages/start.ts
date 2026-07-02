@@ -36,6 +36,8 @@ export const startMessages: MessageDict = {
     "start.difficulty.hard.desc": "Ratings verborgen · geen reroll",
     "start.cta.chooseLeague": "Kies een competitie",
     "start.cta.startDraft": "Start het draft",
+    "start.daily.countdown": "Zelfde loting voor iedereen · nog {time}",
+    "start.daily.cta": "Doe mee",
   },
   en: {
     "start.tagline.prefix": "Draft your dream team and chase the perfect season:",
@@ -72,6 +74,8 @@ export const startMessages: MessageDict = {
     "start.difficulty.hard.desc": "Ratings hidden · no reroll",
     "start.cta.chooseLeague": "Choose a league",
     "start.cta.startDraft": "Start the draft",
+    "start.daily.countdown": "Same draw for everyone · {time} left",
+    "start.daily.cta": "Join in",
   },
   fr: {
     "start.tagline.prefix": "Compose ton équipe de rêve et vise la saison parfaite :",
@@ -108,6 +112,8 @@ export const startMessages: MessageDict = {
     "start.difficulty.hard.desc": "Notes masquées · pas de relance",
     "start.cta.chooseLeague": "Choisis une compétition",
     "start.cta.startDraft": "Lancer le draft",
+    "start.daily.countdown": "Même tirage pour tous · encore {time}",
+    "start.daily.cta": "Participer",
   },
   de: {
     "start.tagline.prefix": "Stell dein Traumteam zusammen und jage die perfekte Saison:",
@@ -144,6 +150,8 @@ export const startMessages: MessageDict = {
     "start.difficulty.hard.desc": "Bewertungen verborgen · kein Reroll",
     "start.cta.chooseLeague": "Wähle eine Liga",
     "start.cta.startDraft": "Draft starten",
+    "start.daily.countdown": "Gleiche Auslosung für alle · noch {time}",
+    "start.daily.cta": "Mitmachen",
   },
   es: {
     "start.tagline.prefix": "Arma tu equipo soñado y busca la temporada perfecta:",
@@ -180,5 +188,7 @@ export const startMessages: MessageDict = {
     "start.difficulty.hard.desc": "Valoraciones ocultas · sin repetición",
     "start.cta.chooseLeague": "Elige una liga",
     "start.cta.startDraft": "Iniciar el draft",
+    "start.daily.countdown": "Mismo sorteo para todos · quedan {time}",
+    "start.daily.cta": "Participa",
   },
 };

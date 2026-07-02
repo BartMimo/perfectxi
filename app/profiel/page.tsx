@@ -8,6 +8,7 @@ import { LEAGUES } from "@/lib/leagues";
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { useT } from "@/lib/i18n/core";
+import { IconShirt } from "@/components/icons";
 
 interface Stats {
   games: number;
@@ -175,7 +176,7 @@ export default function ProfielPage() {
           <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
         ) : !stats ? (
           <div className="card p-12 text-center">
-            <div className="text-3xl mb-3">🏟️</div>
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"><IconShirt className="h-6 w-6" /></div>
             <div className="text-sm text-slate-400">{t("profiel.noSeasons")}</div>
           </div>
         ) : (

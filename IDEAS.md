@@ -12,7 +12,7 @@ Status: 💡 idee · 🚧 in uitvoering · ✅ klaar
 
 ## Progressie & beloningen
 4. **Achievements / badges** 💡 — bv. "The Invincibles" (38-0), "Treble", "Clean Sweep" (alle clean sheets), "Goal Machine" (100+ goals), "Underdog" (kampioen met budgetelftal).
-5. **XP & levels** 💡 — verdien XP per seizoen, unlock cosmetics (kit-kleuren, badges, veld-thema's).
+5. **XP & levels** 🚧 — verdien XP per seizoen (✅ juli 2026: lib/xp.ts, level-badge in header, XP-toekenning na elk seizoen); cosmetics-unlocks (kit-kleuren, badges, veld-thema's) nog te doen.
 6. **Streaks** 💡 — dagelijkse speel-streak met bonussen.
 
 ## Spelmodi
@@ -23,7 +23,7 @@ Status: 💡 idee · 🚧 in uitvoering · ✅ klaar
 
 ## Diepgang & sfeer
 11. **Chemie / formatie-bonus** 💡 — spelers uit dezelfde club of hetzelfde land in de buurt geven een teamboost.
-12. **Live-commentaar / key moments** 💡 — tijdens de simulatie ("90+3' winnende goal van Agüero!").
+12. **Live-commentaar / key moments** ✅ — doelpuntenmakers + minuten per wedstrijd tijdens de simulatie (juli 2026; sim slaat GoalEvents op via aparte rng-stroom zodat seeds stabiel blijven). Confetti bij titel/38-0-0 en count-up van punten in het resultscherm.
 13. **Deelbare resultkaart** ✅ — mooie afbeelding van je eindstand + XI om op socials te delen.
 14. **Filters op het rad** 💡 — kies een tijdperk, land, of "alleen topteams".
 

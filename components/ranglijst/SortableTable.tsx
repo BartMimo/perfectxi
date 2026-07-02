@@ -39,10 +39,12 @@ export function RankBadge({ rank }: { rank: number }) {
   return <span className="pl-1.5 font-bold text-slate-400">{rank}</span>;
 }
 
-export function EmptyState({ icon, text }: { icon: string; text: string }) {
+export function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="p-12 text-center">
-      <div className="text-3xl mb-3">{icon}</div>
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+        {icon}
+      </div>
       <div className="text-sm text-slate-400">{text}</div>
     </div>
   );
@@ -78,7 +80,7 @@ export default function SortableTable<T>({
   initialSortDir?: SortDir;
   headerClassName?: string;
   rowClassName?: string;
-  emptyIcon: string;
+  emptyIcon: React.ReactNode;
   emptyText: string;
 }) {
   const [sortKey, setSortKey] = useState(initialSortKey);

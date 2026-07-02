@@ -7,6 +7,7 @@ import { useCareer, divisionLabel } from "@/lib/career";
 import { useOnlineCareer } from "@/lib/onlineCareer";
 import { useAuth } from "@/lib/auth";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LevelBadge from "@/components/LevelBadge";
 import { useT } from "@/lib/i18n/core";
 
 export default function Header({ showMeta = false, backHref }: { showMeta?: boolean; backHref?: string }) {
@@ -32,10 +33,8 @@ export default function Header({ showMeta = false, backHref }: { showMeta?: bool
               ←
             </a>
           )}
-          <a href="/" className="text-base font-black tracking-tight">
-            <span className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-transparent">
-              Elite Football
-            </span>
+          <a href="/" className="text-base font-black tracking-tight text-emerald-950">
+            Elite Football
           </a>
         </div>
         <div className="flex items-center gap-2">
@@ -59,6 +58,9 @@ export default function Header({ showMeta = false, backHref }: { showMeta?: bool
               </span>
             </div>
           )}
+          <span className="hidden sm:block">
+            <LevelBadge />
+          </span>
           <LanguageSwitcher />
         </div>
       </div>

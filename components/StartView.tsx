@@ -1,16 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useGame } from "@/lib/store";
 import { FORMATIONS } from "@/lib/formations";
 import { LEAGUES } from "@/lib/leagues";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import LevelBadge from "@/components/LevelBadge";
 import { useT } from "@/lib/i18n/core";
+import {
+  IconBall,
+  IconBolt,
+  IconChart,
+  IconChevronRight,
+  IconGlobe,
+  IconShirt,
+  IconStar,
+  IconTrophy,
+  IconUser,
+} from "@/components/icons";
 
 function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <div className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-cyan-100 text-[11px] font-extrabold text-emerald-700">
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-extrabold text-emerald-700">
         {n}
       </span>
       {children}
@@ -46,25 +59,90 @@ function OptionCard({
 
 type StartScreen = "home" | "single";
 
-function ModeCard({ icon, title, desc, onClick, accent, badge, featured }: {
-  icon: string; title: string; desc: string; onClick: () => void; accent: string; badge?: string; featured?: boolean;
+interface ModeAccent {
+  border: string;
+  chip: string;
+  title: string;
+  desc: string;
+}
+
+function ModeCard({ icon, title, desc, href, onClick, accent, badge, featured }: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  href?: string;
+  onClick?: () => void;
+  accent: ModeAccent;
+  badge?: string;
+  featured?: boolean;
 }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`relative flex flex-col items-center gap-2 rounded-2xl border-2 p-6 text-center transition-all hover:shadow-md hover:-translate-y-0.5 ${accent} ${featured ? "sm:col-span-2 sm:flex-row sm:text-left sm:gap-5 sm:py-7" : ""}`}
-    >
+  const className = `group relative flex rounded-3xl border bg-white p-4 text-left shadow-[0_2px_0_rgba(15,23,42,0.04)] transition-all duration-150 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-900/10 active:translate-y-0 sm:p-5 ${accent.border} ${
+    featured ? "sm:col-span-2 flex-row items-center gap-4" : "flex-row items-center gap-3.5 sm:flex-col sm:items-start sm:gap-3"
+  }`;
+  const inner = (
+    <>
       {badge && (
-        <span className="absolute -top-2.5 right-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-sm">
+        <span className="absolute -top-2.5 right-4 rounded-full bg-sky-500 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white">
           {badge}
         </span>
       )}
-      <span className={featured ? "text-5xl sm:shrink-0" : "text-3xl"}>{icon}</span>
-      <span className={featured ? "flex flex-col gap-1" : "contents"}>
-        <span className="text-base font-black text-slate-800 sm:text-lg">{title}</span>
-        <span className="text-xs leading-relaxed text-slate-500 sm:text-sm">{desc}</span>
+      <span className={`flex shrink-0 items-center justify-center rounded-full ${accent.chip} ${featured ? "h-14 w-14" : "h-11 w-11"}`}>
+        {icon}
       </span>
-    </button>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className={`text-[15px] font-black sm:text-base ${accent.title}`}>{title}</span>
+        <span className={`text-xs leading-relaxed sm:text-[13px] ${accent.desc}`}>{desc}</span>
+      </span>
+      {featured && <IconChevronRight className="h-5 w-5 shrink-0 text-sky-300 transition-transform group-hover:translate-x-1" />}
+    </>
+  );
+  return href ? (
+    <Link href={href} className={className}>{inner}</Link>
+  ) : (
+    <button onClick={onClick} className={className}>{inner}</button>
+  );
+}
+
+function useDailyCountdown() {
+  const [left, setLeft] = useState("--:--:--");
+  useEffect(() => {
+    const tick = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const s = Math.max(0, Math.floor((midnight.getTime() - now.getTime()) / 1000));
+      const p = (n: number) => String(n).padStart(2, "0");
+      setLeft(`${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+  return left;
+}
+
+function DailyChallengeBanner() {
+  const t = useT();
+  const countdown = useDailyCountdown();
+  return (
+    <Link
+      href="/challenge"
+      className="group flex items-center gap-3.5 rounded-3xl border border-amber-200 bg-amber-50 p-4 transition-all duration-150 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-900/10 active:translate-y-0 sm:gap-4 sm:px-5"
+    >
+      <span className="animate-wiggle flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_3px_0_#c98a10] sm:h-12 sm:w-12">
+        <IconBolt className="h-6 w-6" />
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-[15px] font-black text-amber-900 sm:text-base">{t("start.mode.dailyChallenge.title")}</span>
+        <span className="text-xs text-amber-700 sm:text-[13px]">
+          {t("start.daily.countdown", { time: countdown })}
+        </span>
+      </span>
+      <span className="hidden shrink-0 rounded-full border border-amber-200 bg-white px-4 py-2 text-[13px] font-bold text-amber-700 shadow-[0_3px_0_#f0d68e] transition-transform group-active:translate-y-[3px] sm:inline-block">
+        {t("start.daily.cta")}
+      </span>
+      <IconChevronRight className="h-5 w-5 shrink-0 text-amber-400 sm:hidden" />
+    </Link>
   );
 }
 
@@ -87,72 +165,77 @@ export default function StartView() {
 
   if (screen === "home") {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <div className="flex justify-end">
-          <LanguageSwitcher />
-        </div>
-        <div className="animate-fade-up text-center">
-          <div className="text-4xl mb-2">⚽</div>
-          <h1 className="bg-gradient-to-r from-emerald-600 to-cyan-500 bg-clip-text text-4xl font-black tracking-tight text-transparent sm:text-5xl">
-            Elite&nbsp;Football
-          </h1>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-500">
-            {t("start.tagline.prefix")} <span className="font-bold text-emerald-600">38-0-0</span>.
-          </p>
+      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <span className="animate-floaty flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white shadow-[0_3px_0_#0a8f66]">
+              <IconBall className="h-6 w-6" />
+            </span>
+            <span className="text-lg font-black tracking-tight text-emerald-950">Elite Football</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <LevelBadge />
+            <LanguageSwitcher />
+          </div>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <ModeCard
-            icon="🌐"
-            title={t("start.mode.online.title")}
-            desc={t("start.mode.online.desc")}
-            onClick={() => { window.location.href = "/online-carriere"; }}
-            accent="border-cyan-200/60 bg-gradient-to-br from-cyan-50/60 to-blue-50/40"
-            badge={t("start.mode.online.badge")}
-            featured
-          />
-          <ModeCard
-            icon="⭐"
-            title={t("start.mode.myPlayer.title")}
-            desc={t("start.mode.myPlayer.desc")}
-            onClick={() => { window.location.href = "/mijn-speler"; }}
-            accent="border-rose-200/60 bg-gradient-to-br from-rose-50/60 to-pink-50/40"
-          />
-          <ModeCard
-            icon="🏅"
-            title={t("start.mode.dailyChallenge.title")}
-            desc={t("start.mode.dailyChallenge.desc")}
-            onClick={() => { window.location.href = "/challenge"; }}
-            accent="border-amber-200/60 bg-gradient-to-br from-amber-50/80 to-orange-50/50"
-          />
-          <ModeCard
-            icon="🏆"
-            title={t("start.mode.offlineCareer.title")}
-            desc={t("start.mode.offlineCareer.desc")}
-            onClick={() => { window.location.href = "/offline-carriere"; }}
-            accent="border-indigo-200/60 bg-gradient-to-br from-indigo-50/60 to-purple-50/40"
-          />
-          <ModeCard
-            icon="⚽"
-            title={t("start.mode.singleSeason.title")}
-            desc={t("start.mode.singleSeason.desc")}
-            onClick={() => setScreen("single")}
-            accent="border-emerald-200/60 bg-gradient-to-br from-emerald-50/60 to-teal-50/40"
-          />
-          <ModeCard
-            icon="📊"
-            title={t("start.mode.leaderboard.title")}
-            desc={t("start.mode.leaderboard.desc")}
-            onClick={() => { window.location.href = "/ranglijst"; }}
-            accent="border-slate-200/60 bg-gradient-to-br from-slate-50/80 to-slate-100/50"
-          />
-          <ModeCard
-            icon="👤"
-            title={t("start.mode.profile.title")}
-            desc={t("start.mode.profile.desc")}
-            onClick={() => { window.location.href = "/profiel"; }}
-            accent="border-violet-200/60 bg-gradient-to-br from-violet-50/60 to-fuchsia-50/40"
-          />
+        <div className="animate-fade-up mt-8 text-center sm:mt-10">
+          <h1 className="mx-auto max-w-lg text-2xl font-black leading-snug text-emerald-950 sm:text-3xl">
+            {t("start.tagline.prefix")}{" "}
+            <span className="inline-block rounded-full bg-amber-100 px-3.5 py-0.5 text-amber-700">38&#8209;0&#8209;0</span>
+          </h1>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-3 sm:mt-10">
+          <DailyChallengeBanner />
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <ModeCard
+              icon={<IconGlobe className="h-7 w-7" />}
+              title={t("start.mode.online.title")}
+              desc={t("start.mode.online.desc")}
+              href="/online-carriere"
+              accent={{ border: "border-sky-200", chip: "bg-sky-100 text-sky-600", title: "text-sky-950", desc: "text-sky-800/60" }}
+              badge={t("start.mode.online.badge")}
+              featured
+            />
+            <ModeCard
+              icon={<IconShirt className="h-5.5 w-5.5" />}
+              title={t("start.mode.singleSeason.title")}
+              desc={t("start.mode.singleSeason.desc")}
+              onClick={() => setScreen("single")}
+              accent={{ border: "border-emerald-200", chip: "bg-emerald-100 text-emerald-600", title: "text-emerald-950", desc: "text-emerald-800/60" }}
+            />
+            <ModeCard
+              icon={<IconTrophy className="h-5.5 w-5.5" />}
+              title={t("start.mode.offlineCareer.title")}
+              desc={t("start.mode.offlineCareer.desc")}
+              href="/offline-carriere"
+              accent={{ border: "border-indigo-200", chip: "bg-indigo-100 text-indigo-600", title: "text-indigo-950", desc: "text-indigo-800/60" }}
+            />
+            <ModeCard
+              icon={<IconStar className="h-5.5 w-5.5" />}
+              title={t("start.mode.myPlayer.title")}
+              desc={t("start.mode.myPlayer.desc")}
+              href="/mijn-speler"
+              accent={{ border: "border-rose-200", chip: "bg-rose-100 text-rose-500", title: "text-rose-950", desc: "text-rose-800/60" }}
+            />
+            <ModeCard
+              icon={<IconChart className="h-5.5 w-5.5" />}
+              title={t("start.mode.leaderboard.title")}
+              desc={t("start.mode.leaderboard.desc")}
+              href="/ranglijst"
+              accent={{ border: "border-cyan-200", chip: "bg-cyan-100 text-cyan-600", title: "text-cyan-950", desc: "text-cyan-800/60" }}
+            />
+            <ModeCard
+              icon={<IconUser className="h-6 w-6" />}
+              title={t("start.mode.profile.title")}
+              desc={t("start.mode.profile.desc")}
+              href="/profiel"
+              accent={{ border: "border-violet-200", chip: "bg-violet-100 text-violet-600", title: "text-violet-950", desc: "text-violet-800/60" }}
+              featured
+            />
+          </div>
         </div>
       </div>
     );

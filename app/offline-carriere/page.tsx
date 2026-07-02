@@ -13,6 +13,7 @@ import CareerTimeline from "@/components/CareerTimeline";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useT } from "@/lib/i18n/core";
+import { IconTrophy } from "@/components/icons";
 
 const REROLL_OPTIONS = [0, 1, 2, 3];
 const WISSEL_OPTIONS = [0, 1, 2, 3, 4];
@@ -95,7 +96,7 @@ export default function OfflineCarrierePage() {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-          <div className="text-4xl mb-2">🏟️</div>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600"><IconTrophy className="h-7 w-7" /></div>
           <p className="text-sm text-slate-500 mb-4">{t("career.loginToStart")}</p>
           <button onClick={() => setShowLogin(true)} className="btn-primary">{t("common.login")}</button>
         </div>
@@ -111,11 +112,11 @@ export default function OfflineCarrierePage() {
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-10">
           <div className="text-center mb-6">
-            <div className="text-4xl mb-2">🏟️</div>
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600"><IconTrophy className="h-7 w-7" /></div>
             <h1 className="text-2xl font-black text-slate-800">{t("career.offlineTitle")}</h1>
           </div>
 
-          <div className="card p-5 border-2 border-indigo-200/60 bg-gradient-to-br from-indigo-50/80 to-purple-50/50 mb-4">
+          <div className="card p-5 border-2 border-indigo-200/60 bg-indigo-50/60 mb-4">
             <div className="flex flex-wrap items-center gap-2 text-sm mb-3">
               <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-indigo-800">
                 {divisionLabel(t, career.currentDivision)}
@@ -146,7 +147,7 @@ export default function OfflineCarrierePage() {
             <button
               disabled={!loaded}
               onClick={playSeason}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+              className="flex-1 rounded-full bg-indigo-500 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
             >
               {loaded ? t("career.playSeasonN", { n: career.season }) : t("common.loading")}
             </button>
@@ -168,7 +169,7 @@ export default function OfflineCarrierePage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🏟️</div>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600"><IconTrophy className="h-7 w-7" /></div>
           <h1 className="text-2xl font-black text-slate-800">{t("career.offlineTitle")}</h1>
           <p className="mt-2 text-sm text-slate-500">
             {t("career.offlineIntro")}
@@ -259,7 +260,7 @@ export default function OfflineCarrierePage() {
           <button
             disabled={!loaded}
             onClick={handleStart}
-            className="w-full rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-3.5 text-base font-extrabold text-white shadow-md shadow-indigo-200/50 transition hover:shadow-lg hover:-translate-y-0.5 disabled:opacity-40"
+            className="w-full rounded-full bg-indigo-500 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
           >
             {loaded ? t("career.startCareer") : t("common.loading")}
           </button>

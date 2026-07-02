@@ -11,6 +11,7 @@ import SortableTable, { UserLink, type RanglijstColumn } from "@/components/rang
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import { useT } from "@/lib/i18n/core";
+import { IconBall, IconBolt, IconGlobe, IconStar, IconTrophy } from "@/components/icons";
 
 type Tab = "myPlayer" | "onlineCareer" | "offlineCareer" | "singleSeason" | "daily";
 type DailySubTab = "today" | "wins";
@@ -346,12 +347,12 @@ export default function RanglijstPage() {
     loadTab(tab);
   }, [tab, loadedTabs, loadTab]);
 
-  const TABS: { id: Tab; label: string; accent: string }[] = [
-    { id: "myPlayer", label: t("ranglijst.tab.myPlayer"), accent: "rose" },
-    { id: "onlineCareer", label: t("ranglijst.tab.onlineCareer"), accent: "cyan" },
-    { id: "offlineCareer", label: t("ranglijst.tab.offlineCareer"), accent: "indigo" },
-    { id: "singleSeason", label: t("ranglijst.tab.singleSeason"), accent: "emerald" },
-    { id: "daily", label: t("ranglijst.tab.daily"), accent: "amber" },
+  const TABS: { id: Tab; label: string; accent: string; icon: React.ReactNode }[] = [
+    { id: "myPlayer", label: t("ranglijst.tab.myPlayer"), accent: "rose", icon: <IconStar className="h-4 w-4" /> },
+    { id: "onlineCareer", label: t("ranglijst.tab.onlineCareer"), accent: "cyan", icon: <IconGlobe className="h-4 w-4" /> },
+    { id: "offlineCareer", label: t("ranglijst.tab.offlineCareer"), accent: "indigo", icon: <IconTrophy className="h-4 w-4" /> },
+    { id: "singleSeason", label: t("ranglijst.tab.singleSeason"), accent: "emerald", icon: <IconBall className="h-4 w-4" /> },
+    { id: "daily", label: t("ranglijst.tab.daily"), accent: "amber", icon: <IconBolt className="h-4 w-4" /> },
   ];
 
   const myPlayerColumns: RanglijstColumn<MyPlayerRow>[] = [
@@ -549,10 +550,11 @@ export default function RanglijstPage() {
             <button
               key={tb.id}
               onClick={() => setTab(tb.id)}
-              className={`rounded-2xl px-5 py-2.5 text-sm font-bold transition-all ${
+              className={`flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-bold transition-all ${
                 tab === tb.id ? "bg-white shadow-sm border border-slate-200/60 text-slate-800" : "text-slate-400 hover:text-slate-600"
               }`}
             >
+              {tb.icon}
               {tb.label}
             </button>
           ))}
@@ -566,7 +568,7 @@ export default function RanglijstPage() {
                 onClick={() => setDailySubTab(s)}
                 className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
                   dailySubTab === s
-                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-100"
+                    ? "bg-amber-400 text-white shadow-[0_3px_0_#c98a10]"
                     : "bg-white/70 border border-slate-200/60 text-slate-500 hover:bg-white hover:shadow-sm backdrop-blur"
                 }`}
               >
@@ -587,7 +589,7 @@ export default function RanglijstPage() {
               rowKey={(r) => r.id}
               initialSortKey="rating"
               initialSortDir="desc"
-              emptyIcon="⭐"
+              emptyIcon={<IconStar className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.myPlayer")}
             />
           ) : tab === "onlineCareer" ? (
@@ -600,7 +602,7 @@ export default function RanglijstPage() {
               initialSortDir="asc"
               headerClassName="bg-cyan-50/50 text-cyan-600"
               rowClassName="border-t border-cyan-100/60 text-slate-600 transition hover:bg-cyan-50/30"
-              emptyIcon="🌐"
+              emptyIcon={<IconGlobe className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.onlineCareer")}
             />
           ) : tab === "offlineCareer" ? (
@@ -613,7 +615,7 @@ export default function RanglijstPage() {
               initialSortDir="asc"
               headerClassName="bg-indigo-50/50 text-indigo-600"
               rowClassName="border-t border-indigo-100/60 text-slate-600 transition hover:bg-indigo-50/30"
-              emptyIcon="🏆"
+              emptyIcon={<IconTrophy className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.offlineCareer")}
             />
           ) : tab === "singleSeason" ? (
@@ -624,7 +626,7 @@ export default function RanglijstPage() {
               rowKey={(r) => r.id}
               initialSortKey="points"
               initialSortDir="desc"
-              emptyIcon="⚽"
+              emptyIcon={<IconBall className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.singleSeason")}
             />
           ) : dailySubTab === "today" ? (
@@ -650,7 +652,7 @@ export default function RanglijstPage() {
                 initialSortDir="desc"
                 headerClassName="bg-amber-50/50 text-amber-600"
                 rowClassName="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30"
-                emptyIcon="🏅"
+                emptyIcon={<IconBolt className="h-6 w-6" />}
                 emptyText={t("ranglijst.empty.today")}
               />
             </>
@@ -664,7 +666,7 @@ export default function RanglijstPage() {
               initialSortDir="desc"
               headerClassName="bg-amber-50/50 text-amber-600"
               rowClassName="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30"
-              emptyIcon="🏆"
+              emptyIcon={<IconTrophy className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.wins")}
             />
           )}

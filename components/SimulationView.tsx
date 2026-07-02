@@ -4,11 +4,37 @@ import { useEffect, useRef, useState } from "react";
 import { useGame } from "@/lib/store";
 import type { MatchResult } from "@/lib/sim";
 import { useT } from "@/lib/i18n/core";
+import { IconBall, IconPause, IconPlay } from "@/components/icons";
 
 function outcome(m: MatchResult): "W" | "D" | "L" {
   return m.gf > m.ga ? "W" : m.gf === m.ga ? "D" : "L";
 }
 const dot = { W: "bg-emerald-400", D: "bg-amber-400", L: "bg-rose-400" } as const;
+
+function KeyMoments({ m }: { m: MatchResult }) {
+  const t = useT();
+  if (!m.goals?.length) return null;
+  return (
+    <div className="mt-3 flex flex-col gap-1">
+      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        {t("result.keyMoments")}
+      </div>
+      {m.goals.map((g, i) => (
+        <div
+          key={i}
+          className="animate-pop flex items-center gap-2 text-xs text-slate-600"
+          style={{ animationDelay: `${i * 90}ms` }}
+        >
+          <span className="w-8 shrink-0 text-right font-black tabular-nums text-emerald-600">{g.minute}&prime;</span>
+          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+            <IconBall className="h-3 w-3" />
+          </span>
+          <span className="truncate font-bold text-slate-700">{g.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function SimulationView() {
   const t = useT();
@@ -84,6 +110,8 @@ export default function SimulationView() {
             </div>
           </div>
 
+          <KeyMoments m={m} />
+
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-slate-400">{t("result.form")}</span>
@@ -103,9 +131,10 @@ export default function SimulationView() {
             <>
               <button
                 onClick={() => setPlaying((p) => !p)}
-                className="btn-secondary flex-1"
+                className="btn-secondary flex flex-1 items-center justify-center gap-2"
               >
-                {playing ? `⏸ ${t("result.pause")}` : `▶ ${t("result.resume")}`}
+                {playing ? <IconPause className="h-3.5 w-3.5" /> : <IconPlay className="h-3.5 w-3.5" />}
+                {playing ? t("result.pause") : t("result.resume")}
               </button>
               <button
                 onClick={() => setSpeed((s) => (s === 1 ? 2 : s === 2 ? 4 : 1))}

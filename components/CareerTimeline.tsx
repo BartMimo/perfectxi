@@ -96,7 +96,7 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
                   stroke="white" strokeWidth="2"
                 />
                 {p.champion && (
-                  <text x={cx} y={cy - 11} textAnchor="middle" fontSize="10">🏆</text>
+                  <text x={cx} y={cy - 11} textAnchor="middle" fontSize="11" fill="#f59e0b" fontWeight="900">★</text>
                 )}
                 {/* Season label */}
                 <text x={cx} y={chartH - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill="#94a3b8">
