@@ -3,11 +3,26 @@
 import { create } from "zustand";
 import { supabase } from "./supabase";
 import type { SimResult } from "./sim";
-import { XP_PER_CHAMPIONSHIP, XP_PER_SEASON, xpProgress } from "./customPlayer";
+import { LEVEL_XP_COSTS, XP_PER_CHAMPIONSHIP, XP_PER_SEASON } from "./customPlayer";
+
+export const MAX_LEVEL = 100;
 
 // Zelfde XP-systeem als Mijn Speler: 1 XP per seizoen, 2 bij een kampioenschap,
-// en dezelfde level-curve (LEVEL_XP_COSTS, level 1 -> 2 kost 1 XP, max level 40).
-export { xpProgress };
+// en dezelfde level-curve (LEVEL_XP_COSTS, level 1 -> 2 kost 1 XP). Voorbij het
+// einde van de curve (level 40) kost elk volgend level evenveel als de laatste
+// stap, tot maximaal level 100.
+export function xpProgress(xp: number): { level: number; current: number; needed: number } {
+  const lastCost = LEVEL_XP_COSTS[LEVEL_XP_COSTS.length - 1];
+  let level = 1;
+  let remaining = xp;
+  while (level < MAX_LEVEL) {
+    const cost = level - 1 < LEVEL_XP_COSTS.length ? LEVEL_XP_COSTS[level - 1] : lastCost;
+    if (remaining < cost) return { level, current: remaining, needed: cost };
+    remaining -= cost;
+    level++;
+  }
+  return { level: MAX_LEVEL, current: 0, needed: 0 };
+}
 
 const KEY = "pxi_xp";
 
