@@ -18,11 +18,18 @@ import { IconTrophy } from "@/components/icons";
 const REROLL_OPTIONS = [0, 1, 2, 3];
 const WISSEL_OPTIONS = [0, 1, 2, 3, 4];
 
+const chipBtn = (active: boolean) =>
+  `rounded-xl border px-1.5 py-2 text-xs font-bold transition-all ${
+    active
+      ? "border-accent/60 bg-accent/[0.08] text-accent"
+      : "border-line bg-white/[0.03] text-dim hover:bg-white/[0.06]"
+  }`;
+
 function SettingChip({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl bg-white/80 border border-indigo-100 px-3 py-2 text-center">
-      <div className="text-sm font-black text-slate-700">{value}</div>
-      <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{label}</div>
+    <div className="rounded-xl border border-line bg-white/[0.03] px-3 py-2 text-center">
+      <div className="stat-num text-lg text-text">{value}</div>
+      <div className="text-[9px] font-bold uppercase tracking-widest text-faint">{label}</div>
     </div>
   );
 }
@@ -85,7 +92,7 @@ export default function OfflineCarrierePage() {
     return (
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
-        <div className="flex items-center justify-center py-20 text-sm text-slate-400 font-bold">{t("common.loading")}</div>
+        <div className="flex items-center justify-center py-20 text-sm text-faint font-bold">{t("common.loading")}</div>
         <Footer />
       </main>
     );
@@ -96,8 +103,8 @@ export default function OfflineCarrierePage() {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600"><IconTrophy className="h-7 w-7" /></div>
-          <p className="text-sm text-slate-500 mb-4">{t("career.loginToStart")}</p>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-400/12 text-indigo-300 ring-1 ring-indigo-400/25"><IconTrophy className="h-7 w-7" /></div>
+          <p className="text-sm text-dim mb-4">{t("career.loginToStart")}</p>
           <button onClick={() => setShowLogin(true)} className="btn-primary">{t("common.login")}</button>
         </div>
         {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}
@@ -112,19 +119,19 @@ export default function OfflineCarrierePage() {
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-10">
           <div className="text-center mb-6">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600"><IconTrophy className="h-7 w-7" /></div>
-            <h1 className="text-2xl font-black text-slate-800">{t("career.offlineTitle")}</h1>
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-400/12 text-indigo-300 ring-1 ring-indigo-400/25"><IconTrophy className="h-7 w-7" /></div>
+            <h1 className="text-3xl font-black text-text font-display tracking-tight">{t("career.offlineTitle")}</h1>
           </div>
 
-          <div className="card p-5 border-2 border-indigo-200/60 bg-indigo-50/60 mb-4">
+          <div className="card p-5 border border-indigo-400/25 mb-4">
             <div className="flex flex-wrap items-center gap-2 text-sm mb-3">
-              <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-indigo-800">
+              <span className="rounded-full border border-indigo-400/25 bg-indigo-400/[0.08] px-3 py-1.5 font-bold text-indigo-200">
                 {divisionLabel(t, career.currentDivision)}
               </span>
-              <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-slate-700">
+              <span className="rounded-full border border-line bg-white/[0.04] px-3 py-1.5 font-bold text-dim">
                 {t("career.seasonN", { n: career.season })}
               </span>
-              <span className="rounded-full bg-white/80 border border-indigo-200/60 px-3 py-1.5 font-bold text-amber-700">
+              <span className="rounded-full border border-draw/25 bg-draw/[0.08] px-3 py-1.5 font-bold text-draw">
                 {t("career.timesChampion", { n: career.championships })}
               </span>
             </div>
@@ -147,13 +154,13 @@ export default function OfflineCarrierePage() {
             <button
               disabled={!loaded}
               onClick={playSeason}
-              className="flex-1 rounded-full bg-indigo-500 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
+              className="btn-primary flex-1"
             >
               {loaded ? t("career.playSeasonN", { n: career.season }) : t("common.loading")}
             </button>
             <button
               onClick={() => userId && career.endCareer(userId)}
-              className="rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-500 hover:bg-rose-100 transition"
+              className="rounded-xl border border-loss/30 bg-loss/[0.08] px-4 py-3 text-xs font-bold text-loss hover:bg-loss/[0.14] transition"
             >
               {t("career.stop")}
             </button>
@@ -169,27 +176,19 @@ export default function OfflineCarrierePage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="text-center mb-8">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-indigo-100 text-indigo-600"><IconTrophy className="h-7 w-7" /></div>
-          <h1 className="text-2xl font-black text-slate-800">{t("career.offlineTitle")}</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-400/12 text-indigo-300 ring-1 ring-indigo-400/25"><IconTrophy className="h-7 w-7" /></div>
+          <h1 className="text-3xl font-black text-text font-display tracking-tight">{t("career.offlineTitle")}</h1>
+          <p className="mt-2 text-sm text-dim">
             {t("career.offlineIntro")}
           </p>
         </div>
 
         <div className="card p-6">
           <div className="mb-3.5">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.formation")}</div>
+            <div className="eyebrow mb-1.5">{t("career.formation")}</div>
             <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
               {FORMATIONS.map((fm) => (
-                <button
-                  key={fm.key}
-                  onClick={() => setFormationKey(fm.key)}
-                  className={`rounded-xl border-2 px-1.5 py-2 text-xs font-bold transition-all ${
-                    formationKey === fm.key
-                      ? "border-indigo-400 bg-indigo-50 text-indigo-700"
-                      : "border-transparent bg-slate-50 text-slate-500 hover:bg-slate-100"
-                  }`}
-                >
+                <button key={fm.key} onClick={() => setFormationKey(fm.key)} className={chipBtn(formationKey === fm.key)}>
                   {fm.label}
                 </button>
               ))}
@@ -197,18 +196,10 @@ export default function OfflineCarrierePage() {
           </div>
 
           <div className="mb-3.5">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.rerollsPerSeason")}</div>
+            <div className="eyebrow mb-1.5">{t("career.rerollsPerSeason")}</div>
             <div className="flex gap-1.5">
               {REROLL_OPTIONS.map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setRerollCount(n)}
-                  className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold transition-all ${
-                    rerollCount === n
-                      ? "border-indigo-400 bg-indigo-50 text-indigo-700"
-                      : "border-transparent bg-slate-50 text-slate-500 hover:bg-slate-100"
-                  }`}
-                >
+                <button key={n} onClick={() => setRerollCount(n)} className={`flex-1 ${chipBtn(rerollCount === n)}`}>
                   {n}
                 </button>
               ))}
@@ -216,18 +207,10 @@ export default function OfflineCarrierePage() {
           </div>
 
           <div className="mb-3.5">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.substitutionsPerSeason")}</div>
+            <div className="eyebrow mb-1.5">{t("career.substitutionsPerSeason")}</div>
             <div className="flex gap-1.5">
               {WISSEL_OPTIONS.map((n) => (
-                <button
-                  key={n}
-                  onClick={() => setWisselCount(n)}
-                  className={`flex-1 rounded-xl border-2 py-2 text-sm font-bold transition-all ${
-                    wisselCount === n
-                      ? "border-indigo-400 bg-indigo-50 text-indigo-700"
-                      : "border-transparent bg-slate-50 text-slate-500 hover:bg-slate-100"
-                  }`}
-                >
+                <button key={n} onClick={() => setWisselCount(n)} className={`flex-1 ${chipBtn(wisselCount === n)}`}>
                   {n}
                 </button>
               ))}
@@ -235,20 +218,12 @@ export default function OfflineCarrierePage() {
           </div>
 
           <div className="mb-4">
-            <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1.5">{t("career.competitions")}</div>
+            <div className="eyebrow mb-1.5">{t("career.competitions")}</div>
             <div className="grid grid-cols-2 gap-1.5">
               {LEAGUES.map((l) => {
                 const active = selectedLeagues.includes(l.code);
                 return (
-                  <button
-                    key={l.code}
-                    onClick={() => toggleLeague(l.code)}
-                    className={`flex items-center gap-1.5 rounded-xl border-2 px-2.5 py-2 text-xs font-bold transition-all ${
-                      active
-                        ? "border-indigo-400 bg-indigo-50 text-indigo-700"
-                        : "border-transparent bg-slate-50 text-slate-400 hover:bg-slate-100"
-                    }`}
-                  >
+                  <button key={l.code} onClick={() => toggleLeague(l.code)} className={`flex items-center gap-1.5 ${chipBtn(active)}`}>
                     <span>{l.flag}</span>
                     <span className="truncate">{l.name}</span>
                   </button>
@@ -257,11 +232,7 @@ export default function OfflineCarrierePage() {
             </div>
           </div>
 
-          <button
-            disabled={!loaded}
-            onClick={handleStart}
-            className="w-full rounded-full bg-indigo-500 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
-          >
+          <button disabled={!loaded} onClick={handleStart} className="btn-primary w-full">
             {loaded ? t("career.startCareer") : t("common.loading")}
           </button>
         </div>

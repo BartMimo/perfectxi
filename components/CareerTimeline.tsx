@@ -56,7 +56,7 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
 
   return (
     <div className="card p-4 overflow-hidden">
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+      <div className="eyebrow mb-3">
         {t("career.overview")}
       </div>
       <div className="overflow-x-auto -mx-4 px-4">
@@ -66,9 +66,9 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
             <g key={d}>
               <line
                 x1={padLeft - 4} y1={y(d)} x2={viewW - padRight} y2={y(d)}
-                stroke="#e2e8f0" strokeWidth="1" strokeDasharray={d === minDiv || d === maxDiv ? "" : "3,3"}
+                stroke="rgba(233,240,234,0.1)" strokeWidth="1" strokeDasharray={d === minDiv || d === maxDiv ? "" : "3,3"}
               />
-              <text x={padLeft - 8} y={y(d) + 3.5} textAnchor="end" fontSize="9" fontWeight="700" fill="#94a3b8">
+              <text x={padLeft - 8} y={y(d) + 3.5} textAnchor="end" fontSize="9" fontWeight="700" fill="#7c8f84">
                 D{d}
               </text>
             </g>
@@ -79,8 +79,8 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
 
           <defs>
             <linearGradient id="careerGrad" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#818cf8" />
-              <stop offset="100%" stopColor="#6366f1" />
+              <stop offset="0%" stopColor="#7ce88a" />
+              <stop offset="100%" stopColor="#b6ff3a" />
             </linearGradient>
           </defs>
 
@@ -92,19 +92,19 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
               <g key={i}>
                 {/* Dot */}
                 <circle cx={cx} cy={cy} r={p.champion ? 7 : 5}
-                  fill={p.champion ? "#f59e0b" : p.promoted ? "#10b981" : p.relegated ? "#ef4444" : "#6366f1"}
-                  stroke="white" strokeWidth="2"
+                  fill={p.champion ? "#f5c451" : p.promoted ? "#b6ff3a" : p.relegated ? "#ff6b7a" : "#9db0a5"}
+                  stroke="#0c1712" strokeWidth="2"
                 />
                 {p.champion && (
-                  <text x={cx} y={cy - 11} textAnchor="middle" fontSize="11" fill="#f59e0b" fontWeight="900">★</text>
+                  <text x={cx} y={cy - 11} textAnchor="middle" fontSize="11" fill="#f5c451" fontWeight="900">★</text>
                 )}
                 {/* Season label */}
-                <text x={cx} y={chartH - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill="#94a3b8">
+                <text x={cx} y={chartH - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill="#7c8f84">
                   S{p.season}
                 </text>
                 {/* Position */}
                 <text x={cx} y={cy + (p.champion ? 17 : 15)} textAnchor="middle" fontSize="8" fontWeight="700"
-                  fill={p.position <= 2 ? "#10b981" : p.position >= 18 ? "#ef4444" : "#64748b"}>
+                  fill={p.position <= 2 ? "#7ce88a" : p.position >= 18 ? "#ff6b7a" : "#9db0a5"}>
                   {t("career.positionPoints", { pos: p.position, pts: p.points })}
                 </text>
               </g>
@@ -113,12 +113,12 @@ export default function CareerTimeline({ history, currentDivision, currentSeason
 
           {/* Current season dot */}
           <circle cx={x(points.length, viewW)} cy={y(currentDivision)} r={5}
-            fill="white" stroke="#6366f1" strokeWidth="2" strokeDasharray="3,2"
+            fill="#0c1712" stroke="#b6ff3a" strokeWidth="2" strokeDasharray="3,2"
           />
-          <text x={x(points.length, viewW)} y={chartH - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill="#6366f1">
+          <text x={x(points.length, viewW)} y={chartH - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill="#b6ff3a">
             S{currentSeason}
           </text>
-          <text x={x(points.length, viewW)} y={y(currentDivision) + 15} textAnchor="middle" fontSize="8" fontWeight="700" fill="#6366f1">
+          <text x={x(points.length, viewW)} y={y(currentDivision) + 15} textAnchor="middle" fontSize="8" fontWeight="700" fill="#b6ff3a">
             {t("career.now")}
           </text>
         </svg>
