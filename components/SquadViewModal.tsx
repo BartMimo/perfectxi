@@ -101,10 +101,10 @@ const BAND_LABEL_KEYS: Record<Band, string> = {
   ATT: "draft.bandAttack",
 };
 const BAND_COLORS: Record<Band, string> = {
-  GK: "text-amber-600",
-  DEF: "text-sky-600",
-  MID: "text-emerald-600",
-  ATT: "text-rose-600",
+  GK: "text-amber-300",
+  DEF: "text-sky-300",
+  MID: "text-emerald-300",
+  ATT: "text-rose-300",
 };
 
 function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: () => void }) {
@@ -122,24 +122,24 @@ function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: 
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 9999 }}
-      className="bg-gradient-to-br from-slate-50 to-slate-100"
+      className="bg-bg"
     >
       {/* Sticky top bar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200/60 bg-white/90 backdrop-blur-xl">
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-line bg-bg/90 backdrop-blur-xl">
         <div className="min-w-0">
-          <div className="text-lg font-black text-slate-800 truncate">{player.team_name || player.username}</div>
+          <div className="text-lg font-black text-text truncate font-display">{player.team_name || player.username}</div>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-xs font-bold text-slate-400">{divisionLabel(t, player.current_division)}</span>
-            <span className="text-xs font-bold text-emerald-600">{rating} OVR</span>
-            <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-500">{formation.label}</span>
+            <span className="text-xs font-bold text-faint">{divisionLabel(t, player.current_division)}</span>
+            <span className="text-xs font-bold text-accent">{rating} OVR</span>
+            <span className="rounded-full bg-white/[0.05] px-2.5 py-0.5 text-[10px] font-bold text-dim">{formation.label}</span>
             {player.championships > 0 && (
-              <span className="text-xs font-bold text-amber-600">{player.championships}x 🏆</span>
+              <span className="text-xs font-bold text-draw">{player.championships}x 🏆</span>
             )}
           </div>
         </div>
         <button
           onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition text-sm font-bold shrink-0"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.06] text-dim hover:bg-white/[0.12] hover:text-text transition text-sm font-bold shrink-0"
         >
           ✕
         </button>
@@ -160,7 +160,7 @@ function SquadViewContent({ player, onClose }: { player: OnlinePlayer; onClose: 
             </div>
           </div>
           {/* List */}
-          <div className="w-[380px] shrink-0 overflow-y-auto border-l border-slate-200/60 bg-white/60 p-6">
+          <div className="w-[380px] shrink-0 overflow-y-auto border-l border-line bg-white/[0.02] p-6">
             <PlayerList grouped={grouped} />
           </div>
         </div>
@@ -202,13 +202,13 @@ function PlayerList({ grouped }: { grouped: Map<Band, DraftedPlayer[]> }) {
               {players
                 .sort((a, b) => b.overall - a.overall)
                 .map((p) => (
-                  <div key={p.name} className="flex items-center gap-3 rounded-xl bg-white/80 border border-slate-100 px-3.5 py-2.5 shadow-sm">
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black tabular-nums shadow-sm ${ratingColor(p.overall)}`}>
+                  <div key={p.name} className="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-line px-3.5 py-2.5">
+                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-black tabular-nums ${ratingColor(p.overall)}`}>
                       {p.overall}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold text-slate-800 truncate">{p.name}</div>
-                      <div className="text-[11px] text-slate-400 truncate">{p.fromClub} · {p.sub}</div>
+                      <div className="text-sm font-bold text-text truncate">{p.name}</div>
+                      <div className="text-[11px] text-faint truncate">{p.fromClub} · {p.sub}</div>
                     </div>
                   </div>
                 ))}
