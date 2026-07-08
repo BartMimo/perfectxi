@@ -19,7 +19,7 @@ export function UserLink({ username }: { username: string }) {
   return (
     <a
       href={`/profiel/${encodeURIComponent(username)}`}
-      className="font-bold text-slate-800 hover:text-indigo-600 transition"
+      className="font-bold text-text hover:text-accent transition"
     >
       {username}
     </a>
@@ -29,23 +29,23 @@ export function UserLink({ username }: { username: string }) {
 export function RankBadge({ rank }: { rank: number }) {
   if (rank <= 3) {
     return (
-      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black text-white ${
-        rank === 1 ? "bg-amber-400" : rank === 2 ? "bg-slate-400" : "bg-amber-600"
+      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full stat-num text-xs ${
+        rank === 1 ? "bg-draw text-accent-ink" : rank === 2 ? "bg-slate-300 text-slate-900" : "bg-amber-700 text-white"
       }`}>
         {rank}
       </span>
     );
   }
-  return <span className="pl-1.5 font-bold text-slate-400">{rank}</span>;
+  return <span className="pl-1.5 stat-num text-sm text-faint">{rank}</span>;
 }
 
 export function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="p-12 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.05] text-faint">
         {icon}
       </div>
-      <div className="text-sm text-slate-400">{text}</div>
+      <div className="text-sm text-faint">{text}</div>
     </div>
   );
 }
@@ -68,8 +68,8 @@ export default function SortableTable<T>({
   rowKey,
   initialSortKey,
   initialSortDir = "desc",
-  headerClassName = "bg-slate-50/80 text-slate-400",
-  rowClassName = "border-t border-slate-100/60 text-slate-600 transition hover:bg-emerald-50/30",
+  headerClassName = "bg-white/[0.03] text-faint",
+  rowClassName = "border-t border-line text-dim transition hover:bg-white/[0.03]",
   emptyIcon,
   emptyText,
 }: {
@@ -112,7 +112,7 @@ export default function SortableTable<T>({
               <th
                 key={col.key}
                 onClick={() => handleClick(col)}
-                className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 hover:text-slate-600 ${
+                className={`cursor-pointer select-none whitespace-nowrap px-3 py-3 hover:text-text ${
                   col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                 }`}
               >
@@ -133,7 +133,7 @@ export default function SortableTable<T>({
                   key={col.key}
                   className={`px-3 py-3 ${
                     col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
-                  } ${sortKey === col.key ? "font-black text-emerald-600" : ""}`}
+                  } ${sortKey === col.key ? "font-black text-accent" : ""}`}
                 >
                   {col.cell(row)}
                 </td>

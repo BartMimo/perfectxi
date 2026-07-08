@@ -95,10 +95,10 @@ function fmtLeagues(t: TFunc, codes: string[]): string {
 function PosBadge({ position }: { position: number }) {
   return (
     <span className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[10px] font-bold ${
-      position === 1 ? "bg-amber-100/80 text-amber-700"
-        : position <= 4 ? "bg-emerald-100/80 text-emerald-700"
-        : position >= 18 ? "bg-rose-100/80 text-rose-600"
-        : "bg-slate-100/80 text-slate-500"
+      position === 1 ? "bg-draw/15 text-draw"
+        : position <= 4 ? "bg-accent/12 text-accent"
+        : position >= 18 ? "bg-loss/12 text-loss"
+        : "bg-white/[0.05] text-dim"
     }`}>
       {position}e
     </span>
@@ -360,7 +360,7 @@ export default function RanglijstPage() {
       key: "playerName",
       label: t("ranglijst.col.playerName"),
       value: (r) => r.playerName,
-      cell: (r) => <span className="font-bold text-slate-800">{r.playerName}</span>,
+      cell: (r) => <span className="font-bold text-text">{r.playerName}</span>,
       defaultDir: "asc",
     },
     {
@@ -415,7 +415,7 @@ export default function RanglijstPage() {
       key: "competition",
       label: t("ranglijst.col.competition"),
       value: (r) => r.leagueName,
-      cell: (r) => <span className="text-slate-500">{r.leagueName}</span>,
+      cell: (r) => <span className="text-dim">{r.leagueName}</span>,
       defaultDir: "desc",
     },
     {
@@ -423,7 +423,7 @@ export default function RanglijstPage() {
       label: t("ranglijst.col.formation"),
       value: (r) => fmtFormation(r.formation),
       cell: (r) => (
-        <span className="rounded-lg bg-slate-100/80 px-2 py-1 text-[11px] font-bold text-slate-600">
+        <span className="rounded-lg bg-white/[0.05] px-2 py-1 text-[11px] font-bold text-dim">
           {fmtFormation(r.formation)}
         </span>
       ),
@@ -442,7 +442,7 @@ export default function RanglijstPage() {
       label: t("ranglijst.col.record"),
       align: "center",
       value: (r) => r.won,
-      cell: (r) => <span className="text-[11px] text-slate-500">{r.won}-{r.drawn}-{r.lost}</span>,
+      cell: (r) => <span className="text-[11px] text-dim tabular-nums">{r.won}-{r.drawn}-{r.lost}</span>,
       defaultDir: "desc",
     },
     {
@@ -542,7 +542,7 @@ export default function RanglijstPage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl font-black text-slate-800">{t("ranglijst.title")}</h1>
+          <h1 className="text-3xl font-black text-text font-display tracking-tight">{t("ranglijst.title")}</h1>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-5">
@@ -550,8 +550,8 @@ export default function RanglijstPage() {
             <button
               key={tb.id}
               onClick={() => setTab(tb.id)}
-              className={`flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-bold transition-all ${
-                tab === tb.id ? "bg-white shadow-sm border border-slate-200/60 text-slate-800" : "text-slate-400 hover:text-slate-600"
+              className={`flex items-center gap-1.5 rounded-full border px-5 py-2.5 text-sm font-bold transition-all ${
+                tab === tb.id ? "border-accent/40 bg-accent/[0.1] text-accent" : "border-line text-faint hover:text-text hover:bg-white/[0.03]"
               }`}
             >
               {tb.icon}
@@ -568,8 +568,8 @@ export default function RanglijstPage() {
                 onClick={() => setDailySubTab(s)}
                 className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
                   dailySubTab === s
-                    ? "bg-amber-400 text-white shadow-[0_3px_0_#c98a10]"
-                    : "bg-white/70 border border-slate-200/60 text-slate-500 hover:bg-white hover:shadow-sm backdrop-blur"
+                    ? "bg-draw text-accent-ink"
+                    : "border border-line text-dim hover:bg-white/[0.04] hover:text-text"
                 }`}
               >
                 {t(s === "today" ? "ranglijst.subtab.today" : "ranglijst.subtab.wins")}
@@ -578,9 +578,9 @@ export default function RanglijstPage() {
           </div>
         )}
 
-        <div className="card overflow-hidden">
+        <div className="card-solid overflow-hidden">
           {loading && !loadedTabs.has(tab) ? (
-            <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
+            <div className="p-12 text-center text-sm text-faint">{t("common.loading")}</div>
           ) : tab === "myPlayer" ? (
             <SortableTable
               key="myPlayer"
@@ -600,8 +600,7 @@ export default function RanglijstPage() {
               rowKey={(r) => r.id}
               initialSortKey="fastest"
               initialSortDir="asc"
-              headerClassName="bg-cyan-50/50 text-cyan-600"
-              rowClassName="border-t border-cyan-100/60 text-slate-600 transition hover:bg-cyan-50/30"
+              headerClassName="bg-cyan-400/[0.06] text-cyan-300"
               emptyIcon={<IconGlobe className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.onlineCareer")}
             />
@@ -613,8 +612,7 @@ export default function RanglijstPage() {
               rowKey={(r) => r.id}
               initialSortKey="fastest"
               initialSortDir="asc"
-              headerClassName="bg-indigo-50/50 text-indigo-600"
-              rowClassName="border-t border-indigo-100/60 text-slate-600 transition hover:bg-indigo-50/30"
+              headerClassName="bg-indigo-400/[0.06] text-indigo-300"
               emptyIcon={<IconTrophy className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.offlineCareer")}
             />
@@ -631,15 +629,15 @@ export default function RanglijstPage() {
             />
           ) : dailySubTab === "today" ? (
             <>
-              <div className="px-5 py-3 border-b border-slate-100/60 flex flex-wrap items-center gap-2">
-                <span className="text-sm font-bold text-amber-800">{t("ranglijst.dailyChallenge")}</span>
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+              <div className="px-5 py-3 border-b border-line flex flex-wrap items-center gap-2">
+                <span className="text-sm font-bold text-text">{t("ranglijst.dailyChallenge")}</span>
+                <span className="rounded-full bg-draw/12 px-2.5 py-1 text-[10px] font-bold text-draw">
                   {challenge.leagueFlag} {challenge.leagueName}
                 </span>
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                <span className="rounded-full bg-draw/12 px-2.5 py-1 text-[10px] font-bold text-draw">
                   {challenge.formationLabel}
                 </span>
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-700">
+                <span className="rounded-full bg-draw/12 px-2.5 py-1 text-[10px] font-bold text-draw">
                   {challenge.ratingMode === "prime" ? t("ranglijst.ratingMode.prime") : t("ranglijst.ratingMode.current")}
                 </span>
               </div>
@@ -650,8 +648,7 @@ export default function RanglijstPage() {
                 rowKey={(r) => r.id}
                 initialSortKey="points"
                 initialSortDir="desc"
-                headerClassName="bg-amber-50/50 text-amber-600"
-                rowClassName="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30"
+                headerClassName="bg-draw/[0.06] text-draw"
                 emptyIcon={<IconBolt className="h-6 w-6" />}
                 emptyText={t("ranglijst.empty.today")}
               />
@@ -664,8 +661,7 @@ export default function RanglijstPage() {
               rowKey={(r) => r.username}
               initialSortKey="wins"
               initialSortDir="desc"
-              headerClassName="bg-amber-50/50 text-amber-600"
-              rowClassName="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30"
+              headerClassName="bg-draw/[0.06] text-draw"
               emptyIcon={<IconTrophy className="h-6 w-6" />}
               emptyText={t("ranglijst.empty.wins")}
             />
