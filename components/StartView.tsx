@@ -66,7 +66,22 @@ interface ModeAccent {
   ring: string;
 }
 
-function ModeCard({ icon, title, desc, href, onClick, accent, badge, featured }: {
+/** Mini-pitch signatuur — echoot het echte speelveld van de game. */
+function MiniPitch({ className = "" }: { className?: string }) {
+  const l = { stroke: "rgba(182,255,58,0.28)", strokeWidth: 1, fill: "none" } as const;
+  return (
+    <svg viewBox="0 0 64 96" className={className} aria-hidden="true">
+      <rect x="3" y="3" width="58" height="90" rx="2" {...l} />
+      <line x1="3" y1="48" x2="61" y2="48" {...l} />
+      <circle cx="32" cy="48" r="11" {...l} />
+      <rect x="18" y="3" width="28" height="13" {...l} />
+      <rect x="18" y="80" width="28" height="13" {...l} />
+      <circle cx="32" cy="48" r="2.4" fill="#b6ff3a" className="text-glow" />
+    </svg>
+  );
+}
+
+function ModeCard({ icon, title, desc, href, onClick, accent, badge, index, featured }: {
   icon: React.ReactNode;
   title: string;
   desc: string;
@@ -74,26 +89,32 @@ function ModeCard({ icon, title, desc, href, onClick, accent, badge, featured }:
   onClick?: () => void;
   accent: ModeAccent;
   badge?: string;
+  index: string;
   featured?: boolean;
 }) {
-  const className = `group relative flex rounded-2xl border border-line bg-white/[0.03] p-4 text-left backdrop-blur transition-all duration-150 hover:-translate-y-0.5 hover:bg-white/[0.055] active:translate-y-0 sm:p-5 ${accent.ring} ${
-    featured ? "sm:col-span-2 flex-row items-center gap-4" : "flex-row items-center gap-3.5 sm:flex-col sm:items-start sm:gap-3"
+  const className = `group relative grid grid-cols-[auto_auto_1fr_auto] items-center gap-3.5 overflow-hidden rounded-2xl border border-line bg-white/[0.03] p-4 text-left backdrop-blur transition-all duration-150 hover:bg-white/[0.055] active:translate-y-px ${accent.ring} ${
+    featured ? "sm:col-span-2" : ""
   }`;
   const inner = (
     <>
-      {badge && (
-        <span className="absolute -top-2.5 right-4 rounded-full bg-accent px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-accent-ink">
-          {badge}
-        </span>
-      )}
-      <span className={`flex shrink-0 items-center justify-center rounded-xl ${accent.chip} ${featured ? "h-14 w-14" : "h-11 w-11"}`}>
+      {/* lime edge on hover */}
+      <span className="absolute inset-y-3 left-0 w-0.5 rounded-full bg-accent opacity-0 transition-opacity group-hover:opacity-100" />
+      <span className="stat-num w-6 text-center text-xl text-faint transition-colors group-hover:text-accent">{index}</span>
+      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${accent.chip}`}>
         {icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-[15px] font-bold text-text sm:text-base">{title}</span>
+        <span className="flex items-center gap-2">
+          <span className="text-[15px] font-bold text-text sm:text-base">{title}</span>
+          {badge && (
+            <span className="rounded-full bg-accent px-2 py-px text-[9px] font-black uppercase tracking-wider text-accent-ink">
+              {badge}
+            </span>
+          )}
+        </span>
         <span className="text-xs leading-relaxed text-dim sm:text-[13px]">{desc}</span>
       </span>
-      {featured && <IconChevronRight className="h-5 w-5 shrink-0 text-faint transition-all group-hover:translate-x-1 group-hover:text-accent" />}
+      <IconChevronRight className="h-5 w-5 shrink-0 text-faint transition-all group-hover:translate-x-1 group-hover:text-accent" />
     </>
   );
   return href ? (
@@ -165,7 +186,7 @@ export default function StartView() {
 
   if (screen === "home") {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/12 text-accent ring-1 ring-accent/20">
@@ -179,33 +200,51 @@ export default function StartView() {
           </div>
         </div>
 
-        {/* Hero — unbeaten-record scoreboard signature */}
-        <div className="animate-fade-up mt-10 text-center sm:mt-14">
-          <p className="eyebrow">{t("start.tagline.prefix")}</p>
-          <div className="mt-4 flex items-center justify-center gap-3 sm:gap-5">
-            <span className="stat-num text-glow text-7xl text-accent sm:text-8xl">38</span>
-            <span className="stat-num text-4xl text-faint sm:text-5xl">–</span>
-            <span className="stat-num text-7xl text-text sm:text-8xl">0</span>
-            <span className="stat-num text-4xl text-faint sm:text-5xl">–</span>
-            <span className="stat-num text-7xl text-text sm:text-8xl">0</span>
-          </div>
-          <div className="mx-auto mt-4 flex max-w-xs items-center justify-center gap-4">
-            <span className="hairline flex-1" />
-            <div className="flex gap-4 eyebrow">
-              <span className="text-accent-2">W</span>
-              <span>D</span>
-              <span>L</span>
+        {/* Hero — editorial "dossier"-paneel met scoreboard + mini-pitch signatuur */}
+        <div className="animate-fade-up card mt-6 overflow-hidden p-6 sm:mt-8 sm:p-8">
+          <div className="grid items-center gap-6 sm:grid-cols-[1fr_auto]">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="hairline w-8" />
+                <p className="eyebrow">{t("start.tagline.prefix")}</p>
+              </div>
+              <div className="mt-4 flex items-end gap-3 sm:gap-4">
+                <span className="stat-num text-glow text-7xl leading-none text-accent sm:text-8xl">38</span>
+                <span className="stat-num pb-1 text-4xl text-faint sm:text-5xl">–</span>
+                <span className="stat-num text-7xl leading-none text-text sm:text-8xl">0</span>
+                <span className="stat-num pb-1 text-4xl text-faint sm:text-5xl">–</span>
+                <span className="stat-num text-7xl leading-none text-text sm:text-8xl">0</span>
+              </div>
+              {/* stat-readout: W / D / L kolommen */}
+              <div className="mt-6 grid max-w-md grid-cols-3 divide-x divide-[color:var(--color-line)] rounded-xl border border-line bg-white/[0.02]">
+                {([
+                  ["W", "38", "text-accent-2"],
+                  ["D", "0", "text-text"],
+                  ["L", "0", "text-text"],
+                ] as const).map(([k, v, c]) => (
+                  <div key={k} className="flex flex-col items-center gap-0.5 px-3 py-2.5">
+                    <span className="eyebrow">{k}</span>
+                    <span className={`stat-num text-2xl ${c}`}>{v}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <span className="hairline flex-1" />
+            <MiniPitch className="hidden h-40 w-auto shrink-0 opacity-90 sm:block" />
           </div>
         </div>
 
-        <div className="mt-9 flex flex-col gap-3 sm:mt-12">
+        <div className="mt-6 flex flex-col gap-3">
           <DailyChallengeBanner />
+
+          <div className="mt-2 flex items-center gap-3">
+            <span className="text-accent">▸</span>
+            <span className="hairline flex-1" />
+          </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <ModeCard
-              icon={<IconGlobe className="h-7 w-7" />}
+              index="01"
+              icon={<IconGlobe className="h-6 w-6" />}
               title={t("start.mode.online.title")}
               desc={t("start.mode.online.desc")}
               href="/online-carriere"
@@ -214,6 +253,7 @@ export default function StartView() {
               featured
             />
             <ModeCard
+              index="02"
               icon={<IconShirt className="h-5.5 w-5.5" />}
               title={t("start.mode.singleSeason.title")}
               desc={t("start.mode.singleSeason.desc")}
@@ -221,6 +261,7 @@ export default function StartView() {
               accent={{ chip: "bg-accent/12 text-accent", ring: "hover:border-accent/40" }}
             />
             <ModeCard
+              index="03"
               icon={<IconTrophy className="h-5.5 w-5.5" />}
               title={t("start.mode.offlineCareer.title")}
               desc={t("start.mode.offlineCareer.desc")}
@@ -228,6 +269,7 @@ export default function StartView() {
               accent={{ chip: "bg-indigo-400/12 text-indigo-300", ring: "hover:border-indigo-400/40" }}
             />
             <ModeCard
+              index="04"
               icon={<IconStar className="h-5.5 w-5.5" />}
               title={t("start.mode.myPlayer.title")}
               desc={t("start.mode.myPlayer.desc")}
@@ -235,6 +277,7 @@ export default function StartView() {
               accent={{ chip: "bg-rose-400/12 text-rose-300", ring: "hover:border-rose-400/40" }}
             />
             <ModeCard
+              index="05"
               icon={<IconChart className="h-5.5 w-5.5" />}
               title={t("start.mode.leaderboard.title")}
               desc={t("start.mode.leaderboard.desc")}
@@ -242,6 +285,7 @@ export default function StartView() {
               accent={{ chip: "bg-cyan-400/12 text-cyan-300", ring: "hover:border-cyan-400/40" }}
             />
             <ModeCard
+              index="06"
               icon={<IconUser className="h-6 w-6" />}
               title={t("start.mode.profile.title")}
               desc={t("start.mode.profile.desc")}
