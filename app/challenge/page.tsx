@@ -30,14 +30,14 @@ interface DailyWinRow {
 function RankBadge({ rank }: { rank: number }) {
   if (rank <= 3) {
     return (
-      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-black text-white ${
-        rank === 1 ? "bg-amber-400" : rank === 2 ? "bg-slate-400" : "bg-amber-600"
+      <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full stat-num text-xs ${
+        rank === 1 ? "bg-draw text-accent-ink" : rank === 2 ? "bg-slate-300 text-slate-900" : "bg-amber-700 text-white"
       }`}>
         {rank}
       </span>
     );
   }
-  return <span className="pl-1.5 font-bold text-slate-400">{rank}</span>;
+  return <span className="pl-1.5 stat-num text-sm text-faint">{rank}</span>;
 }
 
 export default function ChallengePage() {
@@ -143,62 +143,62 @@ export default function ChallengePage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-3xl px-4 py-10">
         <div className="text-center mb-8">
-          <div className="animate-wiggle mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_3px_0_#c98a10]">
+          <div className="animate-wiggle mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-draw/15 text-draw ring-1 ring-draw/30">
             <IconBolt className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-black text-slate-800">{t("challenge.title")}</h1>
-          <p className="mt-2 text-sm text-slate-500">{t("challenge.subtitle")}</p>
+          <h1 className="text-3xl font-black text-text font-display tracking-tight">{t("challenge.title")}</h1>
+          <p className="mt-2 text-sm text-dim">{t("challenge.subtitle")}</p>
         </div>
 
-        <div className="card p-6 mb-6 border-2 border-amber-200/60 bg-amber-50/70">
+        <div className="card-solid p-6 mb-6 border border-draw/25 bg-draw/[0.05]">
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-amber-800">
+            <span className="rounded-full border border-draw/20 bg-white/[0.04] px-3 py-1.5 text-xs font-bold text-draw">
               {challenge.leagueFlag} {challenge.leagueName}
             </span>
-            <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-amber-800">
+            <span className="rounded-full border border-draw/20 bg-white/[0.04] px-3 py-1.5 text-xs font-bold text-draw">
               {challenge.formationLabel}
             </span>
-            <span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-bold text-amber-800">
+            <span className="rounded-full border border-draw/20 bg-white/[0.04] px-3 py-1.5 text-xs font-bold text-draw">
               {challenge.ratingMode === "prime" ? t("challenge.primeRating") : t("challenge.currentRating")}
             </span>
           </div>
 
           {!checked ? (
-            <div className="text-sm text-slate-400">{t("common.loading")}</div>
+            <div className="text-sm text-faint">{t("common.loading")}</div>
           ) : !userId ? (
-            <p className="text-sm text-amber-700">{t("challenge.loginToPlay")}</p>
+            <p className="text-sm text-draw">{t("challenge.loginToPlay")}</p>
           ) : challengePlayed !== null ? (
             <div className="flex items-center gap-3">
-              <span className="text-sm font-bold text-amber-800">{t("challenge.alreadyPlayedToday")}</span>
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-black text-amber-700">{t("challenge.pointsValue", { points: challengePlayed })}</span>
+              <span className="text-sm font-bold text-text">{t("challenge.alreadyPlayedToday")}</span>
+              <span className="rounded-full bg-draw/15 px-3 py-1 text-xs font-black text-draw">{t("challenge.pointsValue", { points: challengePlayed })}</span>
             </div>
           ) : (
             <button
               disabled={!loaded}
               onClick={handlePlay}
-              className="w-full rounded-full bg-amber-400 px-5 py-3.5 text-base font-extrabold text-white shadow-[0_4px_0_#c98a10] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-xl bg-draw px-5 py-3.5 text-base font-extrabold text-accent-ink transition hover:brightness-105 active:translate-y-px disabled:opacity-40"
             >
               {loaded ? t("challenge.playChallenge") : t("common.loading")}
             </button>
           )}
         </div>
 
-        <div className="card overflow-hidden mb-4">
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600"><IconBolt className="h-3.5 w-3.5" /></span>
+        <div className="card-solid overflow-hidden mb-4">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-line text-sm font-bold text-text">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-draw/15 text-draw"><IconBolt className="h-3.5 w-3.5" /></span>
             {t("challenge.todayLeaderboard")}
           </div>
           {loading ? (
-            <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
+            <div className="p-12 text-center text-sm text-faint">{t("common.loading")}</div>
           ) : todayRows.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-500"><IconBolt className="h-6 w-6" /></div>
-              <div className="text-sm text-slate-400">{t("challenge.noOneYetToday")}</div>
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-draw/15 text-draw"><IconBolt className="h-6 w-6" /></div>
+              <div className="text-sm text-faint">{t("challenge.noOneYetToday")}</div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
+                <thead className="bg-white/[0.03] text-[10px] uppercase tracking-wider text-faint">
                   <tr>
                     <th className="px-4 py-3 text-left">#</th>
                     <th className="px-3 py-3 text-left">{t("challenge.colPlayer")}</th>
@@ -211,16 +211,16 @@ export default function ChallengePage() {
                 </thead>
                 <tbody>
                   {todayRows.map((r, i) => (
-                    <tr key={r.id} className="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30">
+                    <tr key={r.id} className="border-t border-line text-dim transition hover:bg-white/[0.03]">
                       <td className="px-4 py-3"><RankBadge rank={i + 1} /></td>
-                      <td className="px-3 py-3 font-bold text-slate-800">{r.username}</td>
-                      <td className="px-3 py-3 text-right tabular-nums font-black text-amber-700">{r.points}</td>
+                      <td className="px-3 py-3 font-bold text-text">{r.username}</td>
+                      <td className="px-3 py-3 text-right stat-num text-sm text-draw">{r.points}</td>
                       <td className="px-3 py-3 text-right tabular-nums">{r.goals_for}</td>
                       <td className="px-3 py-3 text-right tabular-nums">{r.goals_against}</td>
-                      <td className="px-3 py-3 text-right tabular-nums text-slate-400">{(r.goal_diff >= 0 ? "+" : "")}{r.goal_diff}</td>
+                      <td className="px-3 py-3 text-right tabular-nums text-faint">{(r.goal_diff >= 0 ? "+" : "")}{r.goal_diff}</td>
                       <td className="px-3 py-3">
                         <span className={`inline-flex h-6 min-w-[2rem] items-center justify-center rounded-full px-2 text-[10px] font-bold ${
-                          r.position === 1 ? "bg-amber-100/80 text-amber-700" : r.position <= 4 ? "bg-emerald-100/80 text-emerald-700" : "bg-slate-100/80 text-slate-500"
+                          r.position === 1 ? "bg-draw/15 text-draw" : r.position <= 4 ? "bg-accent/12 text-accent" : "bg-white/[0.05] text-dim"
                         }`}>
                           {t("challenge.ordinalSuffix", { n: r.position })}
                         </span>
@@ -233,22 +233,22 @@ export default function ChallengePage() {
           )}
         </div>
 
-        <div className="card overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-3 border-b border-amber-100/60 text-sm font-bold text-amber-800">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 text-amber-600"><IconTrophy className="h-3.5 w-3.5" /></span>
+        <div className="card-solid overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-line text-sm font-bold text-text">
+            <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-draw/15 text-draw"><IconTrophy className="h-3.5 w-3.5" /></span>
             {t("challenge.allTimeWins")}
           </div>
           {loading ? (
-            <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
+            <div className="p-12 text-center text-sm text-faint">{t("common.loading")}</div>
           ) : dailyWinRows.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-500"><IconTrophy className="h-6 w-6" /></div>
-              <div className="text-sm text-slate-400">{t("challenge.noWinnersYet")}</div>
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-draw/15 text-draw"><IconTrophy className="h-6 w-6" /></div>
+              <div className="text-sm text-faint">{t("challenge.noWinnersYet")}</div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
-                <thead className="bg-amber-50/50 text-[10px] uppercase tracking-widest text-amber-600">
+                <thead className="bg-white/[0.03] text-[10px] uppercase tracking-wider text-faint">
                   <tr>
                     <th className="px-4 py-3 text-left">#</th>
                     <th className="px-3 py-3 text-left">{t("challenge.colPlayer")}</th>
@@ -257,10 +257,10 @@ export default function ChallengePage() {
                 </thead>
                 <tbody>
                   {dailyWinRows.map((r, i) => (
-                    <tr key={r.username} className="border-t border-amber-100/60 text-slate-600 transition hover:bg-amber-50/30">
+                    <tr key={r.username} className="border-t border-line text-dim transition hover:bg-white/[0.03]">
                       <td className="px-4 py-3"><RankBadge rank={i + 1} /></td>
-                      <td className="px-3 py-3 font-bold text-slate-800">{r.username}</td>
-                      <td className="px-3 py-3 text-right tabular-nums font-black text-amber-700">{r.wins}</td>
+                      <td className="px-3 py-3 font-bold text-text">{r.username}</td>
+                      <td className="px-3 py-3 text-right stat-num text-sm text-draw">{r.wins}</td>
                     </tr>
                   ))}
                 </tbody>
