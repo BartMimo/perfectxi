@@ -33,26 +33,22 @@ export function computeSeasonXp(result: SimResult): number {
 interface XpState {
   totalXp: number;
   loadedFor: string | null; // "local" (gast) of userId
-  load: (userId: string | null) => void;
+  load: (userId: string | null) => Promise<void>;
   addXp: (amount: number, userId: string | null) => { before: number; after: number };
 }
 
 export const useXp = create<XpState>((set, get) => ({
   totalXp: 0,
   loadedFor: null,
-  load(userId) {
+  async load(userId) {
     const key = userId ?? "local";
     if (get().loadedFor === key || typeof window === "undefined") return;
-    set({ loadedFor: key, totalXp: Number(localStorage.getItem(KEY)) || 0 });
+    set({ loadedFor: key });
     if (userId) {
-      supabase
-        .from("users")
-        .select("xp")
-        .eq("id", userId)
-        .single()
-        .then(({ data }) => {
-          if (data && typeof data.xp === "number") set({ totalXp: data.xp });
-        });
+      const { data } = await supabase.from("users").select("xp").eq("id", userId).single();
+      set({ totalXp: data && typeof data.xp === "number" ? data.xp : 0 });
+    } else {
+      set({ totalXp: Number(localStorage.getItem(KEY)) || 0 });
     }
   },
   addXp(amount, userId) {

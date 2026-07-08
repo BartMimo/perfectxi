@@ -73,16 +73,24 @@ export default function ResultView() {
   useEffect(() => {
     if (!result || authLoading || seasonXpDone.current) return;
     seasonXpDone.current = true;
-    loadXp(userId);
-    const gained = computeSeasonXp(result);
-    const { before, after } = addXp(gained, userId);
-    setXpGained(gained);
-    if (xpProgress(after).level > xpProgress(before).level) setNewLevel(xpProgress(after).level);
-    if (result.position === 1 || result.invincible) {
-      setConfetti(true);
-      const id = setTimeout(() => setConfetti(false), 6500);
-      return () => clearTimeout(id);
-    }
+    let cancelled = false;
+    let confettiId: ReturnType<typeof setTimeout> | undefined;
+    (async () => {
+      await loadXp(userId);
+      if (cancelled) return;
+      const gained = computeSeasonXp(result);
+      const { before, after } = addXp(gained, userId);
+      setXpGained(gained);
+      if (xpProgress(after).level > xpProgress(before).level) setNewLevel(xpProgress(after).level);
+      if (result.position === 1 || result.invincible) {
+        setConfetti(true);
+        confettiId = setTimeout(() => setConfetti(false), 6500);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (confettiId) clearTimeout(confettiId);
+    };
   }, [result, authLoading, userId, addXp, loadXp]);
 
   useEffect(() => {

@@ -634,6 +634,9 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
   useEffect(() => {
     if (step === "draft" && !initRef.current && loaded) {
       initRef.current = true;
+      if (me.formation_key && useGame.getState().formationKey !== me.formation_key) {
+        useGame.getState().setFormation(me.formation_key);
+      }
       startCareerSeason(me.current_division, me.squad.length > 0 ? me.squad : undefined, lobby.reroll_count, lobby.leagues);
     }
   }, [step, loaded]);
@@ -656,6 +659,9 @@ function DraftFlow({ lobby, userId, me }: { lobby: OnlineCareer; userId: string;
         maxReplace={lobby.wissel_count}
         onConfirm={(remaining) => {
           initRef.current = true;
+          if (me.formation_key && useGame.getState().formationKey !== me.formation_key) {
+            useGame.getState().setFormation(me.formation_key);
+          }
           startCareerSeason(me.current_division, remaining, lobby.reroll_count, lobby.leagues);
           setStep("draft");
         }}

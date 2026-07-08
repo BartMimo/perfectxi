@@ -13,13 +13,14 @@ const dot = { W: "bg-emerald-400", D: "bg-amber-400", L: "bg-rose-400" } as cons
 
 function KeyMoments({ m }: { m: MatchResult }) {
   const t = useT();
-  if (!m.goals?.length) return null;
   return (
-    <div className="mt-3 flex flex-col gap-1">
-      <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-        {t("result.keyMoments")}
-      </div>
-      {m.goals.map((g, i) => (
+    <div className="mt-3 flex h-24 flex-col gap-1 overflow-y-auto">
+      {!!m.goals?.length && (
+        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+          {t("result.keyMoments")}
+        </div>
+      )}
+      {m.goals?.map((g, i) => (
         <div
           key={i}
           className="animate-pop flex items-center gap-2 text-xs text-slate-600"
