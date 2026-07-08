@@ -190,24 +190,24 @@ export default function ResultView() {
       <div className="card animate-pop p-6 text-center">
         {invincible ? (
           <>
-            <div className="mx-auto flex h-16 w-16 animate-floaty items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_4px_0_#c98a10]">
+            <div className="mx-auto flex h-16 w-16 animate-floaty items-center justify-center rounded-full bg-accent/15 text-accent ring-1 ring-accent/30">
               <IconStar className="h-9 w-9" />
             </div>
-            <div className="mt-3 text-2xl font-black text-amber-500">THE INVINCIBLES</div>
-            <div className="mt-1 text-sm text-slate-500">
-              {t("result.invincibleDesc")} <b>38-0-0</b>.
+            <div className="mt-3 stat-num text-3xl text-accent text-glow">THE INVINCIBLES</div>
+            <div className="mt-1 text-sm text-dim">
+              {t("result.invincibleDesc")} <b className="text-text">38-0-0</b>.
             </div>
           </>
         ) : (
           <>
-            <div className="text-xs uppercase tracking-widest text-slate-400">{t("result.finalStandings")}</div>
-            <div className="mt-2 text-5xl font-black tabular-nums text-slate-800">
+            <div className="eyebrow">{t("result.finalStandings")}</div>
+            <div className="mt-2 stat-num text-6xl text-text">
               {position}
-              <span className="text-2xl text-slate-300">
+              <span className="text-3xl text-faint">
                 {position === 1 ? t("result.ordinalSte") : position === 2 ? t("result.ordinalDe") : t("result.ordinalE")}
               </span>
             </div>
-            <div className="mt-2 text-base font-bold text-emerald-600">
+            <div className="mt-2 text-base font-bold text-accent">
               {QUALIFICATION_LABELS[qualification]}
             </div>
           </>
@@ -215,12 +215,12 @@ export default function ResultView() {
 
         {xpGained > 0 && (
           <div className="mt-4 flex flex-col items-center gap-1.5">
-            <span className="animate-pop inline-flex items-center gap-1.5 rounded-full bg-violet-100 px-4 py-1.5 text-sm font-black text-violet-700" style={{ animationDelay: "400ms" }}>
+            <span className="animate-pop inline-flex items-center gap-1.5 rounded-full border border-violet-400/25 bg-violet-400/[0.12] px-4 py-1.5 text-sm font-black text-violet-200" style={{ animationDelay: "400ms" }}>
               <IconBolt className="h-4 w-4" />
               {t("result.xpEarned", { xp: xpGained })}
             </span>
             {newLevel !== null && (
-              <span className="animate-pop inline-flex items-center gap-1.5 rounded-full bg-violet-600 px-4 py-1.5 text-sm font-black text-white shadow-[0_3px_0_#5b21b6]" style={{ animationDelay: "900ms" }}>
+              <span className="animate-pop inline-flex items-center gap-1.5 rounded-full bg-violet-500/25 px-4 py-1.5 text-sm font-black text-violet-100 ring-1 ring-violet-400/40" style={{ animationDelay: "900ms" }}>
                 {t("result.levelUp", { level: newLevel })}
               </span>
             )}
@@ -242,19 +242,19 @@ export default function ResultView() {
 
       {/* Awards */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <Award icon={<IconBall className="h-4 w-4" />} chip="bg-emerald-100 text-emerald-600" title={t("result.topScorer")} name={awards.topScorer?.name ?? "—"} value={awards.topScorer ? t("result.goalsCount", { count: awards.topScorer.goals }) : ""} />
-        <Award icon={<IconStar className="h-4 w-4" />} chip="bg-sky-100 text-sky-600" title={t("result.topAssister")} name={awards.topAssister?.name ?? "—"} value={awards.topAssister ? t("result.assistsCount", { count: awards.topAssister.assists }) : ""} />
-        <Award icon={<IconChart className="h-4 w-4" />} chip="bg-violet-100 text-violet-600" title={t("result.goldenGlove")} name={awards.goalkeeper?.name ?? "—"} value={t("result.cleanSheetsCount", { count: awards.cleanSheets })} />
-        <Award icon={<IconBolt className="h-4 w-4" />} chip="bg-amber-100 text-amber-600" title={t("result.biggestWin")} name={awards.biggestWin ? `vs ${awards.biggestWin.opponent}` : "—"} value={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
+        <Award icon={<IconBall className="h-4 w-4" />} chip="bg-accent/12 text-accent" title={t("result.topScorer")} name={awards.topScorer?.name ?? "—"} value={awards.topScorer ? t("result.goalsCount", { count: awards.topScorer.goals }) : ""} />
+        <Award icon={<IconStar className="h-4 w-4" />} chip="bg-sky-400/12 text-sky-300" title={t("result.topAssister")} name={awards.topAssister?.name ?? "—"} value={awards.topAssister ? t("result.assistsCount", { count: awards.topAssister.assists }) : ""} />
+        <Award icon={<IconChart className="h-4 w-4" />} chip="bg-violet-400/12 text-violet-300" title={t("result.goldenGlove")} name={awards.goalkeeper?.name ?? "—"} value={t("result.cleanSheetsCount", { count: awards.cleanSheets })} />
+        <Award icon={<IconBolt className="h-4 w-4" />} chip="bg-draw/15 text-draw" title={t("result.biggestWin")} name={awards.biggestWin ? `vs ${awards.biggestWin.opponent}` : "—"} value={awards.biggestWin ? `${awards.biggestWin.gf}-${awards.biggestWin.ga}` : ""} />
       </div>
 
       {/* Achievements */}
       {achievements.length > 0 && (
         <div className="card animate-fade-up p-5">
-          <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("result.achievements")}</div>
+          <div className="eyebrow mb-3">{t("result.achievements")}</div>
           <div className="flex flex-wrap gap-2">
             {achievements.map((a) => (
-              <span key={a.id} className="inline-flex items-center gap-1.5 rounded-full bg-amber-50/80 border border-amber-200/60 px-3.5 py-1.5 text-xs font-bold text-amber-800 shadow-sm">
+              <span key={a.id} className="inline-flex items-center gap-1.5 rounded-full border border-draw/25 bg-draw/[0.08] px-3.5 py-1.5 text-xs font-bold text-draw">
                 {a.icon} {t(`achievement.${a.id}.label`)}
               </span>
             ))}
@@ -271,7 +271,7 @@ export default function ResultView() {
         </button>
       )}
       {saved && (
-        <div className="text-center text-xs font-bold text-emerald-600">{t("result.resultSaved")}</div>
+        <div className="text-center text-xs font-bold text-accent">{t("result.resultSaved")}</div>
       )}
 
       <button
@@ -298,10 +298,10 @@ export default function ResultView() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:items-start">
         {showTable && (
-          <div className="card overflow-hidden">
+          <div className="card-solid overflow-hidden">
             <table className="w-full text-xs">
-              <thead className="bg-slate-50/80 text-slate-400">
-                <tr>
+              <thead className="bg-white/[0.03] text-faint">
+                <tr className="[&>th]:font-bold [&>th]:uppercase [&>th]:tracking-wider [&>th]:text-[10px]">
                   <th className="px-3 py-2.5 text-left">#</th>
                   <th className="px-3 py-2.5 text-left">{t("result.team")}</th>
                   <th className="px-2 py-2.5 text-right">{t("result.playedAbbr")}</th>
@@ -313,13 +313,13 @@ export default function ResultView() {
                 {table.map((r, i) => (
                   <tr
                     key={r.name}
-                    className={`animate-fade-up border-t border-slate-100/60 ${
-                      r.isUser ? "bg-emerald-50/60 font-bold text-emerald-800" : "text-slate-600"
+                    className={`animate-fade-up border-t border-line ${
+                      r.isUser ? "bg-accent/[0.08] font-bold text-accent" : "text-dim"
                     }`}
                     style={{ animationDelay: `${i * 45}ms` }}
                   >
                     <td className="px-3 py-2">
-                      <span className={i < 4 ? "text-emerald-500" : i >= 17 ? "text-rose-400" : ""}>
+                      <span className={`stat-num text-sm ${i < 4 ? "text-accent-2" : i >= 17 ? "text-loss" : "text-faint"}`}>
                         {i + 1}
                       </span>
                     </td>
@@ -328,7 +328,7 @@ export default function ResultView() {
                     <td className="px-2 py-2 text-right tabular-nums">
                       {(r.gd >= 0 ? "+" : "") + r.gd}
                     </td>
-                    <td className="px-3 py-2 text-right font-semibold tabular-nums">{r.points}</td>
+                    <td className="px-3 py-2 text-right stat-num text-sm text-text">{r.points}</td>
                   </tr>
                 ))}
               </tbody>
@@ -336,11 +336,11 @@ export default function ResultView() {
           </div>
         )}
 
-        <div className="card overflow-hidden">
-          <div className="px-5 py-3 text-sm font-bold text-slate-700">{t("result.playerStats")}</div>
+        <div className="card-solid overflow-hidden">
+          <div className="px-5 py-3 eyebrow">{t("result.playerStats")}</div>
           <table className="w-full text-xs">
-            <thead className="bg-slate-50/80 text-slate-400">
-              <tr>
+            <thead className="bg-white/[0.03] text-faint">
+              <tr className="[&>th]:font-bold [&>th]:uppercase [&>th]:tracking-wider [&>th]:text-[10px]">
                 <th className="px-3 py-2 text-left">{t("result.player")}</th>
                 <th className="px-2 py-2 text-left">{t("result.pos")}</th>
                 <th className="px-2 py-2 text-right">{t("result.goalsAbbr")}</th>
@@ -350,9 +350,9 @@ export default function ResultView() {
             </thead>
             <tbody>
               {squadStats.map((p) => (
-                <tr key={p.name} className="border-t border-slate-100/60 text-slate-600">
+                <tr key={p.name} className="border-t border-line text-dim">
                   <td className="max-w-[150px] truncate px-3 py-2">{p.name}</td>
-                  <td className="px-2 py-2 text-slate-400">{p.pos}</td>
+                  <td className="px-2 py-2 text-faint">{p.pos}</td>
                   <td className="px-2 py-2 text-right tabular-nums">{p.goals || "—"}</td>
                   <td className="px-2 py-2 text-right tabular-nums">{p.assists || "—"}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{p.cleanSheets || "—"}</td>
@@ -365,7 +365,7 @@ export default function ResultView() {
 
       {/* Alle uitslagen */}
       <details className="card">
-        <summary className="cursor-pointer px-5 py-3.5 text-sm font-bold text-slate-700">
+        <summary className="cursor-pointer px-5 py-3.5 eyebrow">
           {t("result.allResults", { count: 38 })}
         </summary>
         <div className="grid grid-cols-2 gap-1.5 px-4 pb-4 text-[11px] sm:grid-cols-3">
@@ -375,15 +375,15 @@ export default function ResultView() {
             return (
               <div
                 key={i}
-                className={`flex items-center justify-between rounded-xl px-3 py-1.5 ${
-                  win ? "bg-emerald-50/70" : draw ? "bg-amber-50/70" : "bg-rose-50/70"
+                className={`flex items-center justify-between rounded-lg border px-3 py-1.5 ${
+                  win ? "border-win/20 bg-win/[0.07]" : draw ? "border-draw/20 bg-draw/[0.07]" : "border-loss/20 bg-loss/[0.07]"
                 }`}
               >
-                <span className="truncate text-slate-500">
+                <span className="truncate text-dim">
                   {m.home ? "" : "@"}
                   {m.opponent}
                 </span>
-                <span className="ml-1 shrink-0 font-bold tabular-nums text-slate-700">
+                <span className="ml-1 shrink-0 stat-num text-sm text-text">
                   {m.gf}-{m.ga}
                 </span>
               </div>
@@ -400,23 +400,23 @@ export default function ResultView() {
 function Award({ icon, chip, title, name, value }: { icon: React.ReactNode; chip: string; title: string; name: string; value: string }) {
   return (
     <div className="card p-3.5">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-slate-400">
-        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${chip}`}>{icon}</span>
+      <div className="flex items-center gap-1.5 eyebrow">
+        <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${chip}`}>{icon}</span>
         <span className="truncate">{title}</span>
       </div>
-      <div className="mt-1.5 truncate text-sm font-bold text-slate-800">{name}</div>
-      <div className="truncate text-[11px] text-emerald-600">{value}</div>
+      <div className="mt-1.5 truncate text-sm font-bold text-text">{name}</div>
+      <div className="truncate text-[11px] text-accent">{value}</div>
     </div>
   );
 }
 
 function Stat({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl px-2 py-2.5 ${accent ? "bg-emerald-50/80" : "bg-slate-50/80"}`}>
-      <div className={`text-lg font-black tabular-nums ${accent ? "text-emerald-700" : "text-slate-800"}`}>
+    <div className={`rounded-xl border px-2 py-2.5 ${accent ? "border-accent/30 bg-accent/[0.08]" : "border-line bg-white/[0.03]"}`}>
+      <div className={`stat-num text-2xl ${accent ? "text-accent" : "text-text"}`}>
         {value}
       </div>
-      <div className="text-[10px] uppercase tracking-widest text-slate-400">{label}</div>
+      <div className="eyebrow mt-0.5">{label}</div>
     </div>
   );
 }

@@ -17,19 +17,19 @@ export function TransferWindow() {
   const selectedCount = career.playersToReplace.size;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-      <div className="animate-pop w-full max-w-md card p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+      <div className="animate-pop w-full max-w-md card-solid p-6">
         <div className="text-center mb-4">
           <div className="text-2xl mb-2">🔄</div>
-          <h2 className="text-lg font-black text-slate-800">{t("career.transferWindow")}</h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <h2 className="text-xl font-black text-text font-display">{t("career.transferWindow")}</h2>
+          <p className="text-sm text-dim mt-1">
             {career.wisselCount === 0
               ? t("career.noTransfersAllowed")
               : career.wisselCount > 1
                 ? t("career.chooseMaxPlayersPlural", { n: career.wisselCount })
                 : t("career.chooseMaxPlayersSingular", { n: career.wisselCount })}
           </p>
-          <div className="mt-2 text-xs font-bold text-indigo-600">
+          <div className="mt-2 text-xs font-bold text-indigo-300">
             {divisionLabel(t, career.currentDivision)} · {t("career.seasonN", { n: career.season })}
           </div>
         </div>
@@ -41,19 +41,19 @@ export function TransferWindow() {
               <button
                 key={p.name}
                 onClick={() => career.toggleReplace(p.name)}
-                className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-all ${
+                className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-all border ${
                   selected
-                    ? "bg-rose-50 border-2 border-rose-300"
-                    : "bg-slate-50/80 border-2 border-transparent hover:border-slate-200"
+                    ? "bg-loss/[0.1] border-loss/40"
+                    : "bg-white/[0.03] border-line hover:border-line-strong"
                 }`}
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-bold text-slate-800">{p.name}</div>
-                  <div className="text-[10px] text-slate-400">{p.fromClub} · {p.sub}</div>
+                  <div className="text-sm font-bold text-text">{p.name}</div>
+                  <div className="text-[10px] text-faint">{p.fromClub} · {p.sub}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-black tabular-nums text-slate-600">{p.overall}</span>
-                  {selected && <span className="text-xs font-bold text-rose-500">{t("career.gone")}</span>}
+                  <span className="stat-num text-base text-text">{p.overall}</span>
+                  {selected && <span className="text-xs font-bold text-loss">{t("career.gone")}</span>}
                 </div>
               </button>
             );
@@ -115,22 +115,22 @@ export function CareerResultBanner() {
   };
 
   return (
-    <div className="card p-5 text-center border-2 border-indigo-200/60">
-      <div className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-2">
+    <div className="card p-5 text-center border border-indigo-400/25">
+      <div className="eyebrow text-indigo-300 mb-2">
         {divisionLabel(t, career.currentDivision)} · {t("career.seasonN", { n: career.season })}
       </div>
       {champion && (
-        <div className="text-lg font-black text-amber-700 mb-1">
+        <div className="text-lg font-black text-accent text-glow mb-1 font-display">
           {t("career.championExclaim")} {promoted ? t("career.promotedTo", { division: divisionLabel(t, career.currentDivision - 1) }) : ""}
         </div>
       )}
       {relegated && (
-        <div className="text-lg font-black text-rose-600 mb-1">
+        <div className="text-lg font-black text-loss mb-1 font-display">
           {t("career.relegatedTo", { division: divisionLabel(t, career.currentDivision + 1) })}
         </div>
       )}
       {!champion && !relegated && (
-        <div className="text-sm text-slate-500 mb-1">
+        <div className="text-sm text-dim mb-1">
           {t("career.finishedPosition", { pos: position, division: divisionLabel(t, career.currentDivision) })}
         </div>
       )}
