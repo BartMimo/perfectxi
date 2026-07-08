@@ -142,7 +142,7 @@ export default function ResultView() {
         skipFonts: true,
       });
       const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], "perfect-xi.png", { type: "image/png" });
+      const file = new File([blob], "elite-football.png", { type: "image/png" });
 
       let shared = false;
       try {
@@ -159,7 +159,7 @@ export default function ResultView() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "perfect-xi.png";
+        a.download = "elite-football.png";
         a.style.display = "none";
         document.body.appendChild(a);
         a.click();

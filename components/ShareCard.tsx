@@ -75,7 +75,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: -1 }}>
-          <span style={{ color: "#b6ff3a" }}>Perfect</span> XI
+          <span style={{ color: "#b6ff3a" }}>Elite</span> Football
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 26, fontWeight: 700 }}>
           <span style={{ fontSize: 30 }}>{league?.flag}</span>

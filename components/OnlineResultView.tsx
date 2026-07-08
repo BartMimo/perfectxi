@@ -109,12 +109,12 @@ export default function OnlineResultView() {
       if (!node) return;
       const dataUrl = await toPng(node, { pixelRatio: 2, cacheBust: true, skipFonts: true });
       const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], "perfect-xi-recap.png", { type: "image/png" });
+      const file = new File([blob], "elite-football-recap.png", { type: "image/png" });
       let shared = false;
       try {
         const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
         if (nav.canShare?.({ files: [file] })) {
-          await nav.share({ files: [file], title: "Perfect XI", text: t("result.recapShareText", { season: lobby?.current_season ?? 1 }) });
+          await nav.share({ files: [file], title: "Elite Football", text: t("result.recapShareText", { season: lobby?.current_season ?? 1 }) });
           shared = true;
         }
       } catch {
@@ -124,7 +124,7 @@ export default function OnlineResultView() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = "perfect-xi-recap.png";
+        a.download = "elite-football-recap.png";
         a.style.display = "none";
         document.body.appendChild(a);
         a.click();

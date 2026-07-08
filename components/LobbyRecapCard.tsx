@@ -65,7 +65,7 @@ const LobbyRecapCard = forwardRef<
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: -1 }}>
-          <span style={{ color: "#a5b4fc" }}>Perfect</span> XI
+          <span style={{ color: "#b6ff3a" }}>Elite</span> Football
         </div>
         <div
           style={{
