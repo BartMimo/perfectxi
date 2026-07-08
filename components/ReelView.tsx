@@ -88,12 +88,12 @@ export default function ReelView() {
     <div className="card flex flex-col items-center gap-3 p-4">
       <div ref={viewportRef} className="relative w-full overflow-hidden rounded-xl">
         {/* aanwijzer */}
-        <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2 text-emerald-500">
+        <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2 text-accent text-glow">
           ▼
         </div>
-        <div className="pointer-events-none absolute left-1/2 top-0 z-10 h-full w-[132px] -translate-x-1/2 rounded-2xl border-2 border-emerald-400/60 shadow-lg shadow-emerald-100/40" />
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-white/90 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-white/90 to-transparent" />
+        <div className="pointer-events-none absolute left-1/2 top-0 z-10 h-full w-[132px] -translate-x-1/2 rounded-2xl border-2 border-accent/70 shadow-lg shadow-[0_0_24px_rgba(182,255,58,0.25)]" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-12 bg-gradient-to-r from-[color:var(--color-elev)] to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-12 bg-gradient-to-l from-[color:var(--color-elev)] to-transparent" />
 
         <div
           ref={trackRef}
@@ -107,17 +107,17 @@ export default function ReelView() {
           {strip.map((c, i) => (
             <div
               key={i}
-              className="flex h-[88px] w-[132px] shrink-0 flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white/70 px-2 text-center shadow-sm"
+              className="flex h-[88px] w-[132px] shrink-0 flex-col items-center justify-center rounded-2xl border border-line bg-white/[0.04] px-2 text-center"
             >
-              <div className="text-[9px] uppercase tracking-wide text-emerald-600/80">
+              <div className="text-[9px] uppercase tracking-wide text-accent/90">
                 {c.league}
               </div>
-              <div className="line-clamp-2 text-xs font-bold leading-tight text-slate-800">
+              <div className="line-clamp-2 text-xs font-bold leading-tight text-text">
                 {c.club}
               </div>
-              <div className="text-[11px] text-slate-400">{c.season}</div>
+              <div className="text-[11px] text-dim">{c.season}</div>
               {!ratingsHidden && (
-                <div className="text-[9px] text-slate-400/70">{t("result.ratingValue", { rating: c.teamRating })}</div>
+                <div className="text-[9px] text-faint">{t("result.ratingValue", { rating: c.teamRating })}</div>
               )}
             </div>
           ))}

@@ -24,8 +24,8 @@ function CompleteCTA() {
   const teamName = useAuth((s) => s.teamName);
   return (
     <div className="card flex flex-col items-center gap-4 p-6 text-center">
-      <div className="text-base font-extrabold text-emerald-700">{t("draft.squadComplete")}</div>
-      <p className="text-sm leading-relaxed text-slate-500">
+      <div className="text-lg font-extrabold text-accent font-display">{t("draft.squadComplete")}</div>
+      <p className="text-sm leading-relaxed text-dim">
         {t("draft.completeHint")}
       </p>
       <button onClick={() => simulate(teamName ?? undefined)} className="btn-primary w-full text-lg">
@@ -49,14 +49,14 @@ function PlayView() {
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-start">
       <div className="min-w-0 lg:sticky lg:top-[74px]">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-600">{t("draft.yourLineup")}</h2>
+          <h2 className="eyebrow">{t("draft.yourLineup")}</h2>
           <div className="flex items-center gap-2">
             {filled > 0 && (
-              <button onClick={useGame.getState().newGame} className="rounded-full bg-rose-50/80 px-3 py-1.5 text-xs font-bold text-rose-500 hover:bg-rose-100 transition">
+              <button onClick={useGame.getState().newGame} className="rounded-full bg-loss/[0.1] px-3 py-1.5 text-xs font-bold text-loss hover:bg-loss/[0.16] transition">
                 {t("draft.restart")}
               </button>
             )}
-            <span className="rounded-full bg-emerald-100/80 px-3 py-1.5 text-xs font-bold text-emerald-700">
+            <span className="rounded-full bg-accent/12 px-3 py-1.5 text-xs font-bold text-accent tabular-nums">
               {complete ? t("draft.complete") : t("draft.filledOfTotal", { filled, total })}
             </span>
           </div>
@@ -68,7 +68,7 @@ function PlayView() {
         {complete ? (
           <CompleteCTA />
         ) : !customPlayerReady ? (
-          <div className="card p-6 text-center text-sm text-slate-400">{t("common.loading")}</div>
+          <div className="card p-6 text-center text-sm text-faint">{t("common.loading")}</div>
         ) : customPlayerBlocking ? (
           <AddCustomPlayerCard />
         ) : (

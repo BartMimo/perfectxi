@@ -49,11 +49,11 @@ export default function SquadPicker() {
 
   if (pendingPlayer) {
     return (
-      <div className="rounded-2xl border-2 border-amber-300/60 bg-amber-50/80 px-5 py-4 text-center backdrop-blur">
-        <div className="text-sm font-bold text-amber-800">
-          {t("draft.placePlayerPrefix")} <span className="font-extrabold">{pendingPlayer.name}</span>
+      <div className="rounded-2xl border border-draw/40 bg-draw/[0.07] px-5 py-4 text-center backdrop-blur">
+        <div className="text-sm font-bold text-text">
+          {t("draft.placePlayerPrefix")} <span className="font-extrabold text-draw">{pendingPlayer.name}</span>
         </div>
-        <div className="mt-1 text-xs leading-relaxed text-amber-700/70">
+        <div className="mt-1 text-xs leading-relaxed text-dim">
           {t("draft.tapHighlightedSpot")}
         </div>
         <button onClick={cancelPick} className="btn-secondary mt-3 text-xs">
@@ -67,13 +67,13 @@ export default function SquadPicker() {
     <div className="card flex w-full flex-col gap-3 p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-widest text-emerald-600/80">{landed.league}</div>
-          <h2 className="truncate text-base font-extrabold leading-tight text-slate-800">
+          <div className="eyebrow text-accent">{landed.league}</div>
+          <h2 className="truncate text-lg font-extrabold leading-tight text-text font-display">
             {landed.club}
           </h2>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-dim">
             {landed.season}
-            {!ratingsHidden && <> · rating {landed.teamRating}</>}
+            {!ratingsHidden && <> · <span className="text-faint">rating</span> <span className="stat-num text-accent-2">{landed.teamRating}</span></>}
           </div>
         </div>
         {rerollsLeft > 0 && (
@@ -83,12 +83,12 @@ export default function SquadPicker() {
         )}
       </div>
 
-      {loadingSquad && <div className="py-6 text-center text-sm text-slate-400">{t("draft.squadLoading")}</div>}
-      {error && <div className="text-center text-sm text-rose-500">{error}</div>}
+      {loadingSquad && <div className="py-6 text-center text-sm text-faint">{t("draft.squadLoading")}</div>}
+      {error && <div className="text-center text-sm text-loss">{error}</div>}
 
       {squad && !anyFits && (
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-slate-50/80 px-5 py-5 text-center">
-          <div className="text-sm text-slate-500">{t("draft.noPlayerFits")}</div>
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-line bg-white/[0.03] px-5 py-5 text-center">
+          <div className="text-sm text-dim">{t("draft.noPlayerFits")}</div>
           <button onClick={requestSpin} className="btn-primary text-sm">
             {t("draft.spinAgain")}
           </button>
@@ -97,7 +97,7 @@ export default function SquadPicker() {
 
       {squad && anyFits && (
         <>
-          <div className="text-xs text-slate-400">
+          <div className="eyebrow">
             {t("draft.pickOnePlayerHint")}
           </div>
           <ul className="flex max-h-[55vh] flex-col gap-2 overflow-y-auto lg:max-h-[calc(100dvh_-_320px)]">
@@ -110,26 +110,26 @@ export default function SquadPicker() {
                   <button
                     disabled={!eligible}
                     onClick={() => pickPlayer(p)}
-                    className={`flex w-full items-center gap-3 rounded-2xl border-2 px-3.5 py-2.5 text-left transition-all ${
+                    className={`flex w-full items-center gap-3 rounded-2xl border px-3.5 py-2.5 text-left transition-all ${
                       eligible
-                        ? "border-transparent bg-white/70 shadow-sm hover:border-emerald-300 hover:bg-emerald-50/60 hover:shadow"
-                        : "cursor-not-allowed border-transparent bg-slate-50/50 opacity-40"
+                        ? "border-line bg-white/[0.03] hover:border-accent/45 hover:bg-white/[0.055]"
+                        : "cursor-not-allowed border-transparent bg-white/[0.015] opacity-40"
                     }`}
                   >
                     {ratingsHidden ? (
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-200 text-sm font-bold text-slate-400">
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/[0.06] text-sm font-bold text-faint">
                         ?
                       </span>
                     ) : (
                       <RatingBadge value={stats.overall} />
                     )}
                     <div className="min-w-0 flex-1">
-                      <div className="truncate font-semibold text-slate-800">{p.name}</div>
+                      <div className="truncate font-semibold text-text">{p.name}</div>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {positions.map((pos) => (
                           <span
                             key={pos}
-                            className="rounded-lg bg-slate-100/80 px-1.5 py-0.5 text-[9px] font-bold text-slate-500"
+                            className="rounded-md bg-white/[0.05] px-1.5 py-0.5 text-[9px] font-bold text-dim"
                           >
                             {pos}
                           </span>
@@ -137,10 +137,10 @@ export default function SquadPicker() {
                       </div>
                     </div>
                     {!ratingsHidden && (
-                      <div className="shrink-0 text-right text-[10px] leading-relaxed text-slate-400">
-                        <div>{fmtMv(p.mv)}</div>
-                        <div>ATT {stats.attack}</div>
-                        <div>DEF {stats.defense}</div>
+                      <div className="shrink-0 text-right text-[10px] leading-relaxed text-faint">
+                        <div className="text-dim">{fmtMv(p.mv)}</div>
+                        <div>ATT <span className="stat-num text-xs text-text">{stats.attack}</span></div>
+                        <div>DEF <span className="stat-num text-xs text-text">{stats.defense}</span></div>
                       </div>
                     )}
                   </button>
