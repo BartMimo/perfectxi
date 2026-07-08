@@ -153,7 +153,7 @@ export default function ProfielPage() {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-          <p className="text-slate-500">{t("profiel.notLoggedIn")}</p>
+          <p className="text-dim">{t("profiel.notLoggedIn")}</p>
           <a href="/" className="btn-primary mt-4 inline-block">{t("profiel.goHome")}</a>
         </div>
         <Footer />
@@ -166,23 +166,23 @@ export default function ProfielPage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8">
-          <h1 className="text-3xl font-black text-slate-800">{username}</h1>
-          <p className="text-sm text-slate-400 mt-1">{t("profiel.subtitle")}</p>
+          <h1 className="text-4xl font-black text-text font-display tracking-tight">{username}</h1>
+          <p className="text-sm text-dim mt-1">{t("profiel.subtitle")}</p>
         </div>
 
         <TeamNameEditor />
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
+          <div className="p-12 text-center text-sm text-faint">{t("common.loading")}</div>
         ) : !stats ? (
           <div className="card p-12 text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"><IconShirt className="h-6 w-6" /></div>
-            <div className="text-sm text-slate-400">{t("profiel.noSeasons")}</div>
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/[0.05] text-faint"><IconShirt className="h-6 w-6" /></div>
+            <div className="text-sm text-faint">{t("profiel.noSeasons")}</div>
           </div>
         ) : (
           <>
             <div className="card p-5 mb-4">
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{t("profiel.stats")}</div>
+              <div className="eyebrow mb-4">{t("profiel.stats")}</div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <StatBox label={t("profiel.stat.played")} value={stats.games} />
                 <StatBox label={t("profiel.stat.champion")} value={t("profiel.stat.champion.value", { n: stats.champions })} accent />
@@ -197,8 +197,8 @@ export default function ProfielPage() {
 
             <div className="card p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("profiel.achievements")}</div>
-                <span className="text-xs font-bold text-emerald-600">{t("profiel.achievementsCount", { unlocked: stats.unlockedAchievements.size, total: ALL_ACHIEVEMENTS.length })}</span>
+                <div className="eyebrow">{t("profiel.achievements")}</div>
+                <span className="text-xs font-bold text-accent">{t("profiel.achievementsCount", { unlocked: stats.unlockedAchievements.size, total: ALL_ACHIEVEMENTS.length })}</span>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ALL_ACHIEVEMENTS.map((a) => {
@@ -215,33 +215,33 @@ export default function ProfielPage() {
                     <button
                       key={a.id}
                       onClick={() => setExpandedAch(expanded ? null : a.id)}
-                      className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left transition-all ${
+                      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
                         unlocked
-                          ? "border-amber-200/60 bg-amber-50/80"
+                          ? "border-draw/25 bg-draw/[0.07]"
                           : isChampion && stats.champLeagues.size > 0
-                            ? "border-amber-200/40 bg-amber-50/40"
-                            : "border-transparent bg-slate-50/50 opacity-40"
+                            ? "border-draw/15 bg-draw/[0.04]"
+                            : "border-line bg-white/[0.02] opacity-50"
                       }`}
                     >
                       <span className="text-xl">{a.icon}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <span className={`text-sm font-bold ${unlocked ? "text-amber-800" : isChampion && stats.champLeagues.size > 0 ? "text-amber-700" : "text-slate-400"}`}>
+                          <span className={`text-sm font-bold ${unlocked ? "text-draw" : isChampion && stats.champLeagues.size > 0 ? "text-draw/80" : "text-faint"}`}>
                             {t(`achievement.${a.id}.label`)}
-                            {isChampion && <span className="ml-1 text-[10px] font-bold text-amber-500">{stats.champLeagues.size}/{LEAGUES.length}</span>}
+                            {isChampion && <span className="ml-1 text-[10px] font-bold text-draw">{stats.champLeagues.size}/{LEAGUES.length}</span>}
                           </span>
-                          <span className="shrink-0 text-[10px] font-bold text-slate-400">{t("profiel.hasThis", { pct })}</span>
+                          <span className="shrink-0 text-[10px] font-bold text-faint">{t("profiel.hasThis", { pct })}</span>
                         </div>
                         {expanded && (
                           <>
-                            <div className="mt-1 text-[11px] leading-relaxed text-slate-500">{t(`achievement.${a.id}.description`)}</div>
+                            <div className="mt-1 text-[11px] leading-relaxed text-dim">{t(`achievement.${a.id}.description`)}</div>
                             {isChampion && (
                               <div className="mt-2 flex flex-wrap gap-1.5">
                                 {LEAGUES.map((l) => {
                                   const won = stats.champLeagues.has(l.code);
                                   return (
                                     <span key={l.code} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
-                                      won ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-400"
+                                      won ? "bg-draw/15 text-draw" : "bg-white/[0.05] text-faint"
                                     }`}>
                                       {l.flag} {l.name} {won ? "✓" : ""}
                                     </span>
@@ -267,11 +267,11 @@ export default function ProfielPage() {
 
 function StatBox({ label, value, accent }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl px-3 py-3 ${accent ? "bg-emerald-50/80" : "bg-slate-50/80"}`}>
-      <div className={`text-lg font-black tabular-nums ${accent ? "text-emerald-700" : "text-slate-800"}`}>
+    <div className={`rounded-xl border px-3 py-3 ${accent ? "border-accent/30 bg-accent/[0.08]" : "border-line bg-white/[0.03]"}`}>
+      <div className={`stat-num text-2xl ${accent ? "text-accent" : "text-text"}`}>
         {value}
       </div>
-      <div className="text-[10px] uppercase tracking-widest text-slate-400">{label}</div>
+      <div className="eyebrow mt-0.5">{label}</div>
     </div>
   );
 }
@@ -286,7 +286,7 @@ function TeamNameEditor() {
   if (editing) {
     return (
       <div className="card p-5 mb-4">
-        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("profiel.teamName")}</div>
+        <div className="eyebrow mb-3">{t("profiel.teamName")}</div>
         <form onSubmit={(e) => { e.preventDefault(); setTeamName(draft); setEditing(false); }} className="flex gap-2">
           <input
             type="text"
@@ -306,9 +306,9 @@ function TeamNameEditor() {
 
   return (
     <div className="card p-5 mb-4">
-      <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("profiel.teamName")}</div>
+      <div className="eyebrow mb-3">{t("profiel.teamName")}</div>
       <div className="flex items-center justify-between">
-        <span className="text-lg font-black text-slate-800">{teamName || t("profiel.teamName.default")}</span>
+        <span className="text-lg font-black text-text font-display">{teamName || t("profiel.teamName.default")}</span>
         <button onClick={() => { setDraft(teamName ?? ""); setEditing(true); }} className="btn-secondary !px-3 !py-1.5 !text-xs">
           {t("profiel.edit")}
         </button>

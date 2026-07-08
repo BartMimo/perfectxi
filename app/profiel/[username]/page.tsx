@@ -140,8 +140,8 @@ export default function PublicProfilePage() {
         <Header backHref="/ranglijst" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
           <div className="text-4xl mb-4">😕</div>
-          <h1 className="text-xl font-black text-slate-800 mb-2">{t("profiel.playerNotFound")}</h1>
-          <p className="text-sm text-slate-500">{t("profiel.userDoesNotExist", { username: decoded })}</p>
+          <h1 className="text-2xl font-black text-text font-display mb-2">{t("profiel.playerNotFound")}</h1>
+          <p className="text-sm text-dim">{t("profiel.userDoesNotExist", { username: decoded })}</p>
         </div>
         <Footer />
       </main>
@@ -153,21 +153,21 @@ export default function PublicProfilePage() {
       <Header backHref="/ranglijst" />
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="animate-fade-up mb-8">
-          <h1 className="text-3xl font-black text-slate-800">{decoded}</h1>
-          {teamName && <p className="text-sm font-bold text-indigo-600 mt-1">{teamName}</p>}
+          <h1 className="text-4xl font-black text-text font-display tracking-tight">{decoded}</h1>
+          {teamName && <p className="text-sm font-bold text-accent mt-1">{teamName}</p>}
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>
+          <div className="p-12 text-center text-sm text-faint">{t("common.loading")}</div>
         ) : !stats ? (
           <div className="card p-12 text-center">
             <div className="text-3xl mb-3">🏟️</div>
-            <div className="text-sm text-slate-400">{t("profiel.noSeasons")}</div>
+            <div className="text-sm text-faint">{t("profiel.noSeasons")}</div>
           </div>
         ) : (
           <>
             <div className="card p-5 mb-4">
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">{t("profiel.stats")}</div>
+              <div className="eyebrow mb-4">{t("profiel.stats")}</div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <StatBox label={t("profiel.stat.played")} value={stats.games} />
                 <StatBox label={t("profiel.stat.champion")} value={t("profiel.stat.champion.value", { n: stats.champions })} accent />
@@ -181,8 +181,8 @@ export default function PublicProfilePage() {
 
             <div className="card p-5">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-xs font-bold uppercase tracking-widest text-slate-400">{t("profiel.achievements")}</div>
-                <span className="text-xs font-bold text-emerald-600">{t("profiel.achievementsCount", { unlocked: stats.unlockedAchievements.size, total: ALL_ACHIEVEMENTS.length })}</span>
+                <div className="eyebrow">{t("profiel.achievements")}</div>
+                <span className="text-xs font-bold text-accent">{t("profiel.achievementsCount", { unlocked: stats.unlockedAchievements.size, total: ALL_ACHIEVEMENTS.length })}</span>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {ALL_ACHIEVEMENTS.map((a) => {
@@ -196,18 +196,18 @@ export default function PublicProfilePage() {
                   return (
                     <div
                       key={a.id}
-                      className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 ${
+                      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${
                         unlocked
-                          ? "border-amber-200/60 bg-amber-50/80"
-                          : "border-transparent bg-slate-50/50 opacity-40"
+                          ? "border-draw/25 bg-draw/[0.07]"
+                          : "border-line bg-white/[0.02] opacity-50"
                       }`}
                     >
                       <span className="text-xl">{a.icon}</span>
                       <div className="min-w-0">
-                        <span className={`text-sm font-bold ${unlocked ? "text-amber-800" : "text-slate-400"}`}>
+                        <span className={`text-sm font-bold ${unlocked ? "text-draw" : "text-faint"}`}>
                           {t(`achievement.${a.id}.label`)}
                         </span>
-                        <div className="text-[11px] text-slate-500">{t(`achievement.${a.id}.description`)}</div>
+                        <div className="text-[11px] text-dim">{t(`achievement.${a.id}.description`)}</div>
                       </div>
                     </div>
                   );
@@ -224,11 +224,11 @@ export default function PublicProfilePage() {
 
 function StatBox({ label, value, accent }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl px-3 py-3 ${accent ? "bg-emerald-50/80" : "bg-slate-50/80"}`}>
-      <div className={`text-lg font-black tabular-nums ${accent ? "text-emerald-700" : "text-slate-800"}`}>
+    <div className={`rounded-xl border px-3 py-3 ${accent ? "border-accent/30 bg-accent/[0.08]" : "border-line bg-white/[0.03]"}`}>
+      <div className={`stat-num text-2xl ${accent ? "text-accent" : "text-text"}`}>
         {value}
       </div>
-      <div className="text-[10px] uppercase tracking-widest text-slate-400">{label}</div>
+      <div className="eyebrow mt-0.5">{label}</div>
     </div>
   );
 }
