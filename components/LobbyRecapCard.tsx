@@ -54,9 +54,9 @@ const LobbyRecapCard = forwardRef<
         color: "#fff",
         fontFamily:
           'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-        backgroundColor: "#3730a3",
+        backgroundColor: "#070e0b",
         backgroundImage:
-          "radial-gradient(120% 50% at 50% 0%, rgba(129,140,248,0.4), rgba(0,0,0,0) 60%), linear-gradient(165deg, #4338ca 0%, #1e1b4b 65%, #12102e 100%)",
+          "radial-gradient(120% 55% at 50% 0%, rgba(182,255,58,0.16), rgba(0,0,0,0) 55%), radial-gradient(90% 40% at 100% 0%, rgba(129,140,248,0.18), rgba(0,0,0,0) 60%), linear-gradient(165deg, #0c1712 0%, #091310 65%, #060b09 100%)",
         display: "flex",
         flexDirection: "column",
         gap: 26,
@@ -198,7 +198,7 @@ const LobbyRecapCard = forwardRef<
               </div>
               {lastSeason && (
                 <div style={{ textAlign: "right", flexShrink: 0 }}>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: "#c7d2fe" }}>{lastSeason.points}</div>
+                  <div style={{ fontSize: 28, fontWeight: 900, color: "#b6ff3a" }}>{lastSeason.points}</div>
                   <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", fontWeight: 700 }}>
                     {t("result.pointsAbbr").toUpperCase()}
                   </div>

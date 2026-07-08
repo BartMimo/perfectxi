@@ -64,9 +64,9 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
         color: "#fff",
         fontFamily:
           'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-        backgroundColor: "#064e3b",
+        backgroundColor: "#070e0b",
         backgroundImage:
-          "radial-gradient(120% 60% at 50% 0%, rgba(16,185,129,0.35), rgba(0,0,0,0) 60%), linear-gradient(165deg, #075e4a 0%, #0b3b30 55%, #062b22 100%)",
+          "radial-gradient(120% 60% at 50% 0%, rgba(182,255,58,0.22), rgba(0,0,0,0) 58%), linear-gradient(165deg, #0c1712 0%, #091310 55%, #060b09 100%)",
         display: "flex",
         flexDirection: "column",
         gap: 22,
@@ -75,7 +75,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: -1 }}>
-          <span style={{ color: "#6ee7b7" }}>Perfect</span> XI
+          <span style={{ color: "#b6ff3a" }}>Perfect</span> XI
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 26, fontWeight: 700 }}>
           <span style={{ fontSize: 30 }}>{league?.flag}</span>
@@ -103,7 +103,7 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
             fontSize: invincible ? 72 : 78,
             fontWeight: 900,
             lineHeight: 1.05,
-            color: "#6ee7b7",
+            color: "#b6ff3a",
             marginTop: 6,
           }}
         >
@@ -136,9 +136,9 @@ const ShareCard = forwardRef<HTMLDivElement>(function ShareCard(_props, ref) {
           borderRadius: 24,
           overflow: "hidden",
           boxShadow: "inset 0 0 60px rgba(0,0,0,0.3), 0 16px 40px rgba(0,0,0,0.35)",
-          backgroundColor: "#2f9e57",
+          backgroundColor: "#0a1a14",
           backgroundImage:
-            "linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.2)), repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0, rgba(255,255,255,0.06) 8.33%, rgba(0,0,0,0.05) 8.33%, rgba(0,0,0,0.05) 16.66%)",
+            "radial-gradient(130% 80% at 50% 0%, rgba(182,255,58,0.07), rgba(0,0,0,0) 46%), linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0) 22%, rgba(0,0,0,0) 78%, rgba(0,0,0,0.45)), repeating-linear-gradient(90deg, rgba(255,255,255,0.028) 0, rgba(255,255,255,0.028) 8.33%, rgba(0,0,0,0.11) 8.33%, rgba(0,0,0,0.11) 16.66%)",
         }}
       >
         <CardPitchLines />
@@ -250,15 +250,15 @@ function Chip({
   return (
     <div
       style={{
-        background: accent ? "rgba(110,231,183,0.18)" : "rgba(255,255,255,0.08)",
-        border: accent ? "1px solid rgba(110,231,183,0.5)" : "1px solid rgba(255,255,255,0.12)",
+        background: accent ? "rgba(182,255,58,0.18)" : "rgba(255,255,255,0.08)",
+        border: accent ? "1px solid rgba(182,255,58,0.5)" : "1px solid rgba(255,255,255,0.12)",
         borderRadius: 16,
         padding: big ? "14px 26px" : "14px 20px",
         textAlign: "center",
         minWidth: big ? 150 : 110,
       }}
     >
-      <div style={{ fontSize: big ? 46 : 38, fontWeight: 900, color: accent ? "#6ee7b7" : "#fff" }}>
+      <div style={{ fontSize: big ? 46 : 38, fontWeight: 900, color: accent ? "#b6ff3a" : "#fff" }}>
         {value}
       </div>
       <div style={{ fontSize: 16, letterSpacing: 2, color: "rgba(255,255,255,0.55)", fontWeight: 700 }}>
@@ -303,7 +303,7 @@ function AwardChip({
       >
         {value}
       </div>
-      <div style={{ fontSize: 18, color: "#6ee7b7", fontWeight: 700 }}>{sub}</div>
+      <div style={{ fontSize: 18, color: "#b6ff3a", fontWeight: 700 }}>{sub}</div>
     </div>
   );
 }
