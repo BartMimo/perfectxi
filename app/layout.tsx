@@ -1,5 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Barlow, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
+
+const barlow = Barlow({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-barlow",
+  display: "swap",
+});
+
+const barlowCondensed = Barlow_Condensed({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-barlow-condensed",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Elite Football — Draft & Domineer",
@@ -10,13 +25,13 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#eafaf1",
+  themeColor: "#070e0b",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="nl">
-      <body className="min-h-full text-slate-800 antialiased">{children}</body>
+    <html lang="nl" className={`${barlow.variable} ${barlowCondensed.variable}`}>
+      <body className="min-h-full antialiased">{children}</body>
     </html>
   );
 }
