@@ -83,6 +83,9 @@ export const resultMessages: MessageDict = {
     "result.ratingValue": "rating {rating}",
     "result.nationalChampion": "Landskampioen",
     "result.shareFooter": "Bouw jouw Elite Football · jaag op 38-0-0",
+    "result.shareRecap": "Deel seizoensrecap",
+    "result.recapHeadline": "SEIZOEN {season} RECAP",
+    "result.recapShareText": "Onze online carrière na seizoen {season}!",
   },
   en: {
     "result.matchday": "Matchday {round} / {total}",
@@ -166,6 +169,9 @@ export const resultMessages: MessageDict = {
     "result.ratingValue": "rating {rating}",
     "result.nationalChampion": "National champion",
     "result.shareFooter": "Build your Elite Football · chase the 38-0-0",
+    "result.shareRecap": "Share season recap",
+    "result.recapHeadline": "SEASON {season} RECAP",
+    "result.recapShareText": "Our online career after season {season}!",
   },
   fr: {
     "result.matchday": "Journée {round} / {total}",
@@ -249,6 +255,9 @@ export const resultMessages: MessageDict = {
     "result.ratingValue": "note {rating}",
     "result.nationalChampion": "Champion national",
     "result.shareFooter": "Construis ton Elite Football · vise le 38-0-0",
+    "result.shareRecap": "Partager le récap de saison",
+    "result.recapHeadline": "RÉCAP SAISON {season}",
+    "result.recapShareText": "Notre carrière en ligne après la saison {season} !",
   },
   de: {
     "result.matchday": "Spieltag {round} / {total}",
@@ -332,6 +341,9 @@ export const resultMessages: MessageDict = {
     "result.ratingValue": "Bewertung {rating}",
     "result.nationalChampion": "Landesmeister",
     "result.shareFooter": "Baue dein Elite Football · jage die 38-0-0",
+    "result.shareRecap": "Saisonrückblick teilen",
+    "result.recapHeadline": "SAISON {season} RÜCKBLICK",
+    "result.recapShareText": "Unsere Online-Karriere nach Saison {season}!",
   },
   es: {
     "result.matchday": "Jornada {round} / {total}",
@@ -415,5 +427,8 @@ export const resultMessages: MessageDict = {
     "result.ratingValue": "valoración {rating}",
     "result.nationalChampion": "Campeón nacional",
     "result.shareFooter": "Construye tu Elite Football · ve por el 38-0-0",
+    "result.shareRecap": "Compartir el resumen de temporada",
+    "result.recapHeadline": "RESUMEN TEMPORADA {season}",
+    "result.recapShareText": "¡Nuestra carrera online tras la temporada {season}!",
   },
 };

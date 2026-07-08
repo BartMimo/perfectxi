@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toPng } from "html-to-image";
 import { useGame } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { useOnlineCareer, type OnlinePlayer } from "@/lib/onlineCareer";
@@ -10,6 +11,8 @@ import { saveResult } from "@/lib/saveResult";
 import { useCustomPlayer, isCustomPlayer } from "@/lib/customPlayer";
 import SquadViewModal from "@/components/SquadViewModal";
 import MultiCareerTimeline from "@/components/MultiCareerTimeline";
+import HeadToHeadModal from "@/components/HeadToHeadModal";
+import LobbyRecapCard from "@/components/LobbyRecapCard";
 import { useT } from "@/lib/i18n/core";
 import { IconStar, IconTrophy } from "@/components/icons";
 
@@ -28,6 +31,9 @@ export default function OnlineResultView() {
   const [xpAwarded, setXpAwarded] = useState(false);
   const [showTable, setShowTable] = useState(true);
   const [viewSquadPlayer, setViewSquadPlayer] = useState<OnlinePlayer | null>(null);
+  const [h2hPlayer, setH2hPlayer] = useState<OnlinePlayer | null>(null);
+  const [sharingRecap, setSharingRecap] = useState(false);
+  const recapRef = useRef<HTMLDivElement>(null);
 
   const me = lobby?.players.find((p) => p.user_id === userId);
 
@@ -94,6 +100,43 @@ export default function OnlineResultView() {
   const handleNextSeason = async () => {
     await advanceSeason();
   };
+
+  async function shareRecap() {
+    if (sharingRecap) return;
+    setSharingRecap(true);
+    try {
+      const node = recapRef.current;
+      if (!node) return;
+      const dataUrl = await toPng(node, { pixelRatio: 2, cacheBust: true, skipFonts: true });
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], "perfect-xi-recap.png", { type: "image/png" });
+      let shared = false;
+      try {
+        const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+        if (nav.canShare?.({ files: [file] })) {
+          await nav.share({ files: [file], title: "Perfect XI", text: t("result.recapShareText", { season: lobby?.current_season ?? 1 }) });
+          shared = true;
+        }
+      } catch {
+        // share dismissed of niet ondersteund, val terug op download
+      }
+      if (!shared) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "perfect-xi-recap.png";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }
+    } finally {
+      setSharingRecap(false);
+    }
+  }
 
   const div1Winner = lobby.players.find(
     (p) => p.history.some((h) => h.division === 1 && h.position === 1),
@@ -246,6 +289,15 @@ export default function OnlineResultView() {
                         👁
                       </button>
                     )}
+                    {!isMe && !p.is_bot && (
+                      <button
+                        onClick={() => setH2hPlayer(p)}
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 border border-amber-200 text-xs text-amber-600 hover:bg-amber-100 transition"
+                        title={t("onlineCarriere.h2h.viewH2h")}
+                      >
+                        <IconTrophy className="h-3 w-3" />
+                      </button>
+                    )}
                     {p.acknowledged ? (
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs text-white shadow-sm shadow-emerald-200">✓</span>
                     ) : (
@@ -266,6 +318,10 @@ export default function OnlineResultView() {
             })}
         </div>
       </div>
+
+      <button onClick={shareRecap} disabled={sharingRecap} className="btn-secondary w-full">
+        {sharingRecap ? t("result.creatingCard") : t("result.shareRecap")}
+      </button>
 
       {/* Continue / Next season buttons */}
       {!div1Winner && (
@@ -369,6 +425,18 @@ export default function OnlineResultView() {
       </div>
 
       {viewSquadPlayer && <SquadViewModal player={viewSquadPlayer} onClose={() => setViewSquadPlayer(null)} />}
+      {h2hPlayer && <HeadToHeadModal me={me} opponent={h2hPlayer} onClose={() => setH2hPlayer(null)} />}
+
+      {/* Verborgen recapkaart voor export */}
+      <div aria-hidden style={{ position: "fixed", left: -99999, top: 0, pointerEvents: "none" }}>
+        <LobbyRecapCard
+          ref={recapRef}
+          lobbyName={lobby.lobby_name || t("onlineCarriere.title")}
+          season={lobby.current_season}
+          players={activePlayers}
+          myUserId={userId ?? ""}
+        />
+      </div>
     </div>
   );
 }
