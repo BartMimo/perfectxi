@@ -139,17 +139,17 @@ export default function PitchView() {
       </div>
 
       {pendingPlayer && (
-        <div className="mt-2 text-center text-[11px] font-semibold text-amber-600">
+        <div className="mt-2 text-center text-[11px] font-semibold text-draw">
           {t("draft.choosePositionFor", { name: pendingPlayer.name })} ·{" "}
-          <button onClick={cancelPick} className="underline">
+          <button onClick={cancelPick} className="underline hover:text-text">
             {t("draft.cancel")}
           </button>
         </div>
       )}
       {!pendingPlayer && selectedSlotId && (
-        <div className="mt-2 text-center text-[11px] font-semibold text-amber-600">
+        <div className="mt-2 text-center text-[11px] font-semibold text-draw">
           {t("draft.choosePositionToMoveOrSwap")} ·{" "}
-          <button onClick={() => onSlotClick(selectedSlotId)} className="underline">
+          <button onClick={() => onSlotClick(selectedSlotId)} className="underline hover:text-text">
             {t("draft.cancel")}
           </button>
         </div>
@@ -199,18 +199,18 @@ function LineRatings({ slots, hideRating }: { slots: Slot[]; hideRating: boolean
     <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
       {stats.map((s) =>
         s.count > 0 ? (
-          <div key={s.band} className="flex items-center gap-1.5 rounded-full bg-white/70 border border-slate-200/60 px-3 py-1.5 backdrop-blur">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{s.label}</span>
-            <span className={`text-xs font-black tabular-nums ${hideRating ? "text-slate-400" : "text-slate-700"}`}>
+          <div key={s.band} className="flex items-center gap-1.5 rounded-full border border-line bg-white/[0.04] px-3 py-1.5 backdrop-blur">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-faint">{s.label}</span>
+            <span className={`stat-num text-sm ${hideRating ? "text-faint" : "text-text"}`}>
               {hideRating ? "?" : s.avg}
             </span>
           </div>
         ) : null,
       )}
       {prediction && !hideRating && (
-        <div className="flex items-center gap-1.5 rounded-full bg-emerald-50/80 border border-emerald-200/60 px-3 py-1.5 backdrop-blur">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">{t("draft.expected")}</span>
-          <span className="text-xs font-black tabular-nums text-emerald-700">
+        <div className="flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/[0.08] px-3 py-1.5 backdrop-blur">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-accent/80">{t("draft.expected")}</span>
+          <span className="stat-num text-sm text-accent">
             ~{t("draft.ordinalSuffix", { n: prediction })}
           </span>
         </div>
