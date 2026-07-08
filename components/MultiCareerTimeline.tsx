@@ -16,8 +16,8 @@ interface Props {
   currentSeason: number;
 }
 
-const PALETTE = ["#f97316", "#0ea5e9", "#a855f7", "#ec4899", "#14b8a6", "#84cc16", "#f43f5e", "#eab308"];
-const ME_COLOR = "#6366f1";
+const PALETTE = ["#f97316", "#38bdf8", "#c084fc", "#f472b6", "#2dd4bf", "#a3e635", "#fb7185", "#facc15"];
+const ME_COLOR = "#b6ff3a";
 
 interface ColoredSeries extends PlayerCareerSeries {
   color: string;
@@ -83,18 +83,18 @@ function DivisionChart({ players, seasons, currentSeason, t }: { players: Colore
 
   return (
     <div className="card p-4 overflow-hidden">
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">{t("career.divisionPerSeason")}</div>
+      <div className="eyebrow mb-3">{t("career.divisionPerSeason")}</div>
       <div className="overflow-x-auto -mx-4 px-4">
         <svg viewBox={`0 0 ${viewW} ${CHART_H}`} width={viewW} height={CHART_H} className="min-w-full">
           {divLabels.map((d) => (
             <g key={d}>
-              <line x1={PAD_LEFT - 4} y1={y(d)} x2={viewW - PAD_RIGHT} y2={y(d)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray={d === minDiv || d === maxDiv ? "" : "3,3"} />
-              <text x={PAD_LEFT - 8} y={y(d) + 3.5} textAnchor="end" fontSize="8" fontWeight="700" fill="#94a3b8">D{d}</text>
+              <line x1={PAD_LEFT - 4} y1={y(d)} x2={viewW - PAD_RIGHT} y2={y(d)} stroke="rgba(233,240,234,0.1)" strokeWidth="1" strokeDasharray={d === minDiv || d === maxDiv ? "" : "3,3"} />
+              <text x={PAD_LEFT - 8} y={y(d) + 3.5} textAnchor="end" fontSize="8" fontWeight="700" fill="#7c8f84">D{d}</text>
             </g>
           ))}
 
           {seasons.map((s) => (
-            <text key={s} x={x(s)} y={CHART_H - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill={s === currentSeason ? ME_COLOR : "#94a3b8"}>
+            <text key={s} x={x(s)} y={CHART_H - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill={s === currentSeason ? ME_COLOR : "#7c8f84"}>
               {s === currentSeason ? t("career.now") : `S${s}`}
             </text>
           ))}
@@ -115,7 +115,7 @@ function DivisionChart({ players, seasons, currentSeason, t }: { players: Colore
                       cx={x(pt.season)}
                       cy={y(pt.division)}
                       r={p.isMe ? 4.5 : 3}
-                      fill={isCurrent ? "white" : p.color}
+                      fill={isCurrent ? "#0c1712" : p.color}
                       stroke={p.color}
                       strokeWidth={isCurrent ? 2 : 1.5}
                       strokeDasharray={isCurrent ? "2,1.5" : ""}
@@ -149,13 +149,13 @@ function RatingChart({ players, seasons, t }: { players: ColoredSeries[]; season
 
   return (
     <div className="card p-4 overflow-hidden">
-      <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">{t("career.teamAverageBySeason")}</div>
+      <div className="eyebrow mb-3">{t("career.teamAverageBySeason")}</div>
       <div className="overflow-x-auto -mx-4 px-4">
         <svg viewBox={`0 0 ${viewW} ${CHART_H}`} width={viewW} height={CHART_H} className="min-w-full">
           {rLabels.map((r) => (
             <g key={r}>
-              <line x1={PAD_LEFT - 4} y1={y(r)} x2={viewW - PAD_RIGHT} y2={y(r)} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3,3" />
-              <text x={PAD_LEFT - 8} y={y(r) + 3.5} textAnchor="end" fontSize="8" fontWeight="700" fill="#94a3b8">{r}</text>
+              <line x1={PAD_LEFT - 4} y1={y(r)} x2={viewW - PAD_RIGHT} y2={y(r)} stroke="rgba(233,240,234,0.1)" strokeWidth="1" strokeDasharray="3,3" />
+              <text x={PAD_LEFT - 8} y={y(r) + 3.5} textAnchor="end" fontSize="8" fontWeight="700" fill="#7c8f84">{r}</text>
             </g>
           ))}
 
@@ -163,7 +163,7 @@ function RatingChart({ players, seasons, t }: { players: ColoredSeries[]; season
             const anyData = players.some((p) => p.history.some((h) => h.season === s && h.avgRating != null));
             if (!anyData) return null;
             return (
-              <text key={s} x={x(s)} y={CHART_H - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill="#94a3b8">S{s}</text>
+              <text key={s} x={x(s)} y={CHART_H - 6} textAnchor="middle" fontSize="8" fontWeight="700" fill="#7c8f84">S{s}</text>
             );
           })}
 
@@ -177,7 +177,7 @@ function RatingChart({ players, seasons, t }: { players: ColoredSeries[]; season
               <g key={p.id}>
                 {pathD && <path d={pathD} fill="none" stroke={p.color} strokeWidth={p.isMe ? 2.5 : 1.5} strokeLinecap="round" strokeLinejoin="round" opacity={p.isMe ? 1 : 0.6} />}
                 {pts.map((pt, i) => (
-                  <circle key={i} cx={x(pt.season)} cy={y(pt.rating)} r={p.isMe ? 4.5 : 3} fill={p.color} stroke="white" strokeWidth="1.5" opacity={p.isMe ? 1 : 0.7} />
+                  <circle key={i} cx={x(pt.season)} cy={y(pt.rating)} r={p.isMe ? 4.5 : 3} fill={p.color} stroke="#0c1712" strokeWidth="1.5" opacity={p.isMe ? 1 : 0.7} />
                 ))}
               </g>
             );
@@ -194,7 +194,7 @@ function Legend({ players, className = "", t }: { players: ColoredSeries[]; clas
       {players.map((p) => (
         <div key={p.id} className="flex items-center gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
-          <span className={`text-[10px] font-bold truncate max-w-[120px] ${p.isMe ? "text-indigo-700" : "text-slate-500"}`}>
+          <span className={`text-[10px] font-bold truncate max-w-[120px] ${p.isMe ? "text-accent" : "text-dim"}`}>
             {p.name}{p.isMe ? ` ${t("career.youSuffix")}` : ""}
           </span>
         </div>

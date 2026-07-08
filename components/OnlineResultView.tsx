@@ -146,40 +146,40 @@ export default function OnlineResultView() {
     <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-6">
       {/* Season result */}
       <div className="card animate-pop p-6 text-center">
-        <div className="text-xs font-bold uppercase tracking-widest text-indigo-600 mb-2">
+        <div className="eyebrow text-indigo-300 mb-2">
           {t("result.divisionSeason", { division: divisionLabel(t, me.current_division), season: lobby.current_season })}
         </div>
 
         {invincible ? (
           <>
-            <div className="mx-auto flex h-16 w-16 animate-floaty items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_4px_0_#c98a10]">
+            <div className="mx-auto flex h-16 w-16 animate-floaty items-center justify-center rounded-full bg-accent/15 text-accent ring-1 ring-accent/30">
               <IconStar className="h-9 w-9" />
             </div>
-            <div className="mt-3 text-2xl font-black text-amber-500">THE INVINCIBLES</div>
+            <div className="mt-3 stat-num text-3xl text-accent text-glow">THE INVINCIBLES</div>
           </>
         ) : (
           <>
-            <div className="text-5xl font-black tabular-nums text-slate-800">
-              {position}<span className="text-2xl text-slate-300">{position === 1 ? t("result.ordinalSte") : t("result.ordinalE")}</span>
+            <div className="stat-num text-6xl text-text">
+              {position}<span className="text-3xl text-faint">{position === 1 ? t("result.ordinalSte") : t("result.ordinalE")}</span>
             </div>
-            <div className="mt-2 text-base font-bold text-emerald-600">
+            <div className="mt-2 text-base font-bold text-accent">
               {QUALIFICATION_LABELS[qualification]}
             </div>
           </>
         )}
 
         {champion && promoted && (
-          <div className="mt-2 text-lg font-black text-amber-700">
+          <div className="mt-2 text-lg font-black text-draw font-display">
             {t("result.championPromotedTo", { division: divisionLabel(t, me.current_division - 1) })}
           </div>
         )}
         {!champion && position === 2 && me.current_division > 1 && (
-          <div className="mt-2 text-lg font-black text-emerald-600">
+          <div className="mt-2 text-lg font-black text-accent font-display">
             {t("result.promotedTo", { division: divisionLabel(t, me.current_division - 1) })}
           </div>
         )}
         {relegated && (
-          <div className="mt-2 text-lg font-black text-rose-600">
+          <div className="mt-2 text-lg font-black text-loss font-display">
             {t("result.relegatedTo", { division: divisionLabel(t, me.current_division + 1) })}
           </div>
         )}
@@ -208,12 +208,12 @@ export default function OnlineResultView() {
 
       {/* Game winner */}
       {div1Winner && (
-        <div className="card p-6 text-center border-2 border-amber-300 bg-amber-50">
-          <div className="animate-floaty mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_3px_0_#c98a10]"><IconTrophy className="h-7 w-7" /></div>
-          <div className="text-xl font-black text-amber-800">
+        <div className="card p-6 text-center border border-draw/30 bg-draw/[0.06]">
+          <div className="animate-floaty mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-draw/15 text-draw ring-1 ring-draw/30"><IconTrophy className="h-7 w-7" /></div>
+          <div className="text-xl font-black text-draw font-display text-glow">
             {t("result.winsTheGame", { name: div1Winner.team_name || div1Winner.username })}
           </div>
-          <p className="text-sm text-amber-600 mt-1">
+          <p className="text-sm text-draw/80 mt-1">
             {t("result.division1ChampionInSeason", { season: lobby.current_season })}
           </p>
         </div>
@@ -221,7 +221,7 @@ export default function OnlineResultView() {
 
       {/* Other players status */}
       <div className="card p-5">
-        <div className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">
+        <div className="eyebrow mb-3">
           {t("result.playerOverview")}
         </div>
         <div className="flex flex-col gap-1.5">
@@ -236,34 +236,34 @@ export default function OnlineResultView() {
               return (
                 <div
                   key={p.user_id}
-                  className={`flex items-center justify-between rounded-2xl p-3 ${
+                  className={`flex items-center justify-between rounded-2xl p-3 border ${
                     isMe
-                      ? "bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200"
+                      ? "bg-indigo-400/[0.08] border-indigo-400/30"
                       : p.is_bot
-                        ? "bg-slate-50/60 border-2 border-dashed border-slate-200"
-                        : "bg-white/80 border-2 border-slate-100"
+                        ? "bg-white/[0.02] border-dashed border-line"
+                        : "bg-white/[0.03] border-line"
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     {p.is_bot ? (
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 text-sm shrink-0">🤖</div>
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] text-sm shrink-0">🤖</div>
                     ) : (
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black text-white shrink-0 ${
-                        isMe ? "bg-gradient-to-br from-indigo-500 to-purple-500" : "bg-gradient-to-br from-slate-400 to-slate-500"
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-black shrink-0 ${
+                        isMe ? "bg-indigo-500/30 text-indigo-100 ring-1 ring-indigo-400/40" : "bg-white/[0.08] text-dim"
                       }`}>
                         {(p.team_name || p.username).charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div className="min-w-0">
-                      <div className="text-sm font-bold text-slate-800 truncate">
+                      <div className="text-sm font-bold text-text truncate">
                         {p.team_name || p.username}
-                        {isMe && <span className="ml-1 text-[9px] font-bold text-indigo-400">{t("result.you")}</span>}
+                        {isMe && <span className="ml-1 text-[9px] font-bold text-indigo-300">{t("result.you")}</span>}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-slate-400">{divisionLabel(t, p.current_division)}</span>
-                        {rating > 0 && <span className="text-[10px] font-bold text-emerald-600">{rating} OVR</span>}
+                        <span className="text-[10px] font-bold text-faint">{divisionLabel(t, p.current_division)}</span>
+                        {rating > 0 && <span className="text-[10px] font-bold text-accent">{rating} OVR</span>}
                         {p.championships > 0 && (
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-600">
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-draw">
                             {p.championships}x <IconTrophy className="h-3 w-3" />
                           </span>
                         )}
@@ -273,9 +273,9 @@ export default function OnlineResultView() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     {lastSeason && (
                       <span className={`rounded-lg px-1.5 py-0.5 text-[10px] font-bold ${
-                        lastSeason.position <= 2 ? "bg-emerald-50 text-emerald-700" :
-                        lastSeason.position >= 18 ? "bg-rose-50 text-rose-600" :
-                        "bg-slate-50 text-slate-500"
+                        lastSeason.position <= 2 ? "bg-accent/12 text-accent" :
+                        lastSeason.position >= 18 ? "bg-loss/12 text-loss" :
+                        "bg-white/[0.05] text-dim"
                       }`}>
                         {t("result.ordinalPosition", { position: lastSeason.position })}
                       </span>
@@ -283,7 +283,7 @@ export default function OnlineResultView() {
                     {p.squad.length > 0 && (
                       <button
                         onClick={() => setViewSquadPlayer(p)}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-50 border border-indigo-200 text-xs text-indigo-500 hover:bg-indigo-100 transition"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-400/12 border border-indigo-400/25 text-xs text-indigo-300 hover:bg-indigo-400/20 transition"
                         title={t("result.viewTeam")}
                       >
                         👁
@@ -292,21 +292,21 @@ export default function OnlineResultView() {
                     {!isMe && !p.is_bot && (
                       <button
                         onClick={() => setH2hPlayer(p)}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-50 border border-amber-200 text-xs text-amber-600 hover:bg-amber-100 transition"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-draw/12 border border-draw/25 text-xs text-draw hover:bg-draw/20 transition"
                         title={t("onlineCarriere.h2h.viewH2h")}
                       >
                         <IconTrophy className="h-3 w-3" />
                       </button>
                     )}
                     {p.acknowledged ? (
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs text-white shadow-sm shadow-emerald-200">✓</span>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs text-accent-ink font-bold">✓</span>
                     ) : (
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-400">…</span>
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/[0.06] border border-line text-xs text-faint">…</span>
                     )}
                     {isOwner && !isMe && !p.is_bot && (
                       <button
                         onClick={() => kickPlayer(p.user_id)}
-                        className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-50 border border-rose-200 text-xs text-rose-400 hover:bg-rose-100 transition"
+                        className="flex h-6 w-6 items-center justify-center rounded-full bg-loss/[0.08] border border-loss/25 text-xs text-loss hover:bg-loss/16 transition"
                         title={t("result.removePlayer")}
                       >
                         ✕
@@ -328,7 +328,7 @@ export default function OnlineResultView() {
         !iAcknowledged ? (
           <button
             onClick={handleAcknowledge}
-            className="w-full rounded-full bg-emerald-500 px-5 py-4 text-lg font-extrabold text-white shadow-[0_4px_0_#0a8f66] transition hover:brightness-105 active:translate-y-1 active:shadow-none"
+            className="btn-primary w-full py-4 text-lg"
           >
             {t("result.continue")}
           </button>
@@ -336,14 +336,14 @@ export default function OnlineResultView() {
           <button
             disabled={!allAcknowledged}
             onClick={handleNextSeason}
-            className="w-full rounded-full bg-indigo-500 px-5 py-4 text-lg font-extrabold text-white shadow-[0_4px_0_#3730a3] transition hover:brightness-105 active:translate-y-1 active:shadow-none disabled:opacity-40 disabled:shadow-none"
+            className="btn-primary w-full py-4 text-lg"
           >
             {allAcknowledged
               ? t("result.startSeason", { season: lobby.current_season + 1 })
               : t("result.waitForEveryone")}
           </button>
         ) : (
-          <div className="rounded-2xl bg-slate-50 border border-slate-200 px-5 py-3.5 text-center text-sm font-bold text-slate-400">
+          <div className="rounded-xl bg-white/[0.03] border border-line px-5 py-3.5 text-center text-sm font-bold text-faint">
             {t("result.waitForHost")}
           </div>
         )
@@ -355,10 +355,10 @@ export default function OnlineResultView() {
       </button>
 
       {showTable && (
-        <div className="card overflow-hidden">
+        <div className="card-solid overflow-hidden">
           <table className="w-full text-xs">
-            <thead className="bg-slate-50/80 text-slate-400">
-              <tr>
+            <thead className="bg-white/[0.03] text-faint">
+              <tr className="[&>th]:font-bold [&>th]:uppercase [&>th]:tracking-wider [&>th]:text-[10px]">
                 <th className="px-3 py-2.5 text-left">#</th>
                 <th className="px-3 py-2.5 text-left">{t("result.team")}</th>
                 <th className="px-2 py-2.5 text-right">{t("result.playedAbbr")}</th>
@@ -373,22 +373,22 @@ export default function OnlineResultView() {
                 return (
                 <tr
                   key={r.name}
-                  className={`border-t border-slate-100/60 ${
-                    isMe ? "bg-emerald-50/60 font-bold text-emerald-800"
-                    : isHuman ? "bg-indigo-50/40 font-semibold text-indigo-800"
-                    : "text-slate-600"
+                  className={`border-t border-line ${
+                    isMe ? "bg-accent/[0.08] font-bold text-accent"
+                    : isHuman ? "bg-indigo-400/[0.06] font-semibold text-indigo-200"
+                    : "text-dim"
                   }`}
                 >
                   <td className="px-3 py-2">
-                    <span className={i < 2 ? "text-emerald-500" : i >= 17 ? "text-rose-400" : ""}>{i + 1}</span>
+                    <span className={`stat-num text-sm ${i < 2 ? "text-accent-2" : i >= 17 ? "text-loss" : "text-faint"}`}>{i + 1}</span>
                   </td>
                   <td className="max-w-[150px] truncate px-3 py-2">
                     {r.name}
-                    {isHuman && !isMe && <span className="ml-1 text-[9px] text-indigo-400">●</span>}
+                    {isHuman && !isMe && <span className="ml-1 text-[9px] text-indigo-300">●</span>}
                   </td>
                   <td className="px-2 py-2 text-right tabular-nums">{r.played}</td>
                   <td className="px-2 py-2 text-right tabular-nums">{(r.gd >= 0 ? "+" : "") + r.gd}</td>
-                  <td className="px-3 py-2 text-right font-semibold tabular-nums">{r.points}</td>
+                  <td className="px-3 py-2 text-right stat-num text-sm text-text">{r.points}</td>
                 </tr>
                 );
               })}
@@ -398,11 +398,11 @@ export default function OnlineResultView() {
       )}
 
       {/* Player stats */}
-      <div className="card overflow-hidden">
-        <div className="px-5 py-3 text-sm font-bold text-slate-700">{t("result.playerStats")}</div>
+      <div className="card-solid overflow-hidden">
+        <div className="px-5 py-3 eyebrow">{t("result.playerStats")}</div>
         <table className="w-full text-xs">
-          <thead className="bg-slate-50/80 text-slate-400">
-            <tr>
+          <thead className="bg-white/[0.03] text-faint">
+            <tr className="[&>th]:font-bold [&>th]:uppercase [&>th]:tracking-wider [&>th]:text-[10px]">
               <th className="px-3 py-2 text-left">{t("result.player")}</th>
               <th className="px-2 py-2 text-left">{t("result.pos")}</th>
               <th className="px-2 py-2 text-right">{t("result.goalsAbbr")}</th>
@@ -412,9 +412,9 @@ export default function OnlineResultView() {
           </thead>
           <tbody>
             {squadStats.map((p) => (
-              <tr key={p.name} className="border-t border-slate-100/60 text-slate-600">
+              <tr key={p.name} className="border-t border-line text-dim">
                 <td className="max-w-[150px] truncate px-3 py-2">{p.name}</td>
-                <td className="px-2 py-2 text-slate-400">{p.pos}</td>
+                <td className="px-2 py-2 text-faint">{p.pos}</td>
                 <td className="px-2 py-2 text-right tabular-nums">{p.goals || "—"}</td>
                 <td className="px-2 py-2 text-right tabular-nums">{p.assists || "—"}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{p.cleanSheets || "—"}</td>
@@ -443,9 +443,9 @@ export default function OnlineResultView() {
 
 function Stat({ label, value, accent = false }: { label: string; value: number | string; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl px-2 py-2.5 ${accent ? "bg-emerald-50/80" : "bg-slate-50/80"}`}>
-      <div className={`text-lg font-black tabular-nums ${accent ? "text-emerald-700" : "text-slate-800"}`}>{value}</div>
-      <div className="text-[10px] uppercase tracking-widest text-slate-400">{label}</div>
+    <div className={`rounded-xl border px-2 py-2.5 ${accent ? "border-accent/30 bg-accent/[0.08]" : "border-line bg-white/[0.03]"}`}>
+      <div className={`stat-num text-2xl ${accent ? "text-accent" : "text-text"}`}>{value}</div>
+      <div className="eyebrow mt-0.5">{label}</div>
     </div>
   );
 }
