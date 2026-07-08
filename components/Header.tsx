@@ -25,35 +25,35 @@ export default function Header({ showMeta = false, backHref }: { showMeta?: bool
   const onlineMe = lobby?.players.find((p) => p.user_id === userId);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/40 bg-white/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-line bg-bg/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3">
         <div className="flex items-center gap-2">
           {backHref && (
-            <a href={backHref} className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition text-sm">
+            <a href={backHref} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.06] text-dim hover:bg-white/[0.12] hover:text-text transition text-sm">
               ←
             </a>
           )}
-          <a href="/" className="text-base font-black tracking-tight text-emerald-950">
+          <a href="/" className="text-base font-black tracking-tight text-text">
             Elite Football
           </a>
         </div>
         <div className="flex items-center gap-2">
           {showMeta && (
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+            <div className="flex items-center gap-2 text-xs font-bold text-dim">
               {isOnlineCareer && onlineMe ? (
-                <span className="truncate rounded-full border border-indigo-200/60 bg-indigo-50/60 px-3 py-1.5 text-indigo-700 backdrop-blur">
+                <span className="truncate rounded-full border border-indigo-400/25 bg-indigo-400/[0.08] px-3 py-1.5 text-indigo-300 backdrop-blur">
                   {divisionLabel(t, onlineMe.current_division)} · S{lobby.current_season}
                 </span>
               ) : gameMode === "career" ? (
-                <span className="truncate rounded-full border border-indigo-200/60 bg-indigo-50/60 px-3 py-1.5 text-indigo-700 backdrop-blur">
+                <span className="truncate rounded-full border border-indigo-400/25 bg-indigo-400/[0.08] px-3 py-1.5 text-indigo-300 backdrop-blur">
                   {divisionLabel(t, career.currentDivision)} · S{career.season}
                 </span>
               ) : leagueCode ? (
-                <span className="truncate rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
+                <span className="truncate rounded-full border border-line bg-white/[0.04] px-3 py-1.5 text-dim backdrop-blur">
                   {leagueName(leagueCode)}
                 </span>
               ) : null}
-              <span className="rounded-full border border-slate-200/60 bg-white/60 px-3 py-1.5 backdrop-blur">
+              <span className="rounded-full border border-line bg-white/[0.04] px-3 py-1.5 text-dim backdrop-blur">
                 {formation.label}
               </span>
             </div>

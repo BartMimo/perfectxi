@@ -9,28 +9,28 @@ import { IconBall, IconPause, IconPlay } from "@/components/icons";
 function outcome(m: MatchResult): "W" | "D" | "L" {
   return m.gf > m.ga ? "W" : m.gf === m.ga ? "D" : "L";
 }
-const dot = { W: "bg-emerald-400", D: "bg-amber-400", L: "bg-rose-400" } as const;
+const dot = { W: "bg-win", D: "bg-draw", L: "bg-loss" } as const;
 
 function KeyMoments({ m }: { m: MatchResult }) {
   const t = useT();
   return (
     <div className="mt-3 flex h-24 flex-col gap-1 overflow-y-auto">
       {!!m.goals?.length && (
-        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <div className="eyebrow">
           {t("result.keyMoments")}
         </div>
       )}
       {m.goals?.map((g, i) => (
         <div
           key={i}
-          className="animate-pop flex items-center gap-2 text-xs text-slate-600"
+          className="animate-pop flex items-center gap-2 text-xs text-dim"
           style={{ animationDelay: `${i * 90}ms` }}
         >
-          <span className="w-8 shrink-0 text-right font-black tabular-nums text-emerald-600">{g.minute}&prime;</span>
-          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+          <span className="w-8 shrink-0 text-right stat-num text-sm text-accent">{g.minute}&prime;</span>
+          <span className="flex h-4.5 w-4.5 items-center justify-center rounded-full bg-accent/12 text-accent">
             <IconBall className="h-3 w-3" />
           </span>
-          <span className="truncate font-bold text-slate-700">{g.name}</span>
+          <span className="truncate font-bold text-text">{g.name}</span>
         </div>
       ))}
     </div>
@@ -74,39 +74,39 @@ export default function SimulationView() {
     <div className="mx-auto grid max-w-5xl grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-2 lg:items-start">
       <div className="flex flex-col gap-4">
         <div className="card p-5">
-          <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+          <div className="mb-2 flex items-center justify-between eyebrow">
             <span>
               {t("result.matchday", { round: md.round, total })}
             </span>
-            <span className="text-slate-500">
+            <span className="text-dim">
               {t("result.formLine", { won: userRow.won, drawn: userRow.drawn, lost: userRow.lost, points: userRow.points })}
             </span>
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.06]">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-cyan-400 transition-all"
+              className="h-full rounded-full bg-gradient-to-r from-accent-2 to-accent transition-all"
               style={{ width: `${((round + 1) / total) * 100}%` }}
             />
           </div>
 
           <div
-            className={`mt-5 flex items-center justify-between rounded-2xl border-2 px-5 py-4 ${
+            className={`mt-5 flex items-center justify-between rounded-xl border px-5 py-4 ${
               oc === "W"
-                ? "border-emerald-200/60 bg-emerald-50/60"
+                ? "border-win/30 bg-win/[0.08]"
                 : oc === "D"
-                  ? "border-amber-200/60 bg-amber-50/60"
-                  : "border-rose-200/60 bg-rose-50/60"
+                  ? "border-draw/30 bg-draw/[0.08]"
+                  : "border-loss/30 bg-loss/[0.08]"
             }`}
           >
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-widest text-slate-400">
+              <div className="eyebrow">
                 {m.home ? t("result.home") : t("result.away")}
               </div>
-              <div className="truncate text-sm font-bold text-slate-800">
-                {t("result.yourXi")} <span className="text-slate-300">vs</span> {m.opponent}
+              <div className="truncate text-sm font-bold text-text">
+                {t("result.yourXi")} <span className="text-faint">vs</span> {m.opponent}
               </div>
             </div>
-            <div className="shrink-0 text-2xl font-black tabular-nums text-slate-800">
+            <div className="shrink-0 stat-num text-3xl text-text">
               {m.gf}-{m.ga}
             </div>
           </div>
@@ -115,14 +115,14 @@ export default function SimulationView() {
 
           <div className="mt-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">{t("result.form")}</span>
+              <span className="eyebrow">{t("result.form")}</span>
               {form.map((f, i) => (
-                <span key={i} className={`h-4 w-4 rounded-full shadow-sm ${dot[outcome(f)]}`} />
+                <span key={i} className={`h-4 w-4 rounded-full ${dot[outcome(f)]}`} />
               ))}
             </div>
             <div className="text-sm font-bold">
-              <span className="text-slate-400">{t("result.position")} </span>
-              <span className="tabular-nums text-emerald-600">{t("result.positionValue", { position })}</span>
+              <span className="text-faint">{t("result.position")} </span>
+              <span className="stat-num text-lg text-accent">{t("result.positionValue", { position })}</span>
             </div>
           </div>
         </div>
@@ -161,10 +161,10 @@ export default function SimulationView() {
         </div>
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="card-solid overflow-hidden">
         <table className="w-full text-xs">
-          <thead className="bg-slate-50/80 text-slate-400">
-            <tr>
+          <thead className="bg-white/[0.03] text-faint">
+            <tr className="[&>th]:font-bold [&>th]:uppercase [&>th]:tracking-wider [&>th]:text-[10px]">
               <th className="px-3 py-2.5 text-left">#</th>
               <th className="px-3 py-2.5 text-left">{t("result.team")}</th>
               <th className="px-2 py-2.5 text-right">{t("result.playedAbbr")}</th>
@@ -176,12 +176,12 @@ export default function SimulationView() {
             {md.standings.map((r, i) => (
               <tr
                 key={r.name}
-                className={`border-t border-slate-100/60 ${
-                  r.isUser ? "bg-emerald-50/60 font-bold text-emerald-800" : "text-slate-600"
+                className={`border-t border-line ${
+                  r.isUser ? "bg-accent/[0.08] font-bold text-accent" : "text-dim"
                 }`}
               >
                 <td className="px-3 py-2">
-                  <span className={i < 4 ? "text-emerald-500" : i >= 17 ? "text-rose-400" : ""}>
+                  <span className={`stat-num text-sm ${i < 4 ? "text-accent-2" : i >= 17 ? "text-loss" : "text-faint"}`}>
                     {i + 1}
                   </span>
                 </td>
@@ -190,7 +190,7 @@ export default function SimulationView() {
                 <td className="px-2 py-2 text-right tabular-nums">
                   {(r.gd >= 0 ? "+" : "") + r.gd}
                 </td>
-                <td className="px-3 py-2 text-right font-semibold tabular-nums">{r.points}</td>
+                <td className="px-3 py-2 text-right stat-num text-sm text-text">{r.points}</td>
               </tr>
             ))}
           </tbody>

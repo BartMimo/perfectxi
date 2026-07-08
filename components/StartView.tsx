@@ -22,11 +22,11 @@ import {
 
 function SectionTitle({ n, children }: { n: number; children: React.ReactNode }) {
   return (
-    <div className="mb-3 flex items-center gap-2.5 text-xs font-bold uppercase tracking-widest text-slate-400">
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 text-[11px] font-extrabold text-emerald-700">
+    <div className="mb-3 flex items-center gap-2.5">
+      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/12 stat-num text-[13px] text-accent">
         {n}
       </span>
-      {children}
+      <span className="eyebrow">{children}</span>
     </div>
   );
 }
@@ -45,14 +45,14 @@ function OptionCard({
   return (
     <button
       onClick={onClick}
-      className={`rounded-2xl border-2 px-4 py-3.5 text-left transition-all ${
+      className={`rounded-xl border px-4 py-3.5 text-left transition-all ${
         active
-          ? "border-emerald-400 bg-emerald-50/80 shadow-sm shadow-emerald-100"
-          : "border-transparent bg-white/60 hover:bg-white/80 hover:shadow-sm"
+          ? "border-accent/60 bg-accent/[0.07]"
+          : "border-line bg-white/[0.02] hover:border-line-strong hover:bg-white/[0.04]"
       }`}
     >
-      <div className="text-sm font-bold text-slate-800">{title}</div>
-      <div className="mt-0.5 text-[11px] leading-relaxed text-slate-500">{desc}</div>
+      <div className={`text-sm font-bold ${active ? "text-text" : "text-dim"}`}>{title}</div>
+      <div className="mt-0.5 text-[11px] leading-relaxed text-faint">{desc}</div>
     </button>
   );
 }
@@ -60,10 +60,10 @@ function OptionCard({
 type StartScreen = "home" | "single";
 
 interface ModeAccent {
-  border: string;
+  /** icon chip tint */
   chip: string;
-  title: string;
-  desc: string;
+  /** hover border tint */
+  ring: string;
 }
 
 function ModeCard({ icon, title, desc, href, onClick, accent, badge, featured }: {
@@ -76,24 +76,24 @@ function ModeCard({ icon, title, desc, href, onClick, accent, badge, featured }:
   badge?: string;
   featured?: boolean;
 }) {
-  const className = `group relative flex rounded-3xl border bg-white p-4 text-left shadow-[0_2px_0_rgba(15,23,42,0.04)] transition-all duration-150 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-900/10 active:translate-y-0 sm:p-5 ${accent.border} ${
+  const className = `group relative flex rounded-2xl border border-line bg-white/[0.03] p-4 text-left backdrop-blur transition-all duration-150 hover:-translate-y-0.5 hover:bg-white/[0.055] active:translate-y-0 sm:p-5 ${accent.ring} ${
     featured ? "sm:col-span-2 flex-row items-center gap-4" : "flex-row items-center gap-3.5 sm:flex-col sm:items-start sm:gap-3"
   }`;
   const inner = (
     <>
       {badge && (
-        <span className="absolute -top-2.5 right-4 rounded-full bg-sky-500 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white">
+        <span className="absolute -top-2.5 right-4 rounded-full bg-accent px-3 py-0.5 text-[10px] font-black uppercase tracking-wider text-accent-ink">
           {badge}
         </span>
       )}
-      <span className={`flex shrink-0 items-center justify-center rounded-full ${accent.chip} ${featured ? "h-14 w-14" : "h-11 w-11"}`}>
+      <span className={`flex shrink-0 items-center justify-center rounded-xl ${accent.chip} ${featured ? "h-14 w-14" : "h-11 w-11"}`}>
         {icon}
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className={`text-[15px] font-black sm:text-base ${accent.title}`}>{title}</span>
-        <span className={`text-xs leading-relaxed sm:text-[13px] ${accent.desc}`}>{desc}</span>
+        <span className="text-[15px] font-bold text-text sm:text-base">{title}</span>
+        <span className="text-xs leading-relaxed text-dim sm:text-[13px]">{desc}</span>
       </span>
-      {featured && <IconChevronRight className="h-5 w-5 shrink-0 text-sky-300 transition-transform group-hover:translate-x-1" />}
+      {featured && <IconChevronRight className="h-5 w-5 shrink-0 text-faint transition-all group-hover:translate-x-1 group-hover:text-accent" />}
     </>
   );
   return href ? (
@@ -127,21 +127,21 @@ function DailyChallengeBanner() {
   return (
     <Link
       href="/challenge"
-      className="group flex items-center gap-3.5 rounded-3xl border border-amber-200 bg-amber-50 p-4 transition-all duration-150 hover:-translate-y-1 hover:shadow-lg hover:shadow-amber-900/10 active:translate-y-0 sm:gap-4 sm:px-5"
+      className="group flex items-center gap-3.5 rounded-2xl border border-draw/25 bg-draw/[0.06] p-4 transition-all duration-150 hover:-translate-y-0.5 hover:bg-draw/[0.1] active:translate-y-0 sm:gap-4 sm:px-5"
     >
-      <span className="animate-wiggle flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-amber-400 text-white shadow-[0_3px_0_#c98a10] sm:h-12 sm:w-12">
+      <span className="animate-wiggle flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-draw/15 text-draw sm:h-12 sm:w-12">
         <IconBolt className="h-6 w-6" />
       </span>
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="text-[15px] font-black text-amber-900 sm:text-base">{t("start.mode.dailyChallenge.title")}</span>
-        <span className="text-xs text-amber-700 sm:text-[13px]">
+        <span className="text-[15px] font-bold text-text sm:text-base">{t("start.mode.dailyChallenge.title")}</span>
+        <span className="text-xs text-dim sm:text-[13px]">
           {t("start.daily.countdown", { time: countdown })}
         </span>
       </span>
-      <span className="hidden shrink-0 rounded-full border border-amber-200 bg-white px-4 py-2 text-[13px] font-bold text-amber-700 shadow-[0_3px_0_#f0d68e] transition-transform group-active:translate-y-[3px] sm:inline-block">
+      <span className="hidden shrink-0 rounded-full border border-draw/30 bg-draw/10 px-4 py-2 text-[13px] font-bold text-draw transition-colors group-hover:bg-draw/15 sm:inline-block">
         {t("start.daily.cta")}
       </span>
-      <IconChevronRight className="h-5 w-5 shrink-0 text-amber-400 sm:hidden" />
+      <IconChevronRight className="h-5 w-5 shrink-0 text-draw sm:hidden" />
     </Link>
   );
 }
@@ -168,10 +168,10 @@ export default function StartView() {
       <div className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="animate-floaty flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white shadow-[0_3px_0_#0a8f66]">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/12 text-accent ring-1 ring-accent/20">
               <IconBall className="h-6 w-6" />
             </span>
-            <span className="text-lg font-black tracking-tight text-emerald-950">Elite Football</span>
+            <span className="text-lg font-black tracking-tight text-text">Elite Football</span>
           </div>
           <div className="flex items-center gap-2">
             <LevelBadge />
@@ -179,14 +179,28 @@ export default function StartView() {
           </div>
         </div>
 
-        <div className="animate-fade-up mt-8 text-center sm:mt-10">
-          <h1 className="mx-auto max-w-lg text-2xl font-black leading-snug text-emerald-950 sm:text-3xl">
-            {t("start.tagline.prefix")}{" "}
-            <span className="inline-block rounded-full bg-amber-100 px-3.5 py-0.5 text-amber-700">38&#8209;0&#8209;0</span>
-          </h1>
+        {/* Hero — unbeaten-record scoreboard signature */}
+        <div className="animate-fade-up mt-10 text-center sm:mt-14">
+          <p className="eyebrow">{t("start.tagline.prefix")}</p>
+          <div className="mt-4 flex items-center justify-center gap-3 sm:gap-5">
+            <span className="stat-num text-glow text-7xl text-accent sm:text-8xl">38</span>
+            <span className="stat-num text-4xl text-faint sm:text-5xl">–</span>
+            <span className="stat-num text-7xl text-text sm:text-8xl">0</span>
+            <span className="stat-num text-4xl text-faint sm:text-5xl">–</span>
+            <span className="stat-num text-7xl text-text sm:text-8xl">0</span>
+          </div>
+          <div className="mx-auto mt-4 flex max-w-xs items-center justify-center gap-4">
+            <span className="hairline flex-1" />
+            <div className="flex gap-4 eyebrow">
+              <span className="text-accent-2">W</span>
+              <span>D</span>
+              <span>L</span>
+            </div>
+            <span className="hairline flex-1" />
+          </div>
         </div>
 
-        <div className="mt-8 flex flex-col gap-3 sm:mt-10">
+        <div className="mt-9 flex flex-col gap-3 sm:mt-12">
           <DailyChallengeBanner />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -195,7 +209,7 @@ export default function StartView() {
               title={t("start.mode.online.title")}
               desc={t("start.mode.online.desc")}
               href="/online-carriere"
-              accent={{ border: "border-sky-200", chip: "bg-sky-100 text-sky-600", title: "text-sky-950", desc: "text-sky-800/60" }}
+              accent={{ chip: "bg-sky-400/12 text-sky-300", ring: "hover:border-sky-400/40" }}
               badge={t("start.mode.online.badge")}
               featured
             />
@@ -204,35 +218,35 @@ export default function StartView() {
               title={t("start.mode.singleSeason.title")}
               desc={t("start.mode.singleSeason.desc")}
               onClick={() => setScreen("single")}
-              accent={{ border: "border-emerald-200", chip: "bg-emerald-100 text-emerald-600", title: "text-emerald-950", desc: "text-emerald-800/60" }}
+              accent={{ chip: "bg-accent/12 text-accent", ring: "hover:border-accent/40" }}
             />
             <ModeCard
               icon={<IconTrophy className="h-5.5 w-5.5" />}
               title={t("start.mode.offlineCareer.title")}
               desc={t("start.mode.offlineCareer.desc")}
               href="/offline-carriere"
-              accent={{ border: "border-indigo-200", chip: "bg-indigo-100 text-indigo-600", title: "text-indigo-950", desc: "text-indigo-800/60" }}
+              accent={{ chip: "bg-indigo-400/12 text-indigo-300", ring: "hover:border-indigo-400/40" }}
             />
             <ModeCard
               icon={<IconStar className="h-5.5 w-5.5" />}
               title={t("start.mode.myPlayer.title")}
               desc={t("start.mode.myPlayer.desc")}
               href="/mijn-speler"
-              accent={{ border: "border-rose-200", chip: "bg-rose-100 text-rose-500", title: "text-rose-950", desc: "text-rose-800/60" }}
+              accent={{ chip: "bg-rose-400/12 text-rose-300", ring: "hover:border-rose-400/40" }}
             />
             <ModeCard
               icon={<IconChart className="h-5.5 w-5.5" />}
               title={t("start.mode.leaderboard.title")}
               desc={t("start.mode.leaderboard.desc")}
               href="/ranglijst"
-              accent={{ border: "border-cyan-200", chip: "bg-cyan-100 text-cyan-600", title: "text-cyan-950", desc: "text-cyan-800/60" }}
+              accent={{ chip: "bg-cyan-400/12 text-cyan-300", ring: "hover:border-cyan-400/40" }}
             />
             <ModeCard
               icon={<IconUser className="h-6 w-6" />}
               title={t("start.mode.profile.title")}
               desc={t("start.mode.profile.desc")}
               href="/profiel"
-              accent={{ border: "border-violet-200", chip: "bg-violet-100 text-violet-600", title: "text-violet-950", desc: "text-violet-800/60" }}
+              accent={{ chip: "bg-violet-400/12 text-violet-300", ring: "hover:border-violet-400/40" }}
               featured
             />
           </div>
@@ -245,11 +259,11 @@ export default function StartView() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <div className="animate-fade-up text-center">
-        <button onClick={() => setScreen("home")} className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-400 hover:text-slate-600 transition mb-4">
+        <button onClick={() => setScreen("home")} className="inline-flex items-center gap-1.5 text-sm font-bold text-faint hover:text-text transition mb-4">
           ← {t("start.back")}
         </button>
-        <h1 className="text-3xl font-black text-slate-800">{t("start.singleSeason.title")}</h1>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+        <h1 className="text-3xl font-black text-text font-display tracking-tight">{t("start.singleSeason.title")}</h1>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-dim">
           {t("start.singleSeason.desc")}
         </p>
       </div>
@@ -263,10 +277,10 @@ export default function StartView() {
               <button
                 key={fm.key}
                 onClick={() => setFormation(fm.key)}
-                className={`rounded-xl border-2 px-2 py-3 text-sm font-bold transition-all ${
+                className={`rounded-xl border px-2 py-3 text-sm font-bold transition-all ${
                   formationKey === fm.key
-                    ? "border-emerald-400 bg-emerald-50/80 text-emerald-700 shadow-sm shadow-emerald-100"
-                    : "border-transparent bg-white/60 text-slate-600 hover:bg-white/80"
+                    ? "border-accent/60 bg-accent/[0.07] text-accent"
+                    : "border-line bg-white/[0.02] text-dim hover:border-line-strong hover:bg-white/[0.04]"
                 }`}
               >
                 {fm.label}
@@ -283,21 +297,21 @@ export default function StartView() {
               <button
                 key={l.code}
                 onClick={() => setLeague(l.code)}
-                className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 text-left transition-all ${
+                className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-left transition-all ${
                   leagueCode === l.code
-                    ? "border-emerald-400 bg-emerald-50/80 shadow-sm shadow-emerald-100"
-                    : "border-transparent bg-white/60 hover:bg-white/80"
+                    ? "border-accent/60 bg-accent/[0.07]"
+                    : "border-line bg-white/[0.02] hover:border-line-strong hover:bg-white/[0.04]"
                 }`}
               >
                 <span className="text-2xl leading-none">{l.flag}</span>
-                <span className="flex-1 font-bold text-slate-800">{l.name}</span>
+                <span className={`flex-1 font-bold ${leagueCode === l.code ? "text-text" : "text-dim"}`}>{l.name}</span>
                 {leagueCode === l.code && (
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-xs text-white">✓</span>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-black text-accent-ink">✓</span>
                 )}
               </button>
             ))}
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-slate-400">
+          <p className="mt-3 text-[11px] leading-relaxed text-faint">
             {t("start.section.league.hint")}
           </p>
         </section>

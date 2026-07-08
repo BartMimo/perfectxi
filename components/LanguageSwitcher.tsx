@@ -13,7 +13,7 @@ export default function LanguageSwitcher() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex h-8 items-center gap-1 rounded-full bg-slate-100 px-3 text-xs font-bold text-slate-600 hover:bg-slate-200 transition"
+        className="flex h-8 items-center gap-1 rounded-full border border-line bg-white/[0.04] px-3 text-xs font-bold text-dim hover:bg-white/[0.08] hover:text-text transition"
       >
         <span>{LOCALE_FLAGS[locale]}</span>
         <span>{locale.toUpperCase()}</span>
@@ -21,13 +21,13 @@ export default function LanguageSwitcher() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg">
+          <div className="absolute right-0 top-full z-50 mt-1 w-40 overflow-hidden rounded-xl border border-line bg-elev py-1 shadow-xl shadow-black/50">
             {LOCALES.map((l) => (
               <button
                 key={l}
                 onClick={() => { setLocale(l); setOpen(false); }}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-slate-50 ${
-                  l === locale ? "font-bold text-emerald-600" : "text-slate-600"
+                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:bg-white/[0.05] ${
+                  l === locale ? "font-bold text-accent" : "text-dim"
                 }`}
               >
                 <span>{LOCALE_FLAGS[l]}</span>
