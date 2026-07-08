@@ -23,7 +23,7 @@ export default function MijnSpelerPage() {
     return (
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
-        <div className="flex items-center justify-center py-20 text-sm text-slate-400 font-bold">{t("common.loading")}</div>
+        <div className="flex items-center justify-center py-20 text-sm text-faint font-bold">{t("common.loading")}</div>
         <Footer />
       </main>
     );
@@ -34,8 +34,8 @@ export default function MijnSpelerPage() {
       <main className="min-h-screen w-full pb-12">
         <Header backHref="/" />
         <div className="mx-auto max-w-2xl px-4 py-20 text-center">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-rose-100 text-rose-500"><IconStar className="h-7 w-7" /></div>
-          <p className="text-sm text-slate-500 mb-4">{t("mijnSpeler.loginPrompt")}</p>
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-400/12 text-rose-300 ring-1 ring-rose-400/25"><IconStar className="h-7 w-7" /></div>
+          <p className="text-sm text-dim mb-4">{t("mijnSpeler.loginPrompt")}</p>
           <button onClick={() => setShowLogin(true)} className="btn-primary">{t("common.login")}</button>
         </div>
         {showLogin && <LoginPrompt onClose={() => setShowLogin(false)} />}
@@ -49,20 +49,20 @@ export default function MijnSpelerPage() {
       <Header backHref="/" />
       <div className="mx-auto max-w-2xl px-4 py-10">
         <div className="mb-8 text-center">
-          <div className="animate-floaty mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-rose-400 text-white shadow-[0_3px_0_#be2f52]"><IconStar className="h-7 w-7" /></div>
-          <h1 className="text-2xl font-black text-slate-800">{t("mijnSpeler.title")}</h1>
-          <p className="mt-2 text-sm text-slate-500">
+          <div className="animate-floaty mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-400/15 text-rose-300 ring-1 ring-rose-400/30"><IconStar className="h-7 w-7" /></div>
+          <h1 className="text-3xl font-black text-text font-display tracking-tight">{t("mijnSpeler.title")}</h1>
+          <p className="mt-2 text-sm text-dim">
             {t("mijnSpeler.intro")}
           </p>
           <button
             onClick={() => setShowUitleg((v) => !v)}
-            className="mt-2 text-xs font-bold text-indigo-500 hover:text-indigo-700 transition"
+            className="mt-2 text-xs font-bold text-accent hover:brightness-110 transition"
           >
             {showUitleg ? t("mijnSpeler.hideExplainer") : t("mijnSpeler.showExplainer")}
           </button>
         </div>
         {showUitleg && (
-          <div className="mb-6 rounded-2xl bg-indigo-50/80 border border-indigo-100 px-4 py-3 text-sm text-slate-600">
+          <div className="mb-6 rounded-2xl border border-line bg-white/[0.03] px-4 py-3 text-sm text-dim">
             <ul className="list-disc pl-4 space-y-1.5">
               <li>{t("mijnSpeler.explainer1")}</li>
               <li>{t("mijnSpeler.explainer2")}</li>
@@ -124,21 +124,21 @@ function TopSpelersRanglijst() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   return (
-    <div className="card mt-6 overflow-hidden">
-      <div className="px-5 py-3 border-b border-slate-100/60">
-        <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-rose-100 text-rose-500"><IconStar className="h-3.5 w-3.5" /></span>
+    <div className="card-solid mt-6 overflow-hidden">
+      <div className="px-5 py-3 border-b border-line">
+        <span className="flex items-center gap-2 text-sm font-bold text-text">
+          <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-400/12 text-rose-300"><IconStar className="h-3.5 w-3.5" /></span>
           {t("mijnSpeler.leaderboardTitle")}
         </span>
       </div>
       {loading ? (
-        <div className="p-8 text-center text-sm text-slate-400">{t("common.loading")}</div>
+        <div className="p-8 text-center text-sm text-faint">{t("common.loading")}</div>
       ) : rows.length === 0 ? (
-        <div className="p-8 text-center text-sm text-slate-400">{t("mijnSpeler.noPlayersYet")}</div>
+        <div className="p-8 text-center text-sm text-faint">{t("mijnSpeler.noPlayersYet")}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="bg-slate-50/80 text-[10px] uppercase tracking-widest text-slate-400">
+            <thead className="bg-white/[0.03] text-[10px] uppercase tracking-wider text-faint">
               <tr>
                 <th className="px-4 py-3 text-left">#</th>
                 <th className="px-3 py-3 text-left">{t("mijnSpeler.colAccount")}</th>
@@ -152,18 +152,18 @@ function TopSpelersRanglijst() {
             </thead>
             <tbody>
               {rows.map((r, i) => (
-                <tr key={r.id} className="border-t border-slate-100/60 text-slate-600 transition hover:bg-emerald-50/30">
-                  <td className="px-4 py-3 font-bold text-slate-400">{i + 1}</td>
+                <tr key={r.id} className="border-t border-line text-dim transition hover:bg-white/[0.03]">
+                  <td className="px-4 py-3 stat-num text-sm text-faint">{i + 1}</td>
                   <td className="px-3 py-3">
-                    <a href={`/profiel/${encodeURIComponent(r.username)}`} className="font-bold text-slate-800 hover:text-indigo-600 transition">
+                    <a href={`/profiel/${encodeURIComponent(r.username)}`} className="font-bold text-text hover:text-accent transition">
                       {r.username}
                     </a>
                   </td>
                   <td className="px-3 py-3 font-semibold">{r.name}</td>
-                  <td className="px-3 py-3 text-slate-500">
+                  <td className="px-3 py-3 text-faint">
                     {[r.position, ...r.extraPositions].map((p) => posLabel(t, p)).join(", ")}
                   </td>
-                  <td className="px-3 py-3 text-right font-black text-indigo-600 tabular-nums">{r.overall}</td>
+                  <td className="px-3 py-3 text-right stat-num text-sm text-accent">{r.overall}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{r.seasonsPlayed}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{r.totalGoals}</td>
                   <td className="px-3 py-3 text-right tabular-nums">{r.totalAssists}</td>
@@ -191,14 +191,14 @@ function CustomPlayerCard({ userId }: { userId: string }) {
   }, [userId, loaded, loading, load]);
 
   if (loading || !loaded) {
-    return <div className="p-12 text-center text-sm text-slate-400">{t("common.loading")}</div>;
+    return <div className="p-12 text-center text-sm text-faint">{t("common.loading")}</div>;
   }
 
   if (!player) {
     return (
       <div className="card p-5">
-        <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">{t("mijnSpeler.newPlayerTitle")}</div>
-        <p className="text-sm text-slate-500 mb-3">
+        <div className="eyebrow mb-3">{t("mijnSpeler.newPlayerTitle")}</div>
+        <p className="text-sm text-dim mb-3">
           {t("mijnSpeler.newPlayerDesc", { base: BASE_OVERALL })}
         </p>
         <input
@@ -214,10 +214,10 @@ function CustomPlayerCard({ userId }: { userId: string }) {
             <button
               key={pos}
               onClick={() => setPosition(pos)}
-              className={`rounded-xl border-2 px-1.5 py-2 text-xs font-bold transition-all ${
+              className={`rounded-xl border px-1.5 py-2 text-xs font-bold transition-all ${
                 position === pos
-                  ? "border-indigo-400 bg-indigo-50 text-indigo-700"
-                  : "border-transparent bg-slate-50 text-slate-500 hover:bg-slate-100"
+                  ? "border-accent/60 bg-accent/[0.08] text-accent"
+                  : "border-line bg-white/[0.03] text-dim hover:bg-white/[0.06]"
               }`}
             >
               {pos}
@@ -262,35 +262,35 @@ function CustomPlayerCard({ userId }: { userId: string }) {
                 autoFocus
                 className="glass-input flex-1 !py-1.5 !text-sm"
               />
-              <button type="submit" className="rounded-lg bg-indigo-500 px-2.5 py-1.5 text-xs font-bold text-white">✓</button>
-              <button type="button" onClick={() => setEditingName(false)} className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-bold text-slate-500">✕</button>
+              <button type="submit" className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-bold text-accent-ink">✓</button>
+              <button type="button" onClick={() => setEditingName(false)} className="rounded-lg bg-white/[0.06] px-2.5 py-1.5 text-xs font-bold text-dim">✕</button>
             </form>
           ) : (
             <div className="flex items-center gap-1.5">
-              <div className="text-lg font-black text-slate-800 truncate">{player.name}</div>
+              <div className="text-lg font-black text-text truncate font-display">{player.name}</div>
               <button
                 onClick={() => { setNameDraft(player.name); setEditingName(true); }}
-                className="shrink-0 text-xs text-slate-400 hover:text-slate-600 transition"
+                className="shrink-0 text-xs text-faint hover:text-text transition"
                 title={t("mijnSpeler.renameTitle")}
               >
                 <IconPencil className="h-3.5 w-3.5" />
               </button>
             </div>
           )}
-          <div className="text-xs font-bold text-slate-400">
+          <div className="text-xs font-bold text-faint">
             {t("mijnSpeler.levelLine", { level: player.level, positions: [player.position, ...player.extraPositions].map((p) => posLabel(t, p)).join(", ") })}
           </div>
         </div>
       </div>
 
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+        <div className="flex items-center justify-between mb-1 eyebrow">
           <span>XP</span>
-          <span>{isMaxLevel ? t("mijnSpeler.maxLevel") : `${progress.current} / ${progress.needed}`}</span>
+          <span className="text-dim tabular-nums">{isMaxLevel ? t("mijnSpeler.maxLevel") : `${progress.current} / ${progress.needed}`}</span>
         </div>
-        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+        <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-500"
+            className="h-full rounded-full bg-gradient-to-r from-accent-2 to-accent"
             style={{ width: isMaxLevel ? "100%" : `${(progress.current / progress.needed) * 100}%` }}
           />
         </div>
@@ -303,8 +303,8 @@ function CustomPlayerCard({ userId }: { userId: string }) {
         <PlayerStatBox label={t("mijnSpeler.statCleanSheets")} value={player.totalCleanSheets} />
       </div>
 
-      <div className="rounded-2xl bg-indigo-50/80 border border-indigo-100 px-4 py-3 mb-3">
-        <div className="text-sm font-bold text-indigo-700">
+      <div className="rounded-2xl border border-accent/20 bg-accent/[0.07] px-4 py-3 mb-3">
+        <div className="text-sm font-bold text-accent">
           {t("mijnSpeler.skillPointsAvailable", { n: player.skillPoints })}
         </div>
       </div>
@@ -313,24 +313,24 @@ function CustomPlayerCard({ userId }: { userId: string }) {
         <button
           disabled={player.skillPoints < 1 || player.overall >= MAX_OVERALL}
           onClick={() => spendOnOverall(userId)}
-          className="flex items-center justify-between rounded-xl bg-slate-50 border-2 border-transparent px-4 py-3 text-left hover:bg-slate-100 transition disabled:opacity-40 disabled:hover:bg-slate-50"
+          className="flex items-center justify-between rounded-xl bg-white/[0.03] border border-line px-4 py-3 text-left hover:bg-white/[0.06] transition disabled:opacity-40"
         >
-          <span className="text-sm font-bold text-slate-700">
+          <span className="text-sm font-bold text-text">
             {player.overall >= MAX_OVERALL ? t("mijnSpeler.overallMaxed") : t("mijnSpeler.plusOneOverall")}
           </span>
-          <span className="text-xs font-black text-indigo-600">{t("mijnSpeler.onePoint")}</span>
+          <span className="text-xs font-black text-accent">{t("mijnSpeler.onePoint")}</span>
         </button>
 
         {remainingPositions.length > 0 && (
           <div>
-            <div className="text-xs font-bold text-slate-500 mb-1.5 px-1">{t("mijnSpeler.extraPositionCost", { cost: EXTRA_POSITION_COST })}</div>
+            <div className="text-xs font-bold text-dim mb-1.5 px-1">{t("mijnSpeler.extraPositionCost", { cost: EXTRA_POSITION_COST })}</div>
             <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-7">
               {remainingPositions.map((pos) => (
                 <button
                   key={pos}
                   disabled={player.skillPoints < EXTRA_POSITION_COST}
                   onClick={() => spendOnPosition(userId, pos)}
-                  className="rounded-xl border-2 border-transparent bg-slate-50 px-1.5 py-2 text-xs font-bold text-slate-500 transition-all hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-slate-50"
+                  className="rounded-xl border border-line bg-white/[0.03] px-1.5 py-2 text-xs font-bold text-dim transition-all hover:bg-white/[0.06] disabled:opacity-40"
                 >
                   {pos}
                 </button>
@@ -345,9 +345,9 @@ function CustomPlayerCard({ userId }: { userId: string }) {
 
 function PlayerStatBox({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-slate-50 px-2 py-2 text-center">
-      <div className="text-sm font-black text-slate-700">{value}</div>
-      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{label}</div>
+    <div className="rounded-xl border border-line bg-white/[0.03] px-2 py-2 text-center">
+      <div className="stat-num text-lg text-text">{value}</div>
+      <div className="text-[9px] font-bold uppercase tracking-wide text-faint">{label}</div>
     </div>
   );
 }
